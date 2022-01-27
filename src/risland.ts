@@ -1,3 +1,4 @@
+import cloneDeep from 'clone-deep';
 import deepmerge from 'deepmerge';
 import equal from 'fast-deep-equal';
 import { isPlainObject } from 'is-plain-object';
@@ -59,21 +60,48 @@ export default class RIsland<IState extends Record<string, any> = {}> {
     }
 
     public unload(): void {
+        // remove all event listeners on the island container
         Object.keys(this._config.delegations).forEach((eventName: string) => {
             this._config.$element.removeEventListener(eventName, this._delegationFuncs[eventName]);
         });
+
+        // delete all the content in the island container
+        this._config.$element.innerHTML = '';
+
         this._config.unload();
     }
 
-    private _setState(nextState: Partial<IState> | ((state: IState) => Partial<IState>)): void {
-        const tmpState: IState = deepmerge(
-            this._state
-            , typeof nextState === 'function' ? nextState(this._state) : nextState
-            , { isMergeableObject: isPlainObject }
-        );
-        const shouldUpdate = this._config.shouldUpdate(this._state, tmpState);
+    private _setState(
+        nextState:
+            Partial<IState>
+            | null
+            | Promise<Partial<IState> | null>
+            | ((state: IState) => Partial<IState> | null | Promise<Partial<IState> | null>
+        )
+    ): void {
+        const tmpState = typeof nextState === 'function'
+            // we have to work with a clone here, otherwise it would be possible to brutally mutate the state
+            ? nextState(cloneDeep(this._state))
+            : nextState
+        ;
 
-        this._state = tmpState;
+        // the option to return null gives the ability to prevent the diffing, state update and rerendering
+        if (tmpState === null) {
+            return;
+        }
+
+        // in case of a Promise, the resolved state will be used to invoke this method again
+        if (tmpState instanceof Promise) {
+            tmpState.then((thenState: Partial<IState>) => this._setState(thenState));
+
+            return;
+        }
+
+        const tmpMergedState: IState = deepmerge(this._state, tmpState, { isMergeableObject: isPlainObject });
+        // we have to work with two clones here, otherwise it would be possible to brutally mutate the states
+        const shouldUpdate = this._config.shouldUpdate(cloneDeep(this._state), cloneDeep(tmpMergedState));
+
+        this._state = tmpMergedState;
 
         if (shouldUpdate === true) {
             this._throttledRender();
