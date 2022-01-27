@@ -19,7 +19,10 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => !$fromEl.isEqualNode($toEl)
         }
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
-        , squirrelly: Sqrl.defaultConfig
+        , squirrelly: {
+            ...Sqrl.defaultConfig
+            , varName: 'state'
+        }
         , template: ''
         , unload: () => {}
         , update: () => {}
@@ -34,7 +37,7 @@ export default class RIsland<IState extends Record<string, any> = {}> {
 
     constructor(config: Partial<IRIslandConfig<IState>>) {
         this._config = deepmerge(this._initialConfig, config, { isMergeableObject: isPlainObject });
-        this._compiledTemplate = Sqrl.compile(this._config.template, this._config.squirrelly);
+        this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
         this._setState(this._config.initialState);
 
         (Object.keys(this._config.delegations) as Array<keyof GlobalEventHandlersEventMap>).forEach((
@@ -103,6 +106,25 @@ export default class RIsland<IState extends Record<string, any> = {}> {
                 }
             }
         );
+    }
+
+    private _getTemplate(template: string | HTMLTemplateElement): string {
+        if (typeof template === 'string') {
+            return template;
+        }
+
+        // template tag
+        if (
+            typeof template === 'object'
+            && 'content' in template
+            && template.content instanceof DocumentFragment
+        ) {
+            // making a string out of the content of the template tag
+            return Array.from(template.content.childNodes).map((childNode: Element) => childNode.outerHTML).join('');
+        }
+
+        // otherwise show a nice error message
+        return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
     }
 }
 
