@@ -1,0 +1,20 @@
+{
+    "compileOnSave": false
+    , "compilerOptions": {
+        "allowJs": true
+        , "outDir": "./tmp/"
+        , "moduleResolution": "node"
+        , "target": "es5"
+        , "lib": [
+            "es5"
+            ,"es6"
+            ,"dom"
+        ]
+        , "baseUrl": "."
+        , "removeComments": true
+        , "esModuleInterop": true
+    }
+    , "files": [
+        "./src/risland.ts"
+    ]
+}

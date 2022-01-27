@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <div id="island"></div>
+        <script src="../dist/risland.min.js"></script>
+        <script>
+            window.addEventListener('load', function() {
+                new RIsland({
+                    delegations: {
+                        'click': {
+                            '.island__checkbox': function(event, setState) {
+                                setState({ checked: event.target.checked });
+                            }
+                        }
+                    }
+                    , $element: document.getElementById('island')
+                    , initialState: {
+                        checked: false
+                    }
+                    , load: function() { console.log('load'); }
+                    // it is important that the template is wrapped by an outer div. otherwise it won't work!
+                    , template: '<div class="island{{@if(it.checked)}} island--checked{{/if}}">'
+                        + '<input class="island__checkbox" type="checkbox" /> '
+                        + '{{@if(it.checked)}}is checked{{#else}}is not checked{{/if}}'
+                    + '</div>'
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>
