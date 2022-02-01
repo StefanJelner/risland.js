@@ -10,7 +10,12 @@ import { TemplateFunction } from 'squirrelly/dist/types/compile';
 
 export default class RIsland<IState extends Record<string, any> = {}> {
     private _initialConfig: IRIslandConfig<IState> = {
-        delegations: {}
+        deepmerge: {
+            // we use cloneDeep for this task
+            clone: false
+            , isMergeableObject: isPlainObject
+        }
+        , delegations: {}
         , $element: document.body
         , initialState: {} as IState
         , load: () => {}
@@ -37,7 +42,12 @@ export default class RIsland<IState extends Record<string, any> = {}> {
     private _throttledRender: RIsland<IState>['_render'] = throttle(this._render);
 
     constructor(config: Partial<IRIslandConfig<IState>>) {
-        this._config = deepmerge(this._initialConfig, config, { isMergeableObject: isPlainObject });
+        this._config = deepmerge(
+            this._initialConfig
+            , config
+            // for the initial merging we have to use the initial config
+            , this._initialConfig.deepmerge
+        );
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
         this._setState(this._config.initialState);
 
@@ -71,14 +81,7 @@ export default class RIsland<IState extends Record<string, any> = {}> {
         this._config.unload();
     }
 
-    private _setState(
-        nextState:
-            Partial<IState>
-            | null
-            | Promise<Partial<IState> | null>
-            | ((state: IState) => Partial<IState> | null | Promise<Partial<IState> | null>
-        )
-    ): void {
+    private _setState(nextState: TRIslandSetState<IState>): void {
         const tmpState = typeof nextState === 'function'
             // we have to work with a clone here, otherwise it would be possible to brutally mutate the state
             ? nextState(cloneDeep(this._state))
@@ -92,14 +95,19 @@ export default class RIsland<IState extends Record<string, any> = {}> {
 
         // in case of a Promise, the resolved state will be used to invoke this method again
         if (tmpState instanceof Promise) {
-            tmpState.then((thenState: Partial<IState>) => this._setState(thenState));
+            tmpState.then((thenState: TRIslandSetState<IState>) => this._setState(thenState));
 
             return;
         }
 
-        const tmpMergedState: IState = deepmerge(this._state, tmpState, { isMergeableObject: isPlainObject });
-        // we have to work with two clones here, otherwise it would be possible to brutally mutate the states
-        const shouldUpdate = this._config.shouldUpdate(cloneDeep(this._state), cloneDeep(tmpMergedState));
+        const tmpMergedState: IState = deepmerge(this._state, tmpState, this._config.deepmerge);
+
+        const shouldUpdate = (
+            this._config.shouldUpdate === this._initialConfig.shouldUpdate
+                ? this._config.shouldUpdate(this._state, tmpMergedState)
+                // we have to work with two clones here, otherwise it would be possible to brutally mutate the states
+                : this._config.shouldUpdate(cloneDeep(this._state), cloneDeep(tmpMergedState))
+        );
 
         this._state = tmpMergedState;
 
@@ -147,8 +155,11 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             && 'content' in template
             && template.content instanceof DocumentFragment
         ) {
+            // putting the content of the template tag into a textarea to do a simple html decode
+            const $textarea = document.createElement('textarea');
             // making a string out of the content of the template tag
-            return Array.from(template.content.childNodes).map((childNode: Element) => childNode.outerHTML).join('');
+            $textarea.innerHTML = Array.from(template.content.childNodes).map((childNode: Element) => childNode.outerHTML).join('');
+            return $textarea.value;
         }
 
         // otherwise show a nice error message
@@ -157,6 +168,7 @@ export default class RIsland<IState extends Record<string, any> = {}> {
 }
 
 export interface IRIslandConfig<IState extends Record<string, any> = {}> {
+    deepmerge: deepmerge.Options;
     delegations: Partial<Record<
         keyof GlobalEventHandlersEventMap
         , Record<string, (event: Event, setState: RIsland<IState>['_setState']) => void>
@@ -171,3 +183,10 @@ export interface IRIslandConfig<IState extends Record<string, any> = {}> {
     unload: () => void;
     update: (setState: RIsland<IState>['_setState']) => void;
 }
+
+export type TRIslandSetState<IState> = (
+    Partial<IState>
+    | null
+    | Promise<Partial<IState> | null>
+    | ((state: IState) => Partial<IState>) | null | Promise<Partial<IState> | null>
+);

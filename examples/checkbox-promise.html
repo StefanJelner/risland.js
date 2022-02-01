@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox with Promise example</title>
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <template id="squirrelly">
+            <div class="island{{@if(state.checked)}} island--checked{{/if}}">
+                <input class="island__checkbox" type="checkbox" />
+                {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+                <ul>
+                    {{@each(state.log) => checked}}
+                        <li>
+                            {{@if(checked)}}was checked{{#else}}was not checked{{/if}}
+                        </li>
+                    {{/each}}
+                </ul>
+            </div>
+        </template>
+
+        <script src="../dist/risland.min.js"></script>
+        <script>
+            window.addEventListener('load', function() {
+                new RIsland({
+                    delegations: {
+                        'click': {
+                            '.island__checkbox': function(event, setState) {
+                                setState({ checked: event.target.checked });
+
+                                setState(function(state1) {
+                                    return new Promise(function(resolve) {
+                                        window.setTimeout(function() {
+                                            resolve(function(state2) {
+                                                return { log: state2.log.concat(state1.checked) };
+                                            });
+                                        }, 5000);
+                                    });
+                                });
+                            }
+                        }
+                    }
+                    , $element: document.getElementById('island')
+                    , initialState: {
+                        checked: false
+                        , log: []
+                    }
+                    , load: function() { console.log('load'); }
+                    , template: document.getElementById('squirrelly')
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>
