@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox with a seconds counter example</title>
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <template id="squirrelly">
+            <div class="island{{@if(state.checked)}} island--checked{{/if}}">
+                <input class="island__checkbox" type="checkbox" />
+                {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+                <p>{{state.counter}} second{{@if(state.counter !== 1)}}s{{/if}}</p>
+            </div>
+        </template>
+
+        <script src="../dist/risland.min.js"></script>
+        <script>
+            window.addEventListener('load', function() {
+                new RIsland({
+                    delegations: {
+                        'click': {
+                            '.island__checkbox': function(event, setState) {
+                                setState({ checked: event.target.checked });
+                            }
+                        }
+                    }
+                    , $element: document.getElementById('island')
+                    , initialState: {
+                        checked: false
+                        , counter: 0
+                    }
+                    , load: function(setState) {
+                        console.log('load');
+
+                        var initial = +new Date();
+
+                        window.setInterval(function () {
+                            setState({
+                                counter: Math.floor((+new Date() - initial) / 1000)
+                            });
+                        }, 1000);
+                    }
+                    , template: document.getElementById('squirrelly')
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>

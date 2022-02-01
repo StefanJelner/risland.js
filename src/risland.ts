@@ -44,7 +44,8 @@ export default class RIsland<IState extends Record<string, any> = {}> {
     constructor(config: Partial<IRIslandConfig<IState>>) {
         this._config = deepmerge(
             this._initialConfig
-            , config
+            // clone the config, otherwise it could be mutated later
+            , cloneDeep(config)
             // for the initial merging we have to use the initial config
             , this._initialConfig.deepmerge
         );
@@ -100,13 +101,28 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             return;
         }
 
-        const tmpMergedState: IState = deepmerge(this._state, tmpState, this._config.deepmerge);
+        const tmpMergedState: IState = (
+            'customMerge' in this._config.deepmerge
+                // if a custom merging algorithm is provided, it is possible to manipulate the state directly
+                // this is why a clone is used here
+                ? deepmerge(cloneDeep(this._state), tmpState, this._config.deepmerge)
+                : deepmerge(this._state, tmpState, this._config.deepmerge)
+        );
 
         const shouldUpdate = (
             this._config.shouldUpdate === this._initialConfig.shouldUpdate
                 ? this._config.shouldUpdate(this._state, tmpMergedState)
                 // we have to work with two clones here, otherwise it would be possible to brutally mutate the states
-                : this._config.shouldUpdate(cloneDeep(this._state), cloneDeep(tmpMergedState))
+                : this._config.shouldUpdate(
+                    cloneDeep(this._state)
+                    , (
+                        'customMerge' in this._config.deepmerge
+                            // if a custom merging algorithm is provided, tmpMergedState already contains a clone of the state
+                            // we prevent a redundant cloning here
+                            ? tmpMergedState
+                            : cloneDeep(tmpMergedState)
+                    )
+                )
         );
 
         this._state = tmpMergedState;
