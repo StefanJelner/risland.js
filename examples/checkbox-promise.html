@@ -28,17 +28,18 @@
                     delegations: {
                         'click': {
                             '.island__checkbox': function(event, setState) {
-                                setState({ checked: event.target.checked });
-
-                                setState(function(state1) {
-                                    return new Promise(function(resolve) {
-                                        window.setTimeout(function() {
-                                            resolve(function(state2) {
-                                                return { log: state2.log.concat(state1.checked) };
-                                            });
-                                        }, 5000);
-                                    });
-                                });
+                                setState([
+                                    { checked: event.target.checked }
+                                    , function(state1) {
+                                        return new Promise(function(resolve) {
+                                            window.setTimeout(function() {
+                                                resolve(function(state2) {
+                                                    return { log: state2.log.concat(state1.checked) };
+                                                });
+                                            }, 5000);
+                                        });
+                                    }
+                                ]);
                             }
                         }
                     }

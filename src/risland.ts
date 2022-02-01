@@ -101,12 +101,19 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             return;
         }
 
+        // in case of an array all single items will be used to invoke this method again
+        if (Array.isArray(tmpState)) {
+            tmpState.forEach((eachState: TRIslandSetState<IState>) => this._setState(eachState));
+
+            return;
+        }
+
         const tmpMergedState: IState = (
             'customMerge' in this._config.deepmerge
                 // if a custom merging algorithm is provided, it is possible to manipulate the state directly
                 // this is why a clone is used here
-                ? deepmerge(cloneDeep(this._state), tmpState, this._config.deepmerge)
-                : deepmerge(this._state, tmpState, this._config.deepmerge)
+                ? deepmerge(cloneDeep(this._state), tmpState as Partial<IState>, this._config.deepmerge)
+                : deepmerge(this._state, tmpState as Partial<IState>, this._config.deepmerge)
         );
 
         const shouldUpdate = (
@@ -204,5 +211,6 @@ export type TRIslandSetState<IState> = (
     Partial<IState>
     | null
     | Promise<Partial<IState> | null>
-    | ((state: IState) => Partial<IState>) | null | Promise<Partial<IState> | null>
+    | ((state: IState) => TRIslandSetState<IState>)
+    | Array<TRIslandSetState<IState>>
 );
