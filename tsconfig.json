@@ -2,7 +2,7 @@
     "compileOnSave": false
     , "compilerOptions": {
         "allowJs": true
-        , "outDir": "./tmp/"
+        , "outDir": "./dist/"
         , "moduleResolution": "node"
         , "target": "es5"
         , "lib": [
