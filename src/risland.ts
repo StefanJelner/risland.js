@@ -20,26 +20,39 @@ export default class RIsland<IState extends Record<string, any>> {
     private _initialConfig: IRIslandConfig<IState> = {
         $element: document.body
         , deepmerge: {
-            // we use cloneDeep for this task
-            clone: false
-            , isMergeableObject: isPlainObject
+            isMergeableObject: isPlainObject
         }
         , delegations: {}
         , initialState: {} as IState
         , load: () => {}
         , morphdom: {
-            // speed up morphdom significantly
+            // speed up morphdom significantly.
             // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
             onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => !$fromEl.isEqualNode($toEl)
         }
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
-        , squirrelly: {
-            ...Sqrl.defaultConfig
-            , varName: 'state'
-        }
+        , squirrelly: Sqrl.defaultConfig
         , template: ''
         , unload: () => {}
         , update: () => {}
+    };
+
+    // IMPORTANT! these are crucial settings which are necessary for RIsland to operate the way it is intended
+    // to. These settings cannot be overridden by the user.
+    private _enforcedConfig: Partial<IRIslandConfig<IState>> = {
+        deepmerge: {
+            // we use cloneDeep for this task.
+            clone: false
+        }
+        , morphdom: {
+            // this setting is crucial, otherwise RIsland won't work as expected.
+            childrenOnly: false
+        }
+        , squirrelly: {
+            // for reasons of unambiguity - because in RIsland the term "state" is always used -, the namespace
+            // in squirrelly should also be called "state".
+            varName: 'state'
+        }
     };
 
     private _config: IRIslandConfig<IState>;
@@ -55,12 +68,19 @@ export default class RIsland<IState extends Record<string, any>> {
      * @param config the configuration 
      */
     constructor(config: Partial<IRIslandConfig<IState>>) {
-        this._config = deepmerge(
-            this._initialConfig
-            // clone the config, otherwise it could be mutated later
-            , cloneDeep(config)
-            // for the initial merging we have to use the initial config
-            , this._initialConfig.deepmerge
+        this._config = deepmerge.all<IRIslandConfig<IState>>(
+            [
+                this._initialConfig
+                // clone the config, otherwise it could be mutated later.
+                , cloneDeep(config)
+                // finally add the enforced config values.
+                , this._enforcedConfig
+            ]
+            // for the initial merging we have to use the initial config and the enforced one.
+            , {
+                ...this._initialConfig.deepmerge
+                , ...this._enforcedConfig.deepmerge
+            }
         );
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
         this._setState(this._config.initialState);
@@ -83,15 +103,15 @@ export default class RIsland<IState extends Record<string, any>> {
                 });
             };
 
-            // add throttling, if necessary
+            // add throttling, if necessary.
             const throttling = this._getThrottling(eventName);
 
             if (throttling.throttled === true) {
                 if ('ms' in throttling) {
-                    // conventional throttling
+                    // conventional throttling.
                     this._delegationFuncs[eventName] = throttle(throttling.ms, this._delegationFuncs[eventName]);
                 } else {
-                    // throttling by request animation frame
+                    // throttling by request animation frame.
                     this._delegationFuncs[eventName] = rafThrottle(this._delegationFuncs[eventName]);
                 }
             }
@@ -110,7 +130,7 @@ export default class RIsland<IState extends Record<string, any>> {
             this._config.$element.removeEventListener(eventName, this._delegationFuncs[eventName]);
         });
 
-        // delete all the content in the island container
+        // delete all the content in the island container.
         this._config.$element.innerHTML = '';
 
         this._config.unload(cloneDeep(this._state));
@@ -123,24 +143,24 @@ export default class RIsland<IState extends Record<string, any>> {
      */
     private _setState(nextState: TRIslandSetState<IState>): void {
         const tmpState = typeof nextState === 'function'
-            // we have to work with a clone here, otherwise it would be possible to brutally mutate the state
+            // we have to work with a clone here, otherwise it would be possible to brutally mutate the state.
             ? nextState(cloneDeep(this._state))
             : nextState
         ;
 
-        // the option to return null gives the ability to prevent the diffing, state update and rerendering
+        // the option to return null gives the ability to prevent the diffing, state update and rerendering.
         if (tmpState === null) {
             return;
         }
 
-        // in case of a Promise, the resolved state will be used to invoke this method again
+        // in case of a Promise, the resolved state will be used to invoke this method again.
         if (tmpState instanceof Promise) {
             tmpState.then((thenState: TRIslandSetState<IState>) => this._setState(thenState));
 
             return;
         }
 
-        // in case of an array all single items will be used to invoke this method again
+        // in case of an array all single items will be used to invoke this method again.
         if (Array.isArray(tmpState)) {
             tmpState.forEach((eachState: TRIslandSetState<IState>) => this._setState(eachState));
 
@@ -150,7 +170,7 @@ export default class RIsland<IState extends Record<string, any>> {
         const tmpMergedState: IState = (
             'customMerge' in this._config.deepmerge
                 // if a custom merging algorithm is provided, it is possible to manipulate the state directly
-                // this is why a clone is used here
+                // this is why a clone is used here.
                 ? deepmerge(cloneDeep(this._state), tmpState as Partial<IState>, this._config.deepmerge)
                 : deepmerge(this._state, tmpState as Partial<IState>, this._config.deepmerge)
         );
@@ -158,13 +178,13 @@ export default class RIsland<IState extends Record<string, any>> {
         const shouldUpdate = (
             this._config.shouldUpdate === this._initialConfig.shouldUpdate
                 ? this._config.shouldUpdate(this._state, tmpMergedState)
-                // we have to work with two clones here, otherwise it would be possible to brutally mutate the states
+                // we have to work with two clones here, otherwise it would be possible to brutally mutate the states.
                 : this._config.shouldUpdate(
                     cloneDeep(this._state)
                     , (
                         'customMerge' in this._config.deepmerge
                             // if a custom merging algorithm is provided, tmpMergedState already contains a clone of
-                            // the state we prevent a redundant cloning here
+                            // the state we prevent a redundant cloning here.
                             ? tmpMergedState
                             : cloneDeep(tmpMergedState)
                     )
@@ -183,14 +203,14 @@ export default class RIsland<IState extends Record<string, any>> {
      */
     private _render(): void {
         // morphdom replaces the element itself, this is why we have to add a fake element on the first call and
-        // then use firstChild
+        // then use firstChild.
         if (this._config.$element.firstChild === null) {
             this._config.$element.appendChild(document.createElement('div'));
         }
 
         morphdom(
             this._config.$element.firstChild
-            , this._compiledTemplate(this._state, this._config.squirrelly)
+            , this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig)
             , {
                 ...this._config.morphdom
                 , onElUpdated: ($element: HTMLElement) => {
@@ -229,16 +249,16 @@ export default class RIsland<IState extends Record<string, any>> {
             && 'content' in template
             && template.content instanceof DocumentFragment
         ) {
-            // putting the content of the template tag into a textarea to do a simple html decode
+            // putting the content of the template tag into a textarea to do a simple html decode.
             const $textarea = document.createElement('textarea');
-            // making a string out of the content of the template tag
+            // making a string out of the content of the template tag.
             $textarea.innerHTML = Array.from(
                 template.content.childNodes
             ).map((childNode: Element) => childNode.outerHTML).join('');
             return $textarea.value;
         }
 
-        // otherwise show a nice error message
+        // otherwise show a nice error message.
         return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
     }
 
@@ -271,6 +291,7 @@ export default class RIsland<IState extends Record<string, any>> {
         const eventName = chunks[0];
 
         if (chunks.length > 1 && chunks[1] === 'throttled') {
+            // if it is throttled with milliseconds.
             if (chunks.length === 3) {
                 const ms = parseInt(chunks[2], 10);
 
@@ -279,9 +300,11 @@ export default class RIsland<IState extends Record<string, any>> {
                 }
             }
 
+            // if it is only throttled.
             return { eventName, throttled: true };
         }
 
+        // if it is not throttled.
         return { eventName, throttled: false };
     }
 }
@@ -301,7 +324,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     load: (state: IState, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
     shouldUpdate: (state: IState, nextState: IState) => boolean;
-    squirrelly: SqrlConfig;
+    squirrelly: Partial<SqrlConfig>;
     template: string;
     unload: (state: IState) => void;
     update: (state: IState, setState: RIsland<IState>['_setState']) => void;

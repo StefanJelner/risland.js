@@ -2006,7 +2006,6 @@
       this._initialConfig = {
         $element: document.body,
         deepmerge: {
-          clone: false,
           isMergeableObject: isPlainObject
         },
         delegations: {},
@@ -2020,17 +2019,26 @@
         shouldUpdate: function shouldUpdate(state, nextState) {
           return !fastDeepEqual(state, nextState);
         },
-        squirrelly: _assign(_assign({}, squirrelly_min.exports.defaultConfig), {
-          varName: 'state'
-        }),
+        squirrelly: squirrelly_min.exports.defaultConfig,
         template: '',
         unload: function unload() {},
         update: function update() {}
       };
+      this._enforcedConfig = {
+        deepmerge: {
+          clone: false
+        },
+        morphdom: {
+          childrenOnly: false
+        },
+        squirrelly: {
+          varName: 'state'
+        }
+      };
       this._delegationFuncs = {};
       this._loaded = false;
       this._throttledRender = rafThrottle_1(this._render);
-      this._config = cjs$1(this._initialConfig, cloneDeep_1(config), this._initialConfig.deepmerge);
+      this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
       this._compiledTemplate = squirrelly_min.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
 
       this._setState(this._config.initialState);
@@ -2143,8 +2151,9 @@
       return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
     };
 
-    RIsland.prototype._getThrottling = function (eventName) {
-      var chunks = eventName.split(/\./g);
+    RIsland.prototype._getThrottling = function (combinedEventName) {
+      var chunks = combinedEventName.split(/\./g);
+      var eventName = chunks[0];
 
       if (chunks.length > 1 && chunks[1] === 'throttled') {
         if (chunks.length === 3) {
@@ -2152,7 +2161,7 @@
 
           if (!isNaN(ms)) {
             return {
-              eventName: chunks[0],
+              eventName: eventName,
               ms: ms,
               throttled: true
             };
@@ -2160,13 +2169,13 @@
         }
 
         return {
-          eventName: chunks[0],
+          eventName: eventName,
           throttled: true
         };
       }
 
       return {
-        eventName: chunks[0],
+        eventName: eventName,
         throttled: false
       };
     };
