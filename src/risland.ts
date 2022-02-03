@@ -3,20 +3,28 @@ import deepmerge from 'deepmerge';
 import equal from 'fast-deep-equal';
 import { isPlainObject } from 'is-plain-object';
 import morphdom from 'morphdom';
-import throttle from 'raf-throttle';
+import rafThrottle from 'raf-throttle';
 import * as Sqrl from 'squirrelly';
-import { SqrlConfig } from 'squirrelly/dist/types/config';
 import { TemplateFunction } from 'squirrelly/dist/types/compile';
+import { SqrlConfig } from 'squirrelly/dist/types/config';
+import { throttle } from 'throttle-debounce';
 
-export default class RIsland<IState extends Record<string, any> = {}> {
+/**
+ * # RIsland
+ * 
+ * A simple, lightweight approach for providing reactive islands on websites.
+ * 
+ * See the README.md file for further documentation.
+ */
+export default class RIsland<IState extends Record<string, any>> {
     private _initialConfig: IRIslandConfig<IState> = {
-        deepmerge: {
+        $element: document.body
+        , deepmerge: {
             // we use cloneDeep for this task
             clone: false
             , isMergeableObject: isPlainObject
         }
         , delegations: {}
-        , $element: document.body
         , initialState: {} as IState
         , load: () => {}
         , morphdom: {
@@ -39,8 +47,13 @@ export default class RIsland<IState extends Record<string, any> = {}> {
     private _delegationFuncs: Partial<Record<keyof GlobalEventHandlersEventMap, (event: Event) => void>> = {};
     private _loaded: boolean = false;
     private _state: IState;
-    private _throttledRender: RIsland<IState>['_render'] = throttle(this._render);
+    private _throttledRender: RIsland<IState>['_render'] = rafThrottle(this._render);
 
+    /**
+     * Constructor
+     * 
+     * @param config the configuration 
+     */
     constructor(config: Partial<IRIslandConfig<IState>>) {
         this._config = deepmerge(
             this._initialConfig
@@ -56,20 +69,41 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             eventName: keyof GlobalEventHandlersEventMap
         ) => {
             this._delegationFuncs[eventName] = (event: Event) => {
-                Object.keys(this._config.delegations[eventName]).forEach((selector) => {
+                Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
                     if (
                         event.target instanceof HTMLElement
                         && event.target.closest(selector) !== null
                     ) {
-                        this._config.delegations[eventName][selector](event, this._setState.bind(this));
+                        this._config.delegations[eventName][selector](
+                            event
+                            , cloneDeep(this._state)
+                            , this._setState.bind(this)
+                        );
                     }
                 });
             };
 
-            this._config.$element.addEventListener(eventName, this._delegationFuncs[eventName]);
+            // add throttling, if necessary
+            const throttling = this._getThrottling(eventName);
+
+            if (throttling.throttled === true) {
+                if ('ms' in throttling) {
+                    // conventional throttling
+                    this._delegationFuncs[eventName] = throttle(throttling.ms, this._delegationFuncs[eventName]);
+                } else {
+                    // throttling by request animation frame
+                    this._delegationFuncs[eventName] = rafThrottle(this._delegationFuncs[eventName]);
+                }
+            }
+
+            this._config.$element.addEventListener(throttling.eventName, this._delegationFuncs[eventName]);
         });
     }
 
+    /**
+     * Method that triggers the unloading of the island, which removes all the event handlers from the
+     * islands DOM element, removes the HTML and triggers a given unload callback.
+     */
     public unload(): void {
         // remove all event listeners on the island container
         Object.keys(this._config.delegations).forEach((eventName: string) => {
@@ -79,9 +113,14 @@ export default class RIsland<IState extends Record<string, any> = {}> {
         // delete all the content in the island container
         this._config.$element.innerHTML = '';
 
-        this._config.unload();
+        this._config.unload(cloneDeep(this._state));
     }
 
+    /**
+     * Sets the inner state of the island.
+     * 
+     * @param nextState the state (an object, function, Array or Promise)
+     */
     private _setState(nextState: TRIslandSetState<IState>): void {
         const tmpState = typeof nextState === 'function'
             // we have to work with a clone here, otherwise it would be possible to brutally mutate the state
@@ -124,8 +163,8 @@ export default class RIsland<IState extends Record<string, any> = {}> {
                     cloneDeep(this._state)
                     , (
                         'customMerge' in this._config.deepmerge
-                            // if a custom merging algorithm is provided, tmpMergedState already contains a clone of the state
-                            // we prevent a redundant cloning here
+                            // if a custom merging algorithm is provided, tmpMergedState already contains a clone of
+                            // the state we prevent a redundant cloning here
                             ? tmpMergedState
                             : cloneDeep(tmpMergedState)
                     )
@@ -139,6 +178,9 @@ export default class RIsland<IState extends Record<string, any> = {}> {
         }
     }
 
+    /**
+     * Renders the template based on the inner state and then morphs the changes into the DOM.
+     */
     private _render(): void {
         // morphdom replaces the element itself, this is why we have to add a fake element on the first call and
         // then use firstChild
@@ -152,11 +194,13 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             , {
                 ...this._config.morphdom
                 , onElUpdated: ($element: HTMLElement) => {
+                    const state = cloneDeep(this._state);
+
                     if (this._loaded === false) {
                         this._loaded = true;
-                        this._config.load(this._setState.bind(this));
+                        this._config.load(state, this._setState.bind(this));
                     } else {
-                        this._config.update(this._setState.bind(this));
+                        this._config.update(state, this._setState.bind(this));
                     }
 
                     if ('onElUpdated' in this._config.morphdom) {
@@ -167,6 +211,13 @@ export default class RIsland<IState extends Record<string, any> = {}> {
         );
     }
 
+    /**
+     * Tries to determine, whether the template is already a given string or a DOM element which is a tag element.
+     * If it is a tag element, the content will be read, stringified and HTML decoded.
+     * 
+     * @param template the template as a string or a tag element
+     * @returns the template
+     */
     private _getTemplate(template: string | HTMLTemplateElement): string {
         if (typeof template === 'string') {
             return template;
@@ -181,36 +232,96 @@ export default class RIsland<IState extends Record<string, any> = {}> {
             // putting the content of the template tag into a textarea to do a simple html decode
             const $textarea = document.createElement('textarea');
             // making a string out of the content of the template tag
-            $textarea.innerHTML = Array.from(template.content.childNodes).map((childNode: Element) => childNode.outerHTML).join('');
+            $textarea.innerHTML = Array.from(
+                template.content.childNodes
+            ).map((childNode: Element) => childNode.outerHTML).join('');
             return $textarea.value;
         }
 
         // otherwise show a nice error message
         return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
     }
+
+    /**
+     * Tries to determine, whether a given eventName contains throttling information. The syntax is:
+     * 
+     * eventName[.throttled[.ms]]
+     * 
+     * The eventName is a valid event name like "click" or "mouseover".
+     * "throttled" is the optional literal keyword.
+     * ms are the optional milliseconds of throttling.
+     * 
+     * Examples:
+     * 
+     * mousemove
+     * mousemove.throttled
+     * mousemove.throttled.250
+     * 
+     * If no ms value is given the throttling will be done with the request animation frame.
+     * 
+     * @param eventName event name with optional throttling information
+     * @returns parsed throttling object
+     */
+    private _getThrottling(eventName: string): IRIslandThrottling {
+        const chunks = eventName.split(/\./g);
+
+        if (chunks.length > 1 && chunks[1] === 'throttled') {
+            if (chunks.length === 3) {
+                const ms = parseInt(chunks[2], 10);
+
+                if (!isNaN(ms)) {
+                    return {
+                        eventName: chunks[0] as keyof GlobalEventHandlersEventMap
+                        , ms
+                        , throttled: true
+                    };
+                }
+            }
+
+            return {
+                eventName: chunks[0] as keyof GlobalEventHandlersEventMap
+                , throttled: true
+            };
+        }
+
+        return {
+            eventName: chunks[0] as keyof GlobalEventHandlersEventMap
+            , throttled: false
+        };
+    }
 }
 
-export interface IRIslandConfig<IState extends Record<string, any> = {}> {
+export interface IRIslandConfig<IState extends Record<string, any>> {
+    $element: HTMLElement;
     deepmerge: deepmerge.Options;
     delegations: Partial<Record<
-        keyof GlobalEventHandlersEventMap
-        , Record<string, (event: Event, setState: RIsland<IState>['_setState']) => void>
+        (
+            keyof GlobalEventHandlersEventMap
+            | `${keyof GlobalEventHandlersEventMap}.throttled`
+            | `${keyof GlobalEventHandlersEventMap}.throttled.${number}`
+        )
+        , Record<string, (event: Event, state: IState, setState: RIsland<IState>['_setState']) => void>
     >>;
-    $element: HTMLElement;
     initialState: IState;
-    load: (setState: RIsland<IState>['_setState']) => void;
+    load: (state: IState, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
     shouldUpdate: (state: IState, nextState: IState) => boolean;
     squirrelly: SqrlConfig;
     template: string;
-    unload: () => void;
-    update: (setState: RIsland<IState>['_setState']) => void;
+    unload: (state: IState) => void;
+    update: (state: IState, setState: RIsland<IState>['_setState']) => void;
 }
 
-export type TRIslandSetState<IState> = (
+export type TRIslandSetState<IState extends Record<string, any>> = (
     Partial<IState>
     | null
     | Promise<Partial<IState> | null>
     | ((state: IState) => TRIslandSetState<IState>)
     | Array<TRIslandSetState<IState>>
 );
+
+export interface IRIslandThrottling {
+    eventName: keyof GlobalEventHandlersEventMap;
+    ms?: number;
+    throttled: boolean;
+}

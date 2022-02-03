@@ -1,7 +1,9 @@
+import pkg from './package.json';
 import typescript from '@rollup/plugin-typescript';
 import babel from "@rollup/plugin-babel";
 import commonjs from '@rollup/plugin-commonjs';
-import pkg from './package.json';
+import filesize from 'rollup-plugin-filesize';
+import progress from 'rollup-plugin-progress';
 import node from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 
@@ -51,7 +53,8 @@ export default {
         }
     ]
     , plugins: [
-        typescript()
+        progress()
+        , typescript()
         , node({
             browser: true
             , extensions
@@ -61,6 +64,11 @@ export default {
             babelHelpers: 'bundled'
             , extensions
             , presets: ['@babel/preset-env']
+        })
+        , filesize({
+            showBrotliSize: false
+            , showGzippedSize: false
+            , showMinifiedSize: false
         })
     ]
 };

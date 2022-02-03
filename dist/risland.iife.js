@@ -511,7 +511,7 @@ var RIsland = (function () {
   };
 
   var deepmerge_1 = deepmerge;
-  var cjs = deepmerge_1;
+  var cjs$1 = deepmerge_1;
 
   var fastDeepEqual = function equal(a, b) {
     if (a === b) return true;
@@ -1848,17 +1848,165 @@ var RIsland = (function () {
     });
   })(squirrelly_min, squirrelly_min.exports);
 
+  var cjs = {};
+
+  Object.defineProperty(cjs, '__esModule', {
+    value: true
+  });
+  /* eslint-disable no-undefined,no-param-reassign,no-shadow */
+
+  /**
+   * Throttle execution of a function. Especially useful for rate limiting
+   * execution of handlers on events like resize and scroll.
+   *
+   * @param  {number}    delay -          A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher) are most useful.
+   * @param  {boolean}   [noTrailing] -   Optional, defaults to false. If noTrailing is true, callback will only execute every `delay` milliseconds while the
+   *                                    throttled-function is being called. If noTrailing is false or unspecified, callback will be executed one final time
+   *                                    after the last throttled-function call. (After the throttled-function has not been called for `delay` milliseconds,
+   *                                    the internal counter is reset).
+   * @param  {Function}  callback -       A function to be executed after delay milliseconds. The `this` context and all arguments are passed through, as-is,
+   *                                    to `callback` when the throttled-function is executed.
+   * @param  {boolean}   [debounceMode] - If `debounceMode` is true (at begin), schedule `clear` to execute after `delay` ms. If `debounceMode` is false (at end),
+   *                                    schedule `callback` to execute after `delay` ms.
+   *
+   * @returns {Function}  A new, throttled, function.
+   */
+
+  function throttle(delay, noTrailing, callback, debounceMode) {
+    /*
+     * After wrapper has stopped being called, this timeout ensures that
+     * `callback` is executed at the proper times in `throttle` and `end`
+     * debounce modes.
+     */
+    var timeoutID;
+    var cancelled = false; // Keep track of the last time `callback` was executed.
+
+    var lastExec = 0; // Function to clear existing timeout
+
+    function clearExistingTimeout() {
+      if (timeoutID) {
+        clearTimeout(timeoutID);
+      }
+    } // Function to cancel next exec
+
+
+    function cancel() {
+      clearExistingTimeout();
+      cancelled = true;
+    } // `noTrailing` defaults to falsy.
+
+
+    if (typeof noTrailing !== 'boolean') {
+      debounceMode = callback;
+      callback = noTrailing;
+      noTrailing = undefined;
+    }
+    /*
+     * The `wrapper` function encapsulates all of the throttling / debouncing
+     * functionality and when executed will limit the rate at which `callback`
+     * is executed.
+     */
+
+
+    function wrapper() {
+      for (var _len = arguments.length, arguments_ = new Array(_len), _key = 0; _key < _len; _key++) {
+        arguments_[_key] = arguments[_key];
+      }
+
+      var self = this;
+      var elapsed = Date.now() - lastExec;
+
+      if (cancelled) {
+        return;
+      } // Execute `callback` and update the `lastExec` timestamp.
+
+
+      function exec() {
+        lastExec = Date.now();
+        callback.apply(self, arguments_);
+      }
+      /*
+       * If `debounceMode` is true (at begin) this is used to clear the flag
+       * to allow future `callback` executions.
+       */
+
+
+      function clear() {
+        timeoutID = undefined;
+      }
+
+      if (debounceMode && !timeoutID) {
+        /*
+         * Since `wrapper` is being called for the first time and
+         * `debounceMode` is true (at begin), execute `callback`.
+         */
+        exec();
+      }
+
+      clearExistingTimeout();
+
+      if (debounceMode === undefined && elapsed > delay) {
+        /*
+         * In throttle mode, if `delay` time has been exceeded, execute
+         * `callback`.
+         */
+        exec();
+      } else if (noTrailing !== true) {
+        /*
+         * In trailing throttle mode, since `delay` time has not been
+         * exceeded, schedule `callback` to execute `delay` ms after most
+         * recent execution.
+         *
+         * If `debounceMode` is true (at begin), schedule `clear` to execute
+         * after `delay` ms.
+         *
+         * If `debounceMode` is false (at end), schedule `callback` to
+         * execute after `delay` ms.
+         */
+        timeoutID = setTimeout(debounceMode ? clear : exec, debounceMode === undefined ? delay - elapsed : delay);
+      }
+    }
+
+    wrapper.cancel = cancel; // Return the wrapper function.
+
+    return wrapper;
+  }
+  /* eslint-disable no-undefined */
+
+  /**
+   * Debounce execution of a function. Debouncing, unlike throttling,
+   * guarantees that a function is only executed a single time, either at the
+   * very beginning of a series of calls, or at the very end.
+   *
+   * @param  {number}   delay -         A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher) are most useful.
+   * @param  {boolean}  [atBegin] -     Optional, defaults to false. If atBegin is false or unspecified, callback will only be executed `delay` milliseconds
+   *                                  after the last debounced-function call. If atBegin is true, callback will be executed only at the first debounced-function call.
+   *                                  (After the throttled-function has not been called for `delay` milliseconds, the internal counter is reset).
+   * @param  {Function} callback -      A function to be executed after delay milliseconds. The `this` context and all arguments are passed through, as-is,
+   *                                  to `callback` when the debounced-function is executed.
+   *
+   * @returns {Function} A new, debounced function.
+   */
+
+
+  function debounce(delay, atBegin, callback) {
+    return callback === undefined ? throttle(delay, atBegin, false) : throttle(delay, callback, atBegin !== false);
+  }
+
+  cjs.debounce = debounce;
+  var throttle_1 = cjs.throttle = throttle;
+
   var RIsland = function () {
     function RIsland(config) {
       var _this = this;
 
       this._initialConfig = {
+        $element: document.body,
         deepmerge: {
           clone: false,
           isMergeableObject: isPlainObject
         },
         delegations: {},
-        $element: document.body,
         initialState: {},
         load: function load() {},
         morphdom: {
@@ -1879,7 +2027,7 @@ var RIsland = (function () {
       this._delegationFuncs = {};
       this._loaded = false;
       this._throttledRender = rafThrottle_1(this._render);
-      this._config = cjs(this._initialConfig, cloneDeep_1(config), this._initialConfig.deepmerge);
+      this._config = cjs$1(this._initialConfig, cloneDeep_1(config), this._initialConfig.deepmerge);
       this._compiledTemplate = squirrelly_min.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
 
       this._setState(this._config.initialState);
@@ -1888,12 +2036,22 @@ var RIsland = (function () {
         _this._delegationFuncs[eventName] = function (event) {
           Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
             if (event.target instanceof HTMLElement && event.target.closest(selector) !== null) {
-              _this._config.delegations[eventName][selector](event, _this._setState.bind(_this));
+              _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
             }
           });
         };
 
-        _this._config.$element.addEventListener(eventName, _this._delegationFuncs[eventName]);
+        var throttling = _this._getThrottling(eventName);
+
+        if (throttling.throttled === true) {
+          if ('ms' in throttling) {
+            _this._delegationFuncs[eventName] = throttle_1(throttling.ms, _this._delegationFuncs[eventName]);
+          } else {
+            _this._delegationFuncs[eventName] = rafThrottle_1(_this._delegationFuncs[eventName]);
+          }
+        }
+
+        _this._config.$element.addEventListener(throttling.eventName, _this._delegationFuncs[eventName]);
       });
     }
 
@@ -1905,7 +2063,7 @@ var RIsland = (function () {
       });
       this._config.$element.innerHTML = '';
 
-      this._config.unload();
+      this._config.unload(cloneDeep_1(this._state));
     };
 
     RIsland.prototype._setState = function (nextState) {
@@ -1931,7 +2089,7 @@ var RIsland = (function () {
         return;
       }
 
-      var tmpMergedState = 'customMerge' in this._config.deepmerge ? cjs(cloneDeep_1(this._state), tmpState, this._config.deepmerge) : cjs(this._state, tmpState, this._config.deepmerge);
+      var tmpMergedState = 'customMerge' in this._config.deepmerge ? cjs$1(cloneDeep_1(this._state), tmpState, this._config.deepmerge) : cjs$1(this._state, tmpState, this._config.deepmerge);
       var shouldUpdate = this._config.shouldUpdate === this._initialConfig.shouldUpdate ? this._config.shouldUpdate(this._state, tmpMergedState) : this._config.shouldUpdate(cloneDeep_1(this._state), 'customMerge' in this._config.deepmerge ? tmpMergedState : cloneDeep_1(tmpMergedState));
       this._state = tmpMergedState;
 
@@ -1949,12 +2107,14 @@ var RIsland = (function () {
 
       morphdom(this._config.$element.firstChild, this._compiledTemplate(this._state, this._config.squirrelly), _assign(_assign({}, this._config.morphdom), {
         onElUpdated: function onElUpdated($element) {
+          var state = cloneDeep_1(_this._state);
+
           if (_this._loaded === false) {
             _this._loaded = true;
 
-            _this._config.load(_this._setState.bind(_this));
+            _this._config.load(state, _this._setState.bind(_this));
           } else {
-            _this._config.update(_this._setState.bind(_this));
+            _this._config.update(state, _this._setState.bind(_this));
           }
 
           if ('onElUpdated' in _this._config.morphdom) {
@@ -1978,6 +2138,34 @@ var RIsland = (function () {
       }
 
       return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
+    };
+
+    RIsland.prototype._getThrottling = function (eventName) {
+      var chunks = eventName.split(/\./g);
+
+      if (chunks.length > 1 && chunks[1] === 'throttled') {
+        if (chunks.length === 3) {
+          var ms = parseInt(chunks[2], 10);
+
+          if (!isNaN(ms)) {
+            return {
+              eventName: chunks[0],
+              ms: ms,
+              throttled: true
+            };
+          }
+        }
+
+        return {
+          eventName: chunks[0],
+          throttled: true
+        };
+      }
+
+      return {
+        eventName: chunks[0],
+        throttled: false
+      };
     };
 
     return RIsland;
