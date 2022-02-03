@@ -2145,7 +2145,8 @@ var RIsland = (function () {
         return $textarea.value;
       }
 
-      return '<p style="color:red;">Error: template must be a string or a template tag element.</p>';
+      console.error('RIsland: template must be a string or a template tag element.');
+      return '<p style="color:red;">RIsland: template must be a string or a template tag element.</p>';
     };
 
     RIsland.prototype._getThrottling = function (combinedEventName) {
@@ -2162,6 +2163,8 @@ var RIsland = (function () {
               ms: ms,
               throttled: true
             };
+          } else {
+            console.warn("RIsland: event name \"".concat(combinedEventName, "\" is malformed. The milliseconds \"").concat(chunks[2], "\" are not a valid number. falling back to request animation frame."));
           }
         }
 
