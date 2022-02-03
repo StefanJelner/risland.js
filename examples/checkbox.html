@@ -18,14 +18,14 @@
         <script>
             window.addEventListener('load', function() {
                 new RIsland({
-                    delegations: {
+                    $element: document.getElementById('island')
+                    , delegations: {
                         'click': {
-                            '.island__checkbox': function(event, setState) {
+                            '.island__checkbox': function(event, _, setState) {
                                 setState({ checked: event.target.checked });
                             }
                         }
                     }
-                    , $element: document.getElementById('island')
                     , initialState: {
                         checked: false
                     }

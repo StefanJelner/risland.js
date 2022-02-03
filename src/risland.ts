@@ -262,32 +262,27 @@ export default class RIsland<IState extends Record<string, any>> {
      * @param eventName event name with optional throttling information
      * @returns parsed throttling object
      */
-    private _getThrottling(eventName: string): IRIslandThrottling {
-        const chunks = eventName.split(/\./g);
+    private _getThrottling(combinedEventName: string): IRIslandThrottling {
+        const chunks = combinedEventName.split(/\./g) as (
+            [keyof GlobalEventHandlersEventMap]
+            | [keyof GlobalEventHandlersEventMap, 'throttled']
+            | [keyof GlobalEventHandlersEventMap, 'throttled', `${number}`]
+        );
+        const eventName = chunks[0];
 
         if (chunks.length > 1 && chunks[1] === 'throttled') {
             if (chunks.length === 3) {
                 const ms = parseInt(chunks[2], 10);
 
                 if (!isNaN(ms)) {
-                    return {
-                        eventName: chunks[0] as keyof GlobalEventHandlersEventMap
-                        , ms
-                        , throttled: true
-                    };
+                    return { eventName, ms, throttled: true };
                 }
             }
 
-            return {
-                eventName: chunks[0] as keyof GlobalEventHandlersEventMap
-                , throttled: true
-            };
+            return { eventName, throttled: true };
         }
 
-        return {
-            eventName: chunks[0] as keyof GlobalEventHandlersEventMap
-            , throttled: false
-        };
+        return { eventName, throttled: false };
     }
 }
 
