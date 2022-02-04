@@ -276,7 +276,7 @@ export default class RIsland<IState extends Record<string, any>> {
 
         // otherwise show a nice error message.
         /* eslint-disable no-console */
-		console.error('RIsland: template must be a string or a template tag element.');
+        console.error('RIsland: template must be a string or a template tag element.');
         /* eslint-enable no-console */
         return '<p style="color:red;">RIsland: template must be a string or a template tag element.</p>';
     }
@@ -318,11 +318,11 @@ export default class RIsland<IState extends Record<string, any>> {
                     return { eventName, ms, throttled: true };
                 } else {
                     /* eslint-disable no-console */
-					console.warn(`RIsland: event name "${
-						combinedEventName
-					}" is malformed. The milliseconds "${
-						chunks[2]
-					}" are not a valid number. falling back to request animation frame.`);
+                    console.warn(`RIsland: event name "${
+                        combinedEventName
+                    }" is malformed. The milliseconds "${
+                        chunks[2]
+                    }" are not a valid number. falling back to request animation frame.`);
                     /* eslint-enable no-console */
 				}
             }
