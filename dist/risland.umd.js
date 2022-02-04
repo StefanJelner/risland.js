@@ -2037,6 +2037,7 @@
       };
       this._delegationFuncs = {};
       this._loaded = false;
+      this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
       this._throttledRender = rafThrottle_1(this._render);
       this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
       this._compiledTemplate = squirrelly_min.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
@@ -2118,19 +2119,29 @@
 
       morphdom(this._config.$element.firstChild, this._compiledTemplate(this._state, this._config.squirrelly), _assign(_assign({}, this._config.morphdom), {
         onElUpdated: function onElUpdated($element) {
-          var state = cloneDeep_1(_this._state);
-
-          if (_this._loaded === false) {
-            _this._loaded = true;
-
-            _this._config.load(state, _this._setState.bind(_this));
-          } else {
-            _this._config.update(state, _this._setState.bind(_this));
-          }
+          _this._throttledLoadOrUpdate();
 
           if ('onElUpdated' in _this._config.morphdom) {
             _this._config.morphdom.onElUpdated($element);
           }
+        },
+        onNodeAdded: function onNodeAdded(node) {
+          _this._throttledLoadOrUpdate();
+
+          if ('onNodeAdded' in _this._config.morphdom) {
+            return _this._config.morphdom.onNodeAdded(node);
+          }
+
+          return node;
+        },
+        onNodeDiscarded: function onNodeDiscarded(node) {
+          _this._throttledLoadOrUpdate();
+
+          if ('onNodeDiscarded' in _this._config.morphdom) {
+            return _this._config.morphdom.onNodeDiscarded(node);
+          }
+
+          return node;
         }
       }));
     };
@@ -2181,6 +2192,18 @@
         eventName: eventName,
         throttled: false
       };
+    };
+
+    RIsland.prototype._loadOrUpdate = function () {
+      var state = cloneDeep_1(this._state);
+
+      if (this._loaded === false) {
+        this._loaded = true;
+
+        this._config.load(state, this._setState.bind(this));
+      } else {
+        this._config.update(state, this._setState.bind(this));
+      }
     };
 
     return RIsland;

@@ -60,6 +60,7 @@ export default class RIsland<IState extends Record<string, any>> {
     private _delegationFuncs: Partial<Record<keyof GlobalEventHandlersEventMap, (event: Event) => void>> = {};
     private _loaded: boolean = false;
     private _state: IState;
+    private _throttledLoadOrUpdate: RIsland<IState>['_loadOrUpdate'] = rafThrottle(this._loadOrUpdate);
     private _throttledRender: RIsland<IState>['_render'] = rafThrottle(this._render);
 
     /**
@@ -213,19 +214,34 @@ export default class RIsland<IState extends Record<string, any>> {
             , this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig)
             , {
                 ...this._config.morphdom
+                // because morphdom keeps firing the following events for each element, which gets updated, added or
+                // discarded, we wait until everything is done or at least limit firing to every request animation
+                // frame, by throttling it. Actually it would be nice, if morphdom would offer something like a
+                // "finished" event.
                 , onElUpdated: ($element: HTMLElement) => {
-                    const state = cloneDeep(this._state);
-
-                    if (this._loaded === false) {
-                        this._loaded = true;
-                        this._config.load(state, this._setState.bind(this));
-                    } else {
-                        this._config.update(state, this._setState.bind(this));
-                    }
+                    this._throttledLoadOrUpdate();
 
                     if ('onElUpdated' in this._config.morphdom) {
                         this._config.morphdom.onElUpdated($element);
                     }
+                }
+                , onNodeAdded: (node: Node) => {
+                    this._throttledLoadOrUpdate();
+
+                    if ('onNodeAdded' in this._config.morphdom) {
+                        return this._config.morphdom.onNodeAdded(node);
+                    }
+
+                    return node;
+                }
+                , onNodeDiscarded: (node: Node) => {
+                    this._throttledLoadOrUpdate();
+
+                    if ('onNodeDiscarded' in this._config.morphdom) {
+                        return this._config.morphdom.onNodeDiscarded(node);
+                    }
+
+                    return node;
                 }
             }
         );
@@ -317,6 +333,20 @@ export default class RIsland<IState extends Record<string, any>> {
 
         // if it is not throttled.
         return { eventName, throttled: false };
+    }
+
+    /**
+     * Invokes the load or update callbacks.
+     */
+    private _loadOrUpdate(): void {
+        const state = cloneDeep(this._state);
+
+        if (this._loaded === false) {
+            this._loaded = true;
+            this._config.load(state, this._setState.bind(this));
+        } else {
+            this._config.update(state, this._setState.bind(this));
+        }
     }
 }
 

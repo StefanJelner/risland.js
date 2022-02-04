@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox with Observable (RxJS)</title>
+    </head>
+    <body>
+        <div id="island-checkbox"></div>
+        <div id="island-log"></div>
+
+        <template id="squirrelly-checkbox">
+            <div class="island-checkbox{{@if(state.checked)}} island-checkbox--checked{{/if}}">
+                <input class="island-checkbox__checkbox" type="checkbox" />
+                {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+            </div>
+        </template>
+
+        <template id="squirrelly-log">
+            <div class="island-log{{@if(state.checked)}} island-log--checked{{/if}}">
+                <ul>
+                    {{@each(state.log) => checked}}
+                        <li>
+                            {{@if(checked)}}was checked{{#else}}was unchecked{{/if}}
+                        </li>
+                    {{/each}}
+                </ul>
+            </div>
+        </template>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script src="../node_modules/rxjs/dist/bundles/rxjs.umd.min.js"></script>
+        <script>
+            window.addEventListener('load', function() {
+                var exchange = new rxjs.Subject();
+
+                new RIsland({
+                    $element: document.getElementById('island-checkbox')
+                    , delegations: {
+                        'click': {
+                            '.island-checkbox__checkbox': function(event, _, setState) {
+                                setState([
+                                    { checked: event.target.checked }
+                                    , function(state) {
+                                        exchange.next(state.checked);
+
+                                        return null;
+                                    }
+                                ]);
+                            }
+                        }
+                    }
+                    , initialState: {
+                        checked: false
+                    }
+                    , load: function() { console.log('checkbox load'); }
+                    , template: document.getElementById('squirrelly-checkbox')
+                    , update: function() { console.log('checkbox update'); }
+                });
+
+                new RIsland({
+                    $element: document.getElementById('island-log')
+                    , delegations: {}
+                    , initialState: {
+                        checked: false
+                        , log: []
+                    }
+                    , load: function(_, setState) {
+                        console.log('log load');
+
+                        exchange.subscribe(function(checked) {
+                            setState(function(state) {
+                                return {
+                                    checked: checked
+                                    , log: state.log.concat(checked)
+                                };
+                            });
+                        });
+                    }
+                    , template: document.getElementById('squirrelly-log')
+                    , update: function(state) { console.log('log update'); }
+                });
+            });
+        </script>
+    </body>
+</html>
