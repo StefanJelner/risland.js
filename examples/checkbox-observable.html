@@ -30,7 +30,7 @@
         <script src="../dist/risland.iife.min.js"></script>
         <script src="../node_modules/rxjs/dist/bundles/rxjs.umd.min.js"></script>
         <script>
-            window.addEventListener('load', function() {
+            document.addEventListener('DOMContentLoaded', function() {
                 var exchange = new rxjs.Subject();
 
                 new RIsland({
