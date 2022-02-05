@@ -2010,6 +2010,7 @@ var RIsland = function () {
           return !$fromEl.isEqualNode($toEl);
         }
       },
+      nonBubblingEvents: ['abort', 'blur', 'error', 'focus', 'load', 'loadend', 'loadstart', 'pointerenter', 'pointerleave', 'progress', 'scroll', 'unload'],
       shouldUpdate: function shouldUpdate(state, nextState) {
         return !fastDeepEqual(state, nextState);
       },
@@ -2039,25 +2040,30 @@ var RIsland = function () {
     this._setState(this._config.initialState);
 
     Object.keys(this._config.delegations).forEach(function (eventName) {
-      _this._delegationFuncs[eventName] = function (event) {
-        Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
-          if (event.target instanceof HTMLElement && event.target.closest(selector) !== null) {
-            _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
-          }
-        });
-      };
-
       var throttling = _this._getThrottling(eventName);
+
+      _this._delegationFuncs[eventName] = {
+        capture: _this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1,
+        func: function func(event) {
+          Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
+            if (event.target instanceof HTMLElement && event.target.closest(selector) !== null) {
+              _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
+            }
+          });
+        }
+      };
 
       if (throttling.throttled === true) {
         if ('ms' in throttling) {
-          _this._delegationFuncs[eventName] = throttle_1(throttling.ms, _this._delegationFuncs[eventName]);
+          _this._delegationFuncs[eventName].func = throttle_1(throttling.ms, _this._delegationFuncs[eventName].func);
         } else {
-          _this._delegationFuncs[eventName] = rafThrottle_1(_this._delegationFuncs[eventName]);
+          _this._delegationFuncs[eventName].func = rafThrottle_1(_this._delegationFuncs[eventName].func);
         }
       }
 
-      _this._config.$element.addEventListener(throttling.eventName, _this._delegationFuncs[eventName]);
+      _this._config.$element.addEventListener(throttling.eventName, _this._delegationFuncs[eventName].func, {
+        capture: _this._delegationFuncs[eventName].capture
+      });
     });
   }
 
@@ -2065,7 +2071,9 @@ var RIsland = function () {
     var _this = this;
 
     Object.keys(this._config.delegations).forEach(function (eventName) {
-      _this._config.$element.removeEventListener(eventName, _this._delegationFuncs[eventName]);
+      _this._config.$element.removeEventListener(eventName, _this._delegationFuncs[eventName].func, {
+        capture: _this._delegationFuncs[eventName].capture
+      });
     });
     this._config.$element.innerHTML = '';
 

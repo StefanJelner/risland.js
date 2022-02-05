@@ -30,6 +30,22 @@ export default class RIsland<IState extends Record<string, any>> {
             // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
             onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => !$fromEl.isEqualNode($toEl)
         }
+        // List of non-bubbling events, which need to have capture set to true.
+        // See https://en.wikipedia.org/wiki/DOM_events#Events
+        , nonBubblingEvents: [
+            'abort'
+            , 'blur'
+            , 'error'
+            , 'focus'
+            , 'load'
+            , 'loadend'
+            , 'loadstart'
+            , 'pointerenter'
+            , 'pointerleave'
+            , 'progress'
+            , 'scroll'
+            , 'unload'
+        ]
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
         , squirrelly: Sqrl.defaultConfig
         , template: ''
@@ -57,7 +73,10 @@ export default class RIsland<IState extends Record<string, any>> {
 
     private _config: IRIslandConfig<IState>;
     private _compiledTemplate: TemplateFunction;
-    private _delegationFuncs: Partial<Record<keyof GlobalEventHandlersEventMap, (event: Event) => void>> = {};
+    private _delegationFuncs: Partial<Record<TRIslandEventNames, {
+        capture: boolean;
+        func: (event: Event) => void;
+    }>> = {};
     private _loaded: boolean = false;
     private _state: IState;
     private _throttledLoadOrUpdate: RIsland<IState>['_loadOrUpdate'] = rafThrottle(this._loadOrUpdate);
@@ -86,38 +105,48 @@ export default class RIsland<IState extends Record<string, any>> {
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
         this._setState(this._config.initialState);
 
-        (Object.keys(this._config.delegations) as Array<keyof GlobalEventHandlersEventMap>).forEach((
-            eventName: keyof GlobalEventHandlersEventMap
+        (Object.keys(this._config.delegations) as Array<TRIslandEventNames>).forEach((
+            eventName: TRIslandEventNames
         ) => {
-            this._delegationFuncs[eventName] = (event: Event) => {
-                Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
-                    if (
-                        event.target instanceof HTMLElement
-                        && event.target.closest(selector) !== null
-                    ) {
-                        this._config.delegations[eventName][selector](
-                            event
-                            , cloneDeep(this._state)
-                            , this._setState.bind(this)
-                        );
-                    }
-                });
-            };
-
             // add throttling, if necessary.
             const throttling = this._getThrottling(eventName);
+
+            this._delegationFuncs[eventName] = {
+                capture: this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1
+                , func: (event: Event) => {
+                    Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
+                        if (
+                            event.target instanceof HTMLElement
+                            && event.target.closest(selector) !== null
+                        ) {
+                            this._config.delegations[eventName][selector](
+                                event
+                                , cloneDeep(this._state)
+                                , this._setState.bind(this)
+                            );
+                        }
+                    });
+                }
+            };
 
             if (throttling.throttled === true) {
                 if ('ms' in throttling) {
                     // conventional throttling.
-                    this._delegationFuncs[eventName] = throttle(throttling.ms, this._delegationFuncs[eventName]);
+                    this._delegationFuncs[eventName].func = throttle(
+                        throttling.ms
+                        , this._delegationFuncs[eventName].func
+                    );
                 } else {
                     // throttling by request animation frame.
-                    this._delegationFuncs[eventName] = rafThrottle(this._delegationFuncs[eventName]);
+                    this._delegationFuncs[eventName].func = rafThrottle(this._delegationFuncs[eventName].func);
                 }
             }
 
-            this._config.$element.addEventListener(throttling.eventName, this._delegationFuncs[eventName]);
+            this._config.$element.addEventListener(
+                throttling.eventName
+                , this._delegationFuncs[eventName].func
+                , { capture: this._delegationFuncs[eventName].capture }
+            );
         });
     }
 
@@ -128,7 +157,11 @@ export default class RIsland<IState extends Record<string, any>> {
     public unload(): void {
         // remove all event listeners on the island container
         Object.keys(this._config.delegations).forEach((eventName: string) => {
-            this._config.$element.removeEventListener(eventName, this._delegationFuncs[eventName]);
+            this._config.$element.removeEventListener(
+                eventName
+                , this._delegationFuncs[eventName].func
+                , { capture: this._delegationFuncs[eventName].capture }
+            );
         });
 
         // delete all the content in the island container.
@@ -303,9 +336,9 @@ export default class RIsland<IState extends Record<string, any>> {
      */
     private _getThrottling(combinedEventName: string): IRIslandThrottling {
         const chunks = combinedEventName.split(/\./g) as (
-            [keyof GlobalEventHandlersEventMap]
-            | [keyof GlobalEventHandlersEventMap, 'throttled']
-            | [keyof GlobalEventHandlersEventMap, 'throttled', `${number}`]
+            [TRIslandEventNames]
+            | [TRIslandEventNames, 'throttled']
+            | [TRIslandEventNames, 'throttled', `${number}`]
         );
         const eventName = chunks[0];
 
@@ -350,20 +383,23 @@ export default class RIsland<IState extends Record<string, any>> {
     }
 }
 
+export type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
+
 export interface IRIslandConfig<IState extends Record<string, any>> {
     $element: HTMLElement;
     deepmerge: deepmerge.Options;
     delegations: Partial<Record<
         (
-            keyof GlobalEventHandlersEventMap
-            | `${keyof GlobalEventHandlersEventMap}.throttled`
-            | `${keyof GlobalEventHandlersEventMap}.throttled.${number}`
+            TRIslandEventNames
+            | `${TRIslandEventNames}.throttled`
+            | `${TRIslandEventNames}.throttled.${number}`
         )
         , Record<string, (event: Event, state: IState, setState: RIsland<IState>['_setState']) => void>
     >>;
     initialState: IState;
     load: (state: IState, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
+    nonBubblingEvents: Array<TRIslandEventNames>;
     shouldUpdate: (state: IState, nextState: IState) => boolean;
     squirrelly: Partial<SqrlConfig>;
     template: string;
@@ -380,7 +416,7 @@ export type TRIslandSetState<IState extends Record<string, any>> = (
 );
 
 export interface IRIslandThrottling {
-    eventName: keyof GlobalEventHandlersEventMap;
+    eventName: TRIslandEventNames;
     ms?: number;
     throttled: boolean;
 }
