@@ -16,7 +16,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Common state pitfalls](#state-pitfalls)
 - [Options](#options)
 - [Examples](#examples)
-- [Final words](#final-words)
+- [Final thoughts](#final-thoughts)
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
@@ -106,9 +106,7 @@ A simple example could look like this:
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
             $element: document.getElementById('island'),
-            , initialState: {
-                text: 'Hello world!'
-            }
+            , initialState: { text: 'Hello world!' }
             , template: '<div>{{state.text}}</div>'
         });
     });
@@ -131,9 +129,7 @@ The example is rather useless, because it has no dynamics.
                     }
                 }
             }
-            , initialState: {
-                checked: false
-            }
+            , initialState: { checked: false }
             , template: '<div class="island">' +
                 '<input class="island__checkbox" type="checkbox" />' +
                 '{{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}' +
@@ -156,9 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        , initialState: {
-            checked: false
-        }
+        , initialState: { checked: false }
         , template: `<div class="island">
             <input class="island__checkbox" type="checkbox" />
             {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
@@ -176,6 +170,47 @@ There are several things which are quite obvious:
 
 ## <a name="template-tag"></a> `template` Tag
 
+> The template element is used to declare fragments of HTML that can be cloned and inserted in the document by script.
+>
+> In a rendering, the template element represents nothing.
+>
+> -- <cite>[HTML standard - 4.12.3 The template element](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element)</cite>
+
+The `template` tag is perfect for placing our [squirrelly](https://github.com/squirrellyjs/squirrelly) template code inside. Actually it is meant for things like that. By default it is not represented in any way, so it is not shown visually nor does it affect the representation of the document in any other way. One nice aspect is, that editors with syntax highlighting show the code in the `template` tag with a nice HTML syntax highlighting. One drawback is, that it is hard to handle in JavaScript, because it is not easily accessible with `innerHTML` and text content gets HTML encoded (&quot;, &lt;, &gt;, &amp;), which means that some chars in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template code might get HTML encoded. RIsland therefore accepts the `template` tag DOM element and does the extraction and decoding of the code for you. So no worries!
+
+Enough theory, here is an example:
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        <input class="island__checkbox" type="checkbox" />
+        {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island'),
+            , delegations: {
+                'click': {
+                    '.island__checkbox': function(event, _, setState) {
+                        setState({ checked: event.target.checked });
+                    }
+                }
+            }
+            , initialState: { checked: false }
+            , template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
+Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
+
 ## <a name="event-delegation"></a> Event Delegation
 
 ## <a name="state"></a> State
@@ -186,4 +221,4 @@ There are several things which are quite obvious:
 
 ## <a name="examples"></a> Examples
 
-## <a name="final-words"></a> Final words
+## <a name="final-thoughts"></a> Final thoughts
