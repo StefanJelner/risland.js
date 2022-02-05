@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Mousemove throttled</title>
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <template id="squirrelly">
+            <div class="island">
+                unthrottled: {{state.unthrottled}}<br />
+                raf: {{state.throttledRaf}}<br />
+                1 second: {{state.throttled1s}}
+            </div>
+        </template>
+
+        <style type="text/css">
+            .island {
+                border: 1px solid black;
+                left: 50%;
+                padding: 20px;
+                position: absolute;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                new RIsland({
+                    $element: document.getElementById('island')
+                    , delegations: {
+                        'mousemove': {
+                            '.island': function(_, state, setState) {
+                                setState({ unthrottled: state.unthrottled + 1 });
+                            }
+                        }
+                        , 'mousemove.throttled': {
+                            '.island': function(_, state, setState) {
+                                setState({ throttledRaf: state.throttledRaf + 1 });
+                            }
+                        }
+                        , 'mousemove.throttled.1000': {
+                            '.island': function(_, state, setState) {
+                                setState({ throttled1s: state.throttled1s + 1 });
+                            }
+                        }
+                    }
+                    , initialState: {
+                        throttled1s: 0
+                        , throttledRaf: 0
+                        , unthrottled: 0
+                    }
+                    , load: function() { console.log('load'); }
+                    , template: document.getElementById('squirrelly')
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -114,7 +114,7 @@ A simple example could look like this:
 </script>
 ```
 
-The example is rather useless, because it has no dynamics.
+Let's add some dynamics:
 
 ```html
 <div id="island"></div>
@@ -166,7 +166,7 @@ This already looks more like a dynamic application.
 
 There are several things which are quite obvious:
 
-1. To pass the template as a string can be quite painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag.
+1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag.
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
 ## <a name="template-tag"></a> `template` Tag
@@ -212,7 +212,7 @@ Enough theory, here is an example:
 
 Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
 
-> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. One should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 
 ## <a name="event-delegation"></a> Event Delegation
 
@@ -220,15 +220,93 @@ Even everything is in one code block, the concerns have a much cleaner separatio
 >
 > -- <cite>[Wikipedia - Event bubbling](https://en.wikipedia.org/wiki/Event_bubbling)</cite>
 
-In simpler words: If an event happens, all the parent elements get informed about that event. So actually one can also register an event listener on an elements parent and it also gets fired on the parent. There is one final problem: If a parent contains many child elements, how can one distinguish between those elements? The solution is simple: By using the `event.target` and the `closest()`-method, which uses a CSS selector and checks whether the element itself or any parent in the DOM fulfills that CSS selector. All one needs to do is to give the elements unique classnames (or use a selector that clearly can distinguish the element from others). This concept is called event delegation.
+In simpler words: If an event happens, all the parent elements get informed about that event. So actually you can also register an event listener on an elements parent and it also gets fired on the parent. There is one final problem: If a parent contains many child elements, how can you distinguish between those elements? The solution is simple: By using the `event.target` and the `closest()`-method, which uses a CSS selector and checks whether the element itself or any parent in the DOM fulfills that CSS selector. All you need to do is to give the elements unique classnames (or use a selector that clearly can distinguish the element from others). This concept is called event delegation.
 
-Event delegation can speed up applications significantly and also can save many `addEventListener()`-calls. Imagine one has a table with thousands of rows. Wouldn't it be much more convenient to check for a `mouseover` and `mouseout` on the `table` element itself - than distinguish the row that caused the event - rather than on each row? And is one event listener handling all by delegation not much faster than thousands of event listeners?
+Event delegation can speed up applications significantly and also can save many `addEventListener()`-calls. Imagine you have a table with thousands of rows. Wouldn't it be much more convenient to check for a `mouseover` and `mouseout` on the `table` element itself - then distinguish the row that caused the event - rather than on each row? And is one event listener handling all by delegation not much faster than thousands of event listeners?
 
 RIsland does not use event delegation to speed things up, that is a nice side effect, but it needs it, so that after every template rerendering and DOM morphing it is unnecessary to remove or add event listeners. The main island element never gets changed. So adding the event listeners to this element and delegating all the events by selectors is a convenient way to add the listeners only once.
 
 > **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
 ## <a name="event-throttling"></a> Event Throttling
+
+Events, like `resize`, `scroll` or `mousemove` can fire very fast and therefore cause a lot of unnecessary method invocations, because RIsland only renders each animation frame. The solution is to throttle events. This can be done in the `delegations`-object by adding the keyword `throttled` to an event. Additionally the amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
+
+Example:
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        unthrottled: {{state.unthrottled}}<br />
+        raf: {{state.throttledRaf}}<br />
+        1 second: {{state.throttled1s}}
+    </div>
+</template>
+
+<style type="text/css">
+    .island {
+        border: 1px solid black;
+        left: 50%;
+        padding: 20px;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+
+<script src="../dist/risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island')
+            , delegations: {
+                'mousemove': {
+                    '.island': function(_, state, setState) {
+                        setState({ unthrottled: state.unthrottled + 1 });
+                    }
+                }
+                , 'mousemove.throttled': {
+                    '.island': function(_, state, setState) {
+                        setState({ throttledRaf: state.throttledRaf + 1 });
+                    }
+                }
+                , 'mousemove.throttled.1000': {
+                    '.island': function(_, state, setState) {
+                        setState({ throttled1s: state.throttled1s + 1 });
+                    }
+                }
+            }
+            , initialState: {
+                throttled1s: 0
+                , throttledRaf: 0
+                , unthrottled: 0
+            }
+            , load: function() { console.log('load'); }
+            , template: document.getElementById('squirrelly')
+            , update: function() { console.log('update'); }
+        });
+    });
+</script>
+```
+
+The syntax for the event names is:
+
+```
+eventName[.throttled[.ms]]
+```
+
+Examples:
+
+```
+mousemove
+mousemove.throttled
+mousemove.throttled.1000
+scroll.throttled.250
+resize.throttled
+focus
+```
 
 ## <a name="state"></a> State
 
