@@ -12,6 +12,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Basic Usage](#basic-usage)
 - [`template` Tag](#template-tag)
 - [Event Delegation](#event-delegation)
+- [Event Throttling](#event-throttling)
 - [State](#state)
 - [Common state pitfalls](#state-pitfalls)
 - [Options](#options)
@@ -176,7 +177,7 @@ There are several things which are quite obvious:
 >
 > -- <cite>[HTML standard - 4.12.3 The template element](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element)</cite>
 
-The `template` tag is perfect for placing [squirrelly](https://github.com/squirrellyjs/squirrelly) template code inside. Actually it is meant for things like that. By default it is not represented in any way, so it is neither shown visually nor does it affect the representation of the document in any other way. One nice aspect is, that editors with syntax highlighting show the code in the `template` tag with a nice HTML syntax highlighting. One drawback is, that it is hard to handle in JavaScript, because it is not easily accessible with `innerHTML` and text content gets HTML encoded (&quot;, &lt;, &gt;, &amp;), which means that some chars in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template code might get HTML encoded. RIsland therefore accepts the `template` tag DOM element and does the extraction and decoding of the code for you. So no worries!
+The `template` tag is perfect for placing [squirrelly](https://github.com/squirrellyjs/squirrelly) template code inside. Actually it is meant for things like that. By default it is not represented in any way, so it is neither shown visually nor does it affect the representation of the document in any other way. One nice aspect is, that editors show the code in the `template` tag with HTML syntax highlighting. One drawback is, that it is hard to handle in JavaScript, because it is not easily accessible with `innerHTML` and text content gets HTML encoded (&quot;, &lt;, &gt;, &amp;), which means that some chars in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template code might get HTML encoded. RIsland therefore accepts the `template` tag DOM element and does the extraction and decoding of the code for you. So no worries!
 
 Enough theory, here is an example:
 
@@ -211,7 +212,23 @@ Enough theory, here is an example:
 
 Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
 
+> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. One should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+
 ## <a name="event-delegation"></a> Event Delegation
+
+> Event bubbling is a type of event propagation where the event first triggers on the innermost target element, and then successively triggers on the ancestors (parents) of the target element in the same nesting hierarchy till it reaches the outermost DOM element or document object.
+>
+> -- <cite>[Wikipedia - Event bubbling](https://en.wikipedia.org/wiki/Event_bubbling)</cite>
+
+In simpler words: If an event happens, all the parent elements get informed about that event. So actually one can also register an event listener on an elements parent and it also gets fired on the parent. There is one final problem: If a parent contains many child elements, how can one distinguish between those elements? The solution is simple: By using the `event.target` and the `closest()`-method, which uses a CSS selector and checks whether the element itself or any parent in the DOM fulfills that CSS selector. All one needs to do is to give the elements unique classnames (or use a selector that clearly can distinguish the element from others). This concept is called event delegation.
+
+Event delegation can speed up applications significantly and also can save many `addEventListener()`-calls. Imagine one has a table with thousands of rows. Wouldn't it be much more convenient to check for a `mouseover` and `mouseout` on the `table` element itself - than distinguish the row that caused the event - rather than on each row? And is one event listener handling all by delegation not much faster than thousands of event listeners?
+
+RIsland does not use event delegation to speed things up, that is a nice side effect, but it needs it, so that after every template rerendering and DOM morphing it is unnecessary to remove or add event listeners. The main island element never gets changed. So adding the event listeners to this element and delegating all the events by selectors is a convenient way to add the listeners only once.
+
+> **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
+
+## <a name="event-throttling"></a> Event Throttling
 
 ## <a name="state"></a> State
 

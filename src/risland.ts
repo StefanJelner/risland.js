@@ -114,18 +114,17 @@ export default class RIsland<IState extends Record<string, any>> {
             this._delegationFuncs[eventName] = {
                 capture: this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1
                 , func: (event: Event) => {
-                    Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
-                        if (
-                            event.target instanceof HTMLElement
-                            && event.target.closest(selector) !== null
-                        ) {
-                            this._config.delegations[eventName][selector](
-                                event
-                                , cloneDeep(this._state)
-                                , this._setState.bind(this)
-                            );
-                        }
-                    });
+                    if (event.target instanceof HTMLElement) {
+                        Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
+                            if ((event.target as HTMLElement).closest(selector) !== null) {
+                                this._config.delegations[eventName][selector](
+                                    event
+                                    , cloneDeep(this._state)
+                                    , this._setState.bind(this)
+                                );
+                            }
+                        });
+                    }
                 }
             };
 

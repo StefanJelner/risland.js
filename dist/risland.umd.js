@@ -2051,11 +2051,13 @@
         _this._delegationFuncs[eventName] = {
           capture: _this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1,
           func: function func(event) {
-            Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
-              if (event.target instanceof HTMLElement && event.target.closest(selector) !== null) {
-                _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
-              }
-            });
+            if (event.target instanceof HTMLElement) {
+              Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
+                if (event.target.closest(selector) !== null) {
+                  _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
+                }
+              });
+            }
           }
         };
 
