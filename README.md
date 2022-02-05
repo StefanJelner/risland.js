@@ -10,7 +10,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Technologies](#technologies)
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
-- [Template Tag](#template-tag)
+- [`template` Tag](#template-tag)
 - [Event Delegation](#event-delegation)
 - [State](#state)
 - [Common state pitfalls](#state-pitfalls)
@@ -30,7 +30,7 @@ RIsland is perfect for writing small widgets or configurators in static pages. Y
 
 - Small in filesize. (&lt;30KB minified IIFE bundle)
 - The IIFE bundle can be used out of the box. No building necessary. Put it in a script-tag and start writing code.
-- Simple, yet powerful. (See examples)
+- Simple, yet powerful. (See [Examples](#examples))
 - Easy to learn. RIsland is no rocket science!
 - No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
@@ -65,7 +65,7 @@ Feel free to check the package.json, if you want to take a further look into the
 
 After all these warnings, i hope the dear reader of this page is not too scared. It is time to get our hands dirty and dive into the code.
 
-The easiest scenario is to copy the file `dist/risland.iife.min.js` into your static project and add a script tag to the head or body of your HTML:
+The easiest scenario is to copy the file `dist/risland.iife.min.js` into your static project and add a `script` tag to the `head` or `body` of your HTML:
 
 ```HTML
 <script src="risland.iife.min.js"></script>
@@ -77,9 +77,15 @@ If you want to use RIsland in an ES6- or TypeScript-project, then you can instal
 npm install risland.js --save
 ```
 
+then import it:
+
+```ts
+import RIsland from 'risland.js';
+```
+
 ## <a name="basic-usage"></a> Basic Usage
 
-To work with RIsland, you have to create new instances of it:
+To work with RIsland, you have to create a new instance of it:
 
 ```js
 new RIsland(options);
@@ -140,12 +146,12 @@ The example is rather useless, because it has no dynamics.
 Just for the sake of completeness, the typescript version would look like this:
 
 ```ts
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     new RIsland<{ checked: boolean; }>({
         $element: document.getElementById('island'),
         , delegations: {
             'click': {
-                '.island__checkbox': function(event, _, setState) {
+                '.island__checkbox': (event, _, setState) => {
                     setState({ checked: event.target.checked });
                 }
             }
@@ -161,14 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 ```
 
-That already looks more like a dynamic application.
+This already looks more like a dynamic application.
 
 There are several things which are quite obvious:
 
-1. To pass the template as a string can be quite painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML template tag.
+1. To pass the template as a string can be quite painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag.
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
-## <a name="template-tag"></a> Template Tag
+## <a name="template-tag"></a> `template` Tag
 
 ## <a name="event-delegation"></a> Event Delegation
 
