@@ -9,15 +9,16 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Cons](#cons)
 - [Technologies](#technologies)
 - [Installation](#installation)
-- [Basic Usage](#basic-usage)
-- [`template` Tag](#template-tag)
-- [Event Delegation](#event-delegation)
-- [Event Throttling](#event-throttling)
+- [Basic usage](#basic-usage)
+- [`template` tag](#template-tag)
+- [Event delegation](#event-delegation)
+- [Event throttling](#event-throttling)
 - [State](#state)
 - [`setState()`](#setstate)
-- [Common state pitfalls](#state-pitfalls)
+- [Common state and `setState()` pitfalls](#state-pitfalls)
 - [Lifecycles](#lifecycles)
 - [Options](#options)
+- [Advanced - dangerous - options](#advanced-options)
 - [Examples](#examples)
 - [Final thoughts](#final-thoughts)
 
@@ -86,7 +87,7 @@ then import it:
 import RIsland from 'risland.js';
 ```
 
-## <a name="basic-usage"></a> Basic Usage
+## <a name="basic-usage"></a> Basic usage
 
 To work with RIsland, you have to create a new instance of it:
 
@@ -171,7 +172,7 @@ There are several things which are quite obvious:
 1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag.
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
-## <a name="template-tag"></a> `template` Tag
+## <a name="template-tag"></a> `template` tag
 
 > The template element is used to declare fragments of HTML that can be cloned and inserted in the document by script.
 >
@@ -216,7 +217,7 @@ Even everything is in one code block, the concerns have a much cleaner separatio
 
 > **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 
-## <a name="event-delegation"></a> Event Delegation
+## <a name="event-delegation"></a> Event delegation
 
 > Event bubbling is a type of event propagation where the event first triggers on the innermost target element, and then successively triggers on the ancestors (parents) of the target element in the same nesting hierarchy till it reaches the outermost DOM element or document object.
 >
@@ -230,7 +231,7 @@ RIsland does not use event delegation to speed things up, that is a nice side ef
 
 > **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
-## <a name="event-throttling"></a> Event Throttling
+## <a name="event-throttling"></a> Event throttling
 
 Events, like `resize`, `scroll` or `mousemove` can fire very fast and therefore cause a lot of unnecessary method invocations, because RIsland only renders each animation frame. The solution is to throttle events. This can be done in the `delegations`-object by adding the keyword `throttled` to an event. Additionally the amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
 
@@ -322,7 +323,7 @@ For a state pattern, this is a very bad situation, because the state - as a tota
 
 RIsland takes care of that problem by always creating deep clones of the state. It is not enough to create a shallow clone, because f.ex. in an array of objects, it is not sufficient to only clone the array, because in the cloned array, the objects are still references to the original objects. The only way is to deeply clone **EVERYTHING**. It is clear that this strategy has some performance drawbacks, but on the other hand it leads to a totally encapsulated inner state of the component without any side effects. Most reactive libraries with state management follow this pattern. So even event and lifecycle callbacks get a current snapshot of the state as an argument, it is a clone. The only way to change the state is by using the `setState()` method, which also gets passed as an argument.
 
-> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practices to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
+> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practice to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
 
 ## <a name="setstate"></a> `setState()`
 
@@ -363,6 +364,8 @@ The following lifecycles are in order of their invocation (`shouldUpdate`, `upda
 ### `unload`
 
 ### `update`
+
+## <a name="advanced-options"></a> Advanced - dangerous - options
 
 > **IMPORTANT!** the following options should only be used, if you really know what you are doing, because they can change the way, how RIsland works internally and affect the result - in the worst case cause exceptions, errors or unwanted behaviour.
 
