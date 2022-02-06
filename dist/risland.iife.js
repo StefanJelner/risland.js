@@ -2159,6 +2159,12 @@ var RIsland = (function () {
       }
 
       if (_typeof(template) === 'object' && 'content' in template && template.content instanceof DocumentFragment) {
+        if (this._checkWrapping(template.content) === false) {
+          var nestingError = 'RIsland: First element in the template must be a single element, without any ' + 'siblings. The content should at least be wrapped in a div-tag.';
+          console.error(nestingError);
+          return "<p style=\"color:red;\">".concat(nestingError, "</p>");
+        }
+
         var $textarea = document.createElement('textarea');
         $textarea.innerHTML = Array.from(template.content.childNodes).map(function (childNode) {
           return childNode.outerHTML;
@@ -2166,8 +2172,15 @@ var RIsland = (function () {
         return $textarea.value;
       }
 
-      console.error('RIsland: template must be a string or a template tag element.');
-      return '<p style="color:red;">RIsland: template must be a string or a template tag element.</p>';
+      var typeError = 'RIsland: template must be a string or a template tag element.';
+      console.error(typeError);
+      return "<p style=\"color:red;\">".concat(typeError, "</p>");
+    };
+
+    RIsland.prototype._checkWrapping = function (fragment) {
+      return Array.from(fragment.childNodes).filter(function (child) {
+        return child instanceof Element;
+      }).length === 1;
     };
 
     RIsland.prototype._getThrottling = function (combinedEventName) {

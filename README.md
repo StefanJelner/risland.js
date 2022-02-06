@@ -14,7 +14,9 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Event Delegation](#event-delegation)
 - [Event Throttling](#event-throttling)
 - [State](#state)
+- [`setState()`](#setstate)
 - [Common state pitfalls](#state-pitfalls)
+- [Lifecycles](#lifecycles)
 - [Options](#options)
 - [Examples](#examples)
 - [Final thoughts](#final-thoughts)
@@ -256,7 +258,7 @@ Example:
     }
 </style>
 
-<script src="../dist/risland.iife.min.js"></script>
+<script src="risland.iife.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
@@ -310,9 +312,67 @@ focus
 
 ## <a name="state"></a> State
 
-## <a name="state-pitfalls"></a> Common state pitfalls
+> In contrast, the by reference strategy receives not a copy, but the implicit reference to an object instead. And this reference is directly mapped (like an alias) to the object from the outside. Any changes to the parameter inside the function — either just the property modifications, or the full rewrite are immediately reflected on the original object.
+>
+> -- <cite>[ECMA-262-3 in detail. Chapter 8. Evaluation strategy - 4. Call by reference](http://dmitrysoshnikov.com/ecmascript/chapter-8-evaluation-strategy/#call-by-reference)</cite>
+
+In simpler words: arrays and objects are not copied when you assign them to a variable or use them as a function argument, but they are passed by reference.
+
+For a state pattern, this is a very bad situation, because the state - as a total private inner state - of a component is not encapsulated by the component, but changes from the outside on objects or arrays in the state could also change the state in the component and lead to unpredictable side effects.
+
+RIsland takes care of that problem by always creating deep clones of the state. It is not enough to create a shallow clone, because f.ex. in an array of objects, it is not sufficient to only clone the array, because in the cloned array, the objects are still references to the original objects. The only way is to deeply clone **EVERYTHING**. It is clear that this strategy has some performance drawbacks, but on the other hand it leads to a totally encapsulated inner state of the component without any side effects. Most reactive libraries with state management follow this pattern. So even event and lifecycle callbacks get a current snapshot of the state as an argument, it is a clone. The only way to change the state is by using the `setState()` method, which also gets passed as an argument.
+
+> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practices to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
+
+## <a name="setstate"></a> `setState()`
+
+## <a name="state-pitfalls"></a> Common state and `setState()` pitfalls
+
+## <a name="lifecycles"></a> Lifecycles
+
+Every component has different lifecycles.
+
+The following lifecycles are in order of their invocation (`shouldUpdate`, `update` and `render` can run several times during the life of an RIsland instance):
+
+### Constructor
+
+### `load`
+
+### `shouldUpdate`
+
+### `update`
+
+### `render`
+
+### `unload`
 
 ## <a name="options"></a> Options
+
+### `$element`
+
+### `delegations`
+
+### `initialState`
+
+### `load`
+
+### `shouldUpdate`
+
+### `template`
+
+### `unload`
+
+### `update`
+
+> **IMPORTANT!** the following options should only be used, if you really know what you are doing, because they can change the way, how RIsland works internally and affect the result - in the worst case cause exceptions, errors or unwanted behaviour.
+
+### `deepmerge`
+
+### `morphdom`
+
+### `nonBubblingEvents`
+
+### `squirrelly`
 
 ## <a name="examples"></a> Examples
 

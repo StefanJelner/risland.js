@@ -297,6 +297,16 @@ export default class RIsland<IState extends Record<string, any>> {
             && 'content' in template
             && template.content instanceof DocumentFragment
         ) {
+            if (this._checkWrapping(template.content) === false) {
+                // otherwise show a nice error message.
+                const nestingError = 'RIsland: First element in the template must be a single element, without any '
+                    + 'siblings. The content should at least be wrapped in a div-tag.';
+                /* eslint-disable no-console */
+                console.error(nestingError);
+                /* eslint-enable no-console */
+                return `<p style="color:red;">${nestingError}</p>`;
+            }
+
             // putting the content of the template tag into a textarea to do a simple html decode.
             const $textarea = document.createElement('textarea');
             // making a string out of the content of the template tag.
@@ -307,10 +317,24 @@ export default class RIsland<IState extends Record<string, any>> {
         }
 
         // otherwise show a nice error message.
+        const typeError = 'RIsland: template must be a string or a template tag element.';
         /* eslint-disable no-console */
-        console.error('RIsland: template must be a string or a template tag element.');
+        console.error(typeError);
         /* eslint-enable no-console */
-        return '<p style="color:red;">RIsland: template must be a string or a template tag element.</p>';
+        return `<p style="color:red;">${typeError}</p>`;
+    }
+
+    /**
+     * Checks whether a document fragment contains more than one Element on the root
+     * 
+     * @param fragment a document fragment
+     * @returns whether a document fragment contains more than one Element on the root
+     */
+    private _checkWrapping(fragment: DocumentFragment): boolean {
+        // here we filter out all child nodes which are not an Element, like f.ex. text nodes.
+        return Array.from(fragment.childNodes).filter((child: Node) => {
+            return child instanceof Element;
+        }).length === 1;
     }
 
     /**
