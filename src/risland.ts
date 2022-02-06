@@ -23,6 +23,8 @@ export default class RIsland<IState extends Record<string, any>> {
             isMergeableObject: isPlainObject
         }
         , delegations: {}
+        , filters: {}
+        , helpers: {}
         , initialState: {} as IState
         , load: () => {}
         , morphdom: {
@@ -30,6 +32,7 @@ export default class RIsland<IState extends Record<string, any>> {
             // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
             onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => !$fromEl.isEqualNode($toEl)
         }
+        , nativeHelpers: {}
         // List of non-bubbling events, which need to have capture set to true.
         // See https://en.wikipedia.org/wiki/DOM_events#Events
         , nonBubblingEvents: [
@@ -103,6 +106,14 @@ export default class RIsland<IState extends Record<string, any>> {
                 , ...this._enforcedConfig.deepmerge
             }
         );
+
+        // registering filters, helpers and nativeHelpers in squirrelly
+        ['filters', 'helpers', 'nativeHelpers'].forEach((key: string) => {
+            Object.keys(this._config[key]).forEach((key2: string) => {
+                Sqrl[key].define(key2, this._config[key][key2]);
+            });
+        });
+        // registering partials in squirrelly
         Object.keys(this._config.partials).forEach((partial: string) => {
             Sqrl.templates.define(
                 partial
@@ -117,6 +128,7 @@ export default class RIsland<IState extends Record<string, any>> {
             );
         });
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
+
         this._setState(this._config.initialState);
 
         (Object.keys(this._config.delegations) as Array<TRIslandEventNames>).forEach((
@@ -433,9 +445,12 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
         )
         , Record<string, (event: Event, state: IState, setState: RIsland<IState>['_setState']) => void>
     >>;
+    filters: Record<string, Parameters<typeof Sqrl['filters']['define']>[1]>;
+    helpers: Record<string, Parameters<typeof Sqrl['helpers']['define']>[1]>;
     initialState: IState;
     load: (state: IState, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
+    nativeHelpers: Record<string, Parameters<typeof Sqrl['nativeHelpers']['define']>[1]>;
     nonBubblingEvents: Array<TRIslandEventNames>;
     partials: Record<string, string | HTMLTemplateElement>;
     shouldUpdate: (state: IState, nextState: IState) => boolean;

@@ -8,6 +8,21 @@
  * See https://github.com/StefanJelner/risland.js.git
  */
 
+function _mergeNamespaces(n, m) {
+  m.forEach(function (e) {
+    e && typeof e !== 'string' && !Array.isArray(e) && Object.keys(e).forEach(function (k) {
+      if (k !== 'default' && !(k in n)) {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () { return e[k]; }
+        });
+      }
+    });
+  });
+  return Object.freeze(n);
+}
+
 function _typeof(obj) {
   "@babel/helpers - typeof";
 
@@ -35,6 +50,10 @@ var _assign = function __assign() {
 };
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
 
 var toString = Object.prototype.toString;
 
@@ -1392,7 +1411,7 @@ var rafThrottle = function rafThrottle(callback) {
 
 var rafThrottle_1 = rafThrottle;
 
-var squirrelly_min = {exports: {}};
+var squirrelly_min$1 = {exports: {}};
 
 (function (module, exports) {
   !function (e, t) {
@@ -1843,7 +1862,14 @@ var squirrelly_min = {exports: {}};
       value: !0
     });
   });
-})(squirrelly_min, squirrelly_min.exports);
+})(squirrelly_min$1, squirrelly_min$1.exports);
+
+var squirrelly_min = /*@__PURE__*/getDefaultExportFromCjs(squirrelly_min$1.exports);
+
+var Sqrl = /*#__PURE__*/Object.freeze(/*#__PURE__*/_mergeNamespaces({
+  __proto__: null,
+  'default': squirrelly_min
+}, [squirrelly_min$1.exports]));
 
 var cjs = {};
 
@@ -2003,6 +2029,8 @@ var RIsland = function () {
         isMergeableObject: isPlainObject
       },
       delegations: {},
+      filters: {},
+      helpers: {},
       initialState: {},
       load: function load() {},
       morphdom: {
@@ -2010,12 +2038,13 @@ var RIsland = function () {
           return !$fromEl.isEqualNode($toEl);
         }
       },
+      nativeHelpers: {},
       nonBubblingEvents: ['abort', 'blur', 'error', 'focus', 'load', 'loadend', 'loadstart', 'pointerenter', 'pointerleave', 'progress', 'scroll', 'unload'],
       partials: {},
       shouldUpdate: function shouldUpdate(state, nextState) {
         return !fastDeepEqual(state, nextState);
       },
-      squirrelly: squirrelly_min.exports.defaultConfig,
+      squirrelly: squirrelly_min$1.exports.defaultConfig,
       template: '',
       unload: function unload() {},
       update: function update() {}
@@ -2036,12 +2065,17 @@ var RIsland = function () {
     this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
     this._throttledRender = rafThrottle_1(this._render);
     this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
+    ['filters', 'helpers', 'nativeHelpers'].forEach(function (key) {
+      Object.keys(_this._config[key]).forEach(function (key2) {
+        Sqrl[key].define(key2, _this._config[key][key2]);
+      });
+    });
     Object.keys(this._config.partials).forEach(function (partial) {
-      squirrelly_min.exports.templates.define(partial, squirrelly_min.exports.compile(_this._getTemplate(_this._config.partials[partial]), _assign(_assign({}, _this._config.squirrelly), {
+      squirrelly_min$1.exports.templates.define(partial, squirrelly_min$1.exports.compile(_this._getTemplate(_this._config.partials[partial]), _assign(_assign({}, _this._config.squirrelly), {
         varName: 'partialState'
       })));
     });
-    this._compiledTemplate = squirrelly_min.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
+    this._compiledTemplate = squirrelly_min$1.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
 
     this._setState(this._config.initialState);
 

@@ -227,7 +227,7 @@ Otherwise Typescript cannot determine whether the template is a `string` or a `H
 
 > **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 
-Partials work the same way, the only difference is, that the namepsace inside of partials is not `state`, but `partialState`.
+Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
 ## <a name="event-delegation"></a> Event delegation
 
@@ -367,9 +367,15 @@ The following lifecycles are in order of their invocation (`shouldUpdate`, `upda
 
 ### `delegations`
 
+### `filters`
+
+### `helpers`
+
 ### `initialState`
 
 ### `load`
+
+### `nativeHelpers`
 
 ### `partials`
 
