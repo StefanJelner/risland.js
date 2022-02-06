@@ -146,13 +146,15 @@ Let's add some dynamics:
 Just for the sake of completeness, the typescript version would look like this:
 
 ```ts
+import RIsland from 'risland.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     new RIsland<{ checked: boolean; }>({
         $element: document.getElementById('island'),
         , delegations: {
             'click': {
                 '.island__checkbox': (event, _, setState) => {
-                    setState({ checked: event.target.checked });
+                    setState({ checked: (event.target as HTMLFormElement).checked });
                 }
             }
         }
@@ -214,6 +216,14 @@ Enough theory, here is an example:
 ```
 
 Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
+
+In Typescript it is necessary to declare the type to the template:
+
+```ts
+template: document.getElementById('squirrelly') as HTMLTemplateElement
+```
+
+Otherwise Typescript cannot determine whether the template is a string or a HTMLTemplateElement.
 
 > **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 

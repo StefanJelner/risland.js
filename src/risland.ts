@@ -425,7 +425,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     nonBubblingEvents: Array<TRIslandEventNames>;
     shouldUpdate: (state: IState, nextState: IState) => boolean;
     squirrelly: Partial<SqrlConfig>;
-    template: string;
+    template: string | HTMLTemplateElement;
     unload: (state: IState) => void;
     update: (state: IState, setState: RIsland<IState>['_setState']) => void;
 }
