@@ -46,6 +46,7 @@ export default class RIsland<IState extends Record<string, any>> {
             , 'scroll'
             , 'unload'
         ]
+        , partials: {}
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
         , squirrelly: Sqrl.defaultConfig
         , template: ''
@@ -102,6 +103,19 @@ export default class RIsland<IState extends Record<string, any>> {
                 , ...this._enforcedConfig.deepmerge
             }
         );
+        Object.keys(this._config.partials).forEach((partial: string) => {
+            Sqrl.templates.define(
+                partial
+                , Sqrl.compile(this._getTemplate(
+                    this._config.partials[partial])
+                    , {
+                        ...this._config.squirrelly
+                        // in partials the namespace is called "partialState"
+                        , varName: 'partialState'
+                    }
+                )
+            );
+        });
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
         this._setState(this._config.initialState);
 
@@ -423,6 +437,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     load: (state: IState, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
     nonBubblingEvents: Array<TRIslandEventNames>;
+    partials: Record<string, string | HTMLTemplateElement>;
     shouldUpdate: (state: IState, nextState: IState) => boolean;
     squirrelly: Partial<SqrlConfig>;
     template: string | HTMLTemplateElement;

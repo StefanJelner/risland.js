@@ -7,21 +7,25 @@
     <body>
         <div id="island"></div>
 
-        <template id="squirrelly">
+        <template id="squirrelly-checkbox">
             <div class="island{{@if(state.checked)}} island--checked{{/if}}">
                 <input class="island__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
-                <ul class="island__log">
-                    {{@each(state.log) => checked}}
-                        <li class="island__log__entry">
-                            {{@if(checked)}}was checked{{#else}}was unchecked{{/if}}
-                        </li>
-                    {{/each}}
-                </ul>
+                {{@include('log', { log: state.log })/}}
             </div>
         </template>
 
-        <script src="../dist/risland.iife.min.js"></script>
+        <template id="squirrelly-log">
+            <ul class="island__log">
+                {{@each(partialState.log) => checked}}
+                    <li class="island__log__entry">
+                        {{@if(checked)}}was checked{{#else}}was unchecked{{/if}}
+                    </li>
+                {{/each}}
+            </ul>
+        </template>
+
+        <script src="../dist/risland.iife.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 new RIsland({
@@ -49,7 +53,10 @@
                         , log: []
                     }
                     , load: function() { console.log('load'); }
-                    , template: document.getElementById('squirrelly')
+                    , partials: {
+                        log: document.getElementById('squirrelly-log')
+                    }
+                    , template: document.getElementById('squirrelly-checkbox')
                     , update: function() { console.log('update'); }
                 });
             });

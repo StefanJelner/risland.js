@@ -2017,6 +2017,7 @@
           }
         },
         nonBubblingEvents: ['abort', 'blur', 'error', 'focus', 'load', 'loadend', 'loadstart', 'pointerenter', 'pointerleave', 'progress', 'scroll', 'unload'],
+        partials: {},
         shouldUpdate: function shouldUpdate(state, nextState) {
           return !fastDeepEqual(state, nextState);
         },
@@ -2041,6 +2042,11 @@
       this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
       this._throttledRender = rafThrottle_1(this._render);
       this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
+      Object.keys(this._config.partials).forEach(function (partial) {
+        squirrelly_min.exports.templates.define(partial, squirrelly_min.exports.compile(_this._getTemplate(_this._config.partials[partial]), _assign(_assign({}, _this._config.squirrelly), {
+          varName: 'partialState'
+        })));
+      });
       this._compiledTemplate = squirrelly_min.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
 
       this._setState(this._config.initialState);

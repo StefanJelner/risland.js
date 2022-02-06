@@ -39,7 +39,7 @@ RIsland is perfect for writing small widgets or configurators in static pages. Y
 - No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
-- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern template tags. (Unlike in template strings, HTML syntax highlighting still works in editors.)
+- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern template tags. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader).
@@ -48,7 +48,7 @@ RIsland is perfect for writing small widgets or configurators in static pages. Y
 ## <a name="cons"></a> Cons
 
 - It is not a fully featured component library. This means sub components or nested islands are not possible. (Technically speaking it might be possible in some way, but the library is not intended to be used that way.) If you need features like this, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
-- Usually everything is written in one [squirrelly](https://github.com/squirrellyjs/squirrelly) template. If you find yourself writing thousands of lines of template code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
+- Usually everything is written in one [squirrelly](https://github.com/squirrellyjs/squirrelly) template (although partials are possible, but excessive use is not recommended). If you find yourself writing thousands of lines of template code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - This library only takes care of templating, event handling, state management, rendering and throttling. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
@@ -223,9 +223,11 @@ In Typescript it is necessary to declare the type to the template:
 template: document.getElementById('squirrelly') as HTMLTemplateElement
 ```
 
-Otherwise Typescript cannot determine whether the template is a string or a HTMLTemplateElement.
+Otherwise Typescript cannot determine whether the template is a `string` or a `HTMLTemplateElement`.
 
 > **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+
+Partials work the same way, the only difference is, that the namepsace inside of partials is not `state`, but `partialState`.
 
 ## <a name="event-delegation"></a> Event delegation
 
@@ -240,6 +242,8 @@ Event delegation can speed up applications significantly and also can save many 
 RIsland does not use event delegation to speed things up, that is a nice side effect, but it needs it, so that after every template rerendering and DOM morphing it is unnecessary to remove or add event listeners. The main island element never gets changed. So adding the event listeners to this element and delegating all the events by selectors is a convenient way to add the listeners only once.
 
 > **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
+
+> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` lifecycle together with the `setState()` method.
 
 ## <a name="event-throttling"></a> Event throttling
 
@@ -366,6 +370,8 @@ The following lifecycles are in order of their invocation (`shouldUpdate`, `upda
 ### `initialState`
 
 ### `load`
+
+### `partials`
 
 ### `shouldUpdate`
 
