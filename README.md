@@ -14,6 +14,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Event delegation](#event-delegation)
 - [Event throttling](#event-throttling)
 - [State](#state)
+- [Why cloning?](#why-cloning)
 - [`setState()`](#setstate)
 - [Common state and `setState()` pitfalls](#state-pitfalls)
 - [Lifecycles](#lifecycles)
@@ -331,6 +332,12 @@ focus
 
 ## <a name="state"></a> State
 
+"State" means the current state of data at a specific point in time - leading to a predictable template output and DOM representation. An RIsland instance always has an inner encapsulated state, which can be initialized and then changed with `setState()`. Everytime the state gets changed by `setState()`, the lifecycle `shouldUpdate` gets triggered to decide whether something in the state has changed, which makes a rerendering with `render` necessary. If so, the current state will be handed over to the [squirrelly](https://github.com/squirrellyjs/squirrelly) template and the HTML output will then be morphed into the DOM. No direct DOM manipulations take place this way, but the whole applications representational state (in the DOM) depends on its inner data state. This is why this paradigm is called "reactive", because inspite of changing things directly and in an imperative way in the DOM, you change the state and then the RIsland instance reacts on these changes and rerenders - or not.
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, the changes might be gone. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
+
+## <a name="why-cloning"></a> Why cloning?
+
 > In contrast, the by reference strategy receives not a copy, but the implicit reference to an object instead. And this reference is directly mapped (like an alias) to the object from the outside. Any changes to the parameter inside the function — either just the property modifications, or the full rewrite are immediately reflected on the original object.
 >
 > -- <cite>[ECMA-262-3 in detail. Chapter 8. Evaluation strategy - 4. Call by reference](http://dmitrysoshnikov.com/ecmascript/chapter-8-evaluation-strategy/#call-by-reference)</cite>
@@ -348,6 +355,8 @@ RIsland takes care of that problem by always creating deep clones of the state. 
 The `setState()` method is the only way to change the inner state of the component. It gets handed over as an argument to all event callbacks and the `load`, `update` and `unload` callbacks. The `setState()` method is very flexible when it comes to scenarios. The most simple scenario is, that you just pass an object with the key-value-pairs which have changed. If you want to set values based on the latest value of a state value, then you can use `setState()` with a callback function which hands over the most current state as the only argument. Another option is to use `setState()` with a `Promise` which can resolve an object with key-value-pairs or a callback function. Finally it is possible to mix all of these options in an `Array` and pass it to `setState()`.
 
 Whenever `setState()` gets a `null` value, whether directly or as the result of a resolved `Promise`, it will not trigger the `shouldUpdate` lifecycle. If this is done in the `Array` context, only this one `Array` item will prevent the `shouldUpdate` lifecycle from happening; all other items will still be iterated.
+
+> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** Sometimes you want to run something after all state changes have taken place. To achieve this, you can use the `Array` option and add a last item as a callback function, which does what you want and returns `null`.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** You only need to return the `Partial` of the state, which you want to change. It is not necessary to always return the whole state-object, with `Object.assign()` or the spread-operator.
 
@@ -429,6 +438,41 @@ setState(
         )
     ]
 );
+
+// doing something after the state changes
+setState(
+    [
+        { foo: 'bar' },
+        function(state) {
+            console.log('state changes finished', state);
+
+            return null;
+        }
+    ]
+);
+
+// doing something after the state changes in a Promise
+setState(
+    new Promise(
+        function(resolve) {
+            window.setTimeout(
+                function() {
+                    resolve(
+                        [
+                            { foo: 'bar' },
+                            function(state) {
+                                console.log('state changes finished', state);
+
+                                return null;
+                            }
+                        ]
+                    );
+                },
+                5000
+            );
+        }
+    )
+);
 ```
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** RIsland gives the ability to handle very complex state scenarios with one single method. You could possibly use an Array of Promises, which return functions, which return null or more Promises, which return Arrays of Promises, which return simple objects. You can do that! But do yourself a favour and avoid rocket science! If the scenarios get too complex, you might want to rethink your applications structure.
@@ -451,11 +495,11 @@ This is the lifecycle which runs when the initial content - based on the initial
 
 ### `shouldUpdate`
 
+### `render`
+
 ### `update`
 
 This is the lifecycle which runs when the updated content - based on state changes - has been rendered and is present in the DOM. It invokes the `update` config callback if present.
-
-### `render`
 
 ### `unload`
 
