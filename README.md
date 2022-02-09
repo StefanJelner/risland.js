@@ -49,6 +49,8 @@ RIsland is perfect for writing small widgets or configurators in static pages. Y
 
 - It is not a fully featured component library. This means sub components or nested islands are not possible. (Technically speaking it might be possible in some way, but the library is not intended to be used that way.) If you need features like this, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - Usually everything is written in one [squirrelly](https://github.com/squirrellyjs/squirrelly) template (although partials are possible, but excessive use is not recommended). If you find yourself writing thousands of lines of template code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
+
+> **IMPORTANT!** In case an update should be done, RIsland always renders the complete [squirrelly](https://github.com/squirrellyjs/squirrelly) template and then does the DOM morphing. If you have a big template and need to do something fast, like f.ex. a scroll spy (`scroll`) or dragging (`mousemove`), then RIsland might not be fast enough, but you need a library with sub-components in which you can put parts of the code which need to be fast. Consider using a fully featured component library, like f.ex. [React](https://github.com/facebook/react).
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - This library only takes care of templating, event handling, state management, rendering and throttling. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
@@ -341,21 +343,115 @@ RIsland takes care of that problem by always creating deep clones of the state. 
 
 ## <a name="setstate"></a> `setState()`
 
+The `setState()` method is the only way to change the inner state of the component. It gets handed over as an argument to all event callbacks and the `load`, `update` and `unload` callbacks. The `setState()` method is very flexible when it comes to scenarios. The most simple scenario is, that you jsut pass an object with the key-value-pairs which have changed. If you want to set values based on the latest value of a state value, then you can use `setState()` with a callback function which hands over the most current state as the only argument. Another option is to use `setState()` with a `Promise` which can resolve an object with key-value-pairs or a callback function. Finally it is possible to mix all of these options in an `Array` and pass it to `setState()`.
+
+Whenever `setState()` gets a `null` value, whether directly or as the result of a resolved `Promise`, it will not trigger the `shouldUpdate` lifecycle. If this is done in the `Array` context, only this one `Array` item will prevent the `shouldUpdate` lifecycle from happening; all other items will still be iterated.
+
+> **IMPORTANT!** You only need to return the `Partial` of the state, which you want to change. It is not necessary to always return the whole state-object, with `Object.assign()` or the spread-operator.
+
+Examples:
+
+```js
+// simple object
+setState({ foo: 'bar' });
+
+// callback function
+setState(function(state) { return { foo: state.foo + 1 }; });
+
+// Promise resolving a simple object after 5 seconds
+setState(
+    new Promise(
+        function(resolve) {
+            window.setTimeout(
+                function() {
+                    resolve({ foo: 'bar' });
+                },
+                5000
+            );
+        }
+    )
+);
+
+// Promise resolving a callback function after 5 seconds
+setState(
+    new Promise(
+        function(resolve) {
+            window.setTimeout(
+                function() {
+                    resolve(function(state) { return { foo: state.foo + 1 }; });
+                },
+                5000
+            );
+        }
+    )
+);
+
+// callback function, with a condition which might return null to do nothing
+setState(function(state) { return state.baz === true ? { foo: state.foo + 1 } : null; });
+
+// Array with mixed scenarios
+setState(
+    [
+        function(state) { return { foo: state.foo + 1 }; },
+        new Promise(
+            function(resolve) {
+                window.setTimeout(
+                    function() {
+                        resolve(function(state) { return state.baz === true ? { foo: state.foo + 1 } : null; });
+                    },
+                    5000
+                );
+            }
+        )
+    ]
+);
+
+// Array with mixed scenarios and a Promise which returns an Array again
+setState(
+    [
+        function(state) { return { foo: state.foo + 1 }; },
+        new Promise(
+            function(resolve) {
+                window.setTimeout(
+                    function() {
+                        resolve(
+                            [
+                                { bar: 'quox' },
+                                function(state) { return state.baz === true ? { foo: state.foo + 1 } : null; })
+                            ]
+                        );
+                    },
+                    5000
+                );
+            }
+        )
+    ]
+);
+```
+
+> **IMPORTANT!** RIsland gives the ability to handle very complex state scenarios with one single method. You could possibly use an Array of Promises, which return functions, which return null or more Promises, which return Arrays of Promises, which return simple objects. You can do that! But do yourself a favour and avoid rocket science! If the scenarios get too complex, you might want to rethink your applications structure.
+
 ## <a name="state-pitfalls"></a> Common state and `setState()` pitfalls
 
 ## <a name="lifecycles"></a> Lifecycles
 
-Every component has different lifecycles.
+An instance of RIsland has several lifecycles.
 
-The following lifecycles are in order of their invocation (`shouldUpdate`, `update` and `render` can run several times during the life of an RIsland instance):
+The following lifecycles are in order of their occurence (`shouldUpdate`, `update` and `render` can run several times during the life of an RIsland instance):
 
 ### Constructor
 
+The constructor lifecycle does the configuration, precompiling of the [squirrelly](https://github.com/squirrellyjs/squirrelly) template, registering of [squirrelly](https://github.com/squirrellyjs/squirrelly) related `partial`s, `filter`s, `helper`s and `nativeHelper`s and adding DOM event listeners for the event delegation.
+
 ### `load`
+
+This is the lifecycle which runs when the initial content - based on the initial state - has been rendered and is present in the DOM. It invokes the `load` config callback if present.
 
 ### `shouldUpdate`
 
 ### `update`
+
+This is the lifecycle which runs when the updated content - based on state changes - has been rendered and is present in the DOM. It invokes the `update` config callback if present.
 
 ### `render`
 
@@ -378,6 +474,12 @@ The following lifecycles are in order of their invocation (`shouldUpdate`, `upda
 ### `nativeHelpers`
 
 ### `partials`
+
+```ts
+partials: Record<string, string | HTMLTemplateElement>
+```
+
+The `partials` config object consists of keys and - like the `template` config - `string`s or `template` tag DOM elements. The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information, on how to use Partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
 ### `shouldUpdate`
 
