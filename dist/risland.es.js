@@ -2062,9 +2062,16 @@ var RIsland = function () {
     };
     this._delegationFuncs = {};
     this._loaded = false;
+    this._state = {};
     this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
     this._throttledRender = rafThrottle_1(this._render);
     this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
+
+    if (!isPlainObject(this._config.initialState) || this._config.initialState === null) {
+      console.error('RIsland: initialState has to be an object (which is not null).');
+      return;
+    }
+
     ['filters', 'helpers', 'nativeHelpers'].forEach(function (key) {
       Object.keys(_this._config[key]).forEach(function (key2) {
         Sqrl[key].define(key2, _this._config[key][key2]);
@@ -2076,9 +2083,6 @@ var RIsland = function () {
       })));
     });
     this._compiledTemplate = squirrelly_min$1.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
-
-    this._setState(this._config.initialState);
-
     Object.keys(this._config.delegations).forEach(function (eventName) {
       var throttling = _this._getThrottling(eventName);
 
@@ -2107,6 +2111,14 @@ var RIsland = function () {
         capture: _this._delegationFuncs[eventName].capture
       });
     });
+
+    if (Object.keys(this._config.initialState).length === 0) {
+      console.warn('RIsland: Initialisation with an empty state is considered an anti-pattern. ' + 'Please try to predefine everything you will later change with setState() with an initial value; ' + 'even it is null.');
+
+      this._throttledRender();
+    } else {
+      this._setState(this._config.initialState);
+    }
   }
 
   RIsland.prototype.unload = function () {

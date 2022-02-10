@@ -82,7 +82,7 @@ export default class RIsland<IState extends Record<string, any>> {
         func: (event: Event) => void;
     }>> = {};
     private _loaded: boolean = false;
-    private _state: IState;
+    private _state: IState = {} as IState;
     private _throttledLoadOrUpdate: RIsland<IState>['_loadOrUpdate'] = rafThrottle(this._loadOrUpdate);
     private _throttledRender: RIsland<IState>['_render'] = rafThrottle(this._render);
 
@@ -107,6 +107,18 @@ export default class RIsland<IState extends Record<string, any>> {
             }
         );
 
+        if (
+            !isPlainObject(this._config.initialState)
+            || this._config.initialState === null
+        ) {
+            /* eslint-disable no-console */
+            console.error('RIsland: initialState has to be an object (which is not null).');
+            /* eslint-enable no-console */
+
+            // stop here and do nothing
+            return;
+        }
+
         // registering filters, helpers and nativeHelpers in squirrelly
         ['filters', 'helpers', 'nativeHelpers'].forEach((key: string) => {
             Object.keys(this._config[key]).forEach((key2: string) => {
@@ -128,8 +140,6 @@ export default class RIsland<IState extends Record<string, any>> {
             );
         });
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
-
-        this._setState(this._config.initialState);
 
         (Object.keys(this._config.delegations) as Array<TRIslandEventNames>).forEach((
             eventName: TRIslandEventNames
@@ -173,6 +183,22 @@ export default class RIsland<IState extends Record<string, any>> {
                 , { capture: this._delegationFuncs[eventName].capture }
             );
         });
+
+        if (Object.keys(this._config.initialState).length === 0) {
+            /* eslint-disable no-console */
+            console.warn(
+                'RIsland: Initialisation with an empty state is considered an anti-pattern. '
+                + 'Please try to predefine everything you will later change with setState() with an initial value; '
+                + 'even it is null.'
+            );
+            /* eslint-enable no-console */
+
+            // because the state is already an empty object, we do not need to use setState() here, but can directly
+            // render.
+            this._throttledRender();
+        } else {
+            this._setState(this._config.initialState);
+        }
     }
 
     /**

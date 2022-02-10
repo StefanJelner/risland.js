@@ -20,6 +20,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Lifecycles](#lifecycles)
 - [Options](#options)
 - [Advanced - dangerous - options](#advanced-options)
+- [Methods](#methods)
 - [Examples](#examples)
 - [Final thoughts](#final-thoughts)
 
@@ -220,7 +221,7 @@ Enough theory, here is an example:
 
 Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
 
-In Typescript it is necessary to declare the type to the template:
+In Typescript it is necessary to declare the type of the template:
 
 ```ts
 template: document.getElementById('squirrelly') as HTMLTemplateElement
@@ -592,6 +593,12 @@ The `partials` config object consists of keys and - like the `template` config -
 ### `nonBubblingEvents`
 
 ### `squirrelly`
+
+## <a name="methods"></a> Methods
+
+### `unload`
+
+The only method which an RIsland instance offers is `unload`. Everything else is done through the configuration object in the constructor. `unload` removes all event listeners from the element which gets managed by RIsland, empties its HTML and calls the configured `unload` callback - if present - with the final state.
 
 ## <a name="examples"></a> Examples
 
