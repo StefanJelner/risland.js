@@ -113,8 +113,8 @@ A simple example could look like this:
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
             $element: document.getElementById('island'),
-            , initialState: { text: 'Hello world!' }
-            , template: '<div>{{state.text}}</div>'
+            initialState: { text: 'Hello world!' },
+            template: '<div>{{state.text}}</div>'
         });
     });
 </script>
@@ -129,15 +129,15 @@ Let's add some dynamics:
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
             $element: document.getElementById('island'),
-            , delegations: {
+            delegations: {
                 'click': {
                     '.island__checkbox': function(event, _, setState) {
                         setState({ checked: event.target.checked });
                     }
                 }
-            }
-            , initialState: { checked: false }
-            , template: '<div class="island">' +
+            },
+            initialState: { checked: false },
+            template: '<div class="island">' +
                 '<input class="island__checkbox" type="checkbox" />' +
                 '{{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}' +
             '</div>'
@@ -154,15 +154,15 @@ import RIsland from 'risland.js';
 document.addEventListener('DOMContentLoaded', () => {
     new RIsland<{ checked: boolean; }>({
         $element: document.getElementById('island'),
-        , delegations: {
+        delegations: {
             'click': {
                 '.island__checkbox': (event, _, setState) => {
                     setState({ checked: (event.target as HTMLFormElement).checked });
                 }
             }
-        }
-        , initialState: { checked: false }
-        , template: `<div class="island">
+        },
+        initialState: { checked: false },
+        template: `<div class="island">
             <input class="island__checkbox" type="checkbox" />
             {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
         </div>`
@@ -204,15 +204,15 @@ Enough theory, here is an example:
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
             $element: document.getElementById('island'),
-            , delegations: {
+            delegations: {
                 'click': {
                     '.island__checkbox': function(event, _, setState) {
                         setState({ checked: event.target.checked });
                     }
                 }
-            }
-            , initialState: { checked: false }
-            , template: document.getElementById('squirrelly')
+            },
+            initialState: { checked: false },
+            template: document.getElementById('squirrelly')
         });
     });
 </script>
@@ -282,32 +282,30 @@ Example:
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         new RIsland({
-            $element: document.getElementById('island')
-            , delegations: {
+            $element: document.getElementById('island'),
+            delegations: {
                 'mousemove': {
                     '.island': function(_, state, setState) {
                         setState({ unthrottled: state.unthrottled + 1 });
                     }
-                }
-                , 'mousemove.throttled': {
+                },
+                'mousemove.throttled': {
                     '.island': function(_, state, setState) {
                         setState({ throttledRaf: state.throttledRaf + 1 });
                     }
-                }
-                , 'mousemove.throttled.1000': {
+                },
+                'mousemove.throttled.1000': {
                     '.island': function(_, state, setState) {
                         setState({ throttled1s: state.throttled1s + 1 });
                     }
                 }
-            }
-            , initialState: {
-                throttled1s: 0
-                , throttledRaf: 0
-                , unthrottled: 0
-            }
-            , load: function() { console.log('load'); }
-            , template: document.getElementById('squirrelly')
-            , update: function() { console.log('update'); }
+            },
+            initialState: {
+                throttled1s: 0,
+                throttledRaf: 0,
+                unthrottled: 0
+            },
+            template: document.getElementById('squirrelly')
         });
     });
 </script>
