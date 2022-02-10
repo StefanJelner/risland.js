@@ -117,8 +117,8 @@ export default class RIsland<IState extends Record<string, any>> {
         Object.keys(this._config.partials).forEach((partial: string) => {
             Sqrl.templates.define(
                 partial
-                , Sqrl.compile(this._getTemplate(
-                    this._config.partials[partial])
+                , Sqrl.compile(
+                    this._getTemplate(this._config.partials[partial])
                     , {
                         ...this._config.squirrelly
                         // in partials the namespace is called "partialState"

@@ -334,7 +334,7 @@ focus
 
 "State" means the current state of data at a specific point in time - leading to a predictable template output and DOM representation. An RIsland instance always has an inner encapsulated state, which can be initialized and then changed with `setState()`. Everytime the state gets changed by `setState()`, the lifecycle `shouldUpdate` gets triggered to decide whether something in the state has changed, which makes a rerendering with `render` necessary. If so, the current state will be handed over to the [squirrelly](https://github.com/squirrellyjs/squirrelly) template and the HTML output will then be morphed into the DOM. No direct DOM manipulations take place this way, but the whole applications representational state (in the DOM) depends on its inner data state. This is why this paradigm is called "reactive", because inspite of changing things directly and in an imperative way in the DOM, you change the state and then the RIsland instance reacts on these changes and rerenders - or not.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, the changes might be gone. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, your direct changes might be gone. This leads to an unpredictable and inconsistent application. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
 
 ## <a name="why-cloning"></a> Why cloning?
 
@@ -479,6 +479,54 @@ setState(
 
 ## <a name="state-pitfalls"></a> Common state and `setState()` pitfalls
 
+The all time evergreen and most common pitfall is to use an obsolete state. This means that a state clone is used which is outdated, because the state has already changed, so an old value is used, which leads to unexpected behaviour. These problems are very hard to debug and find and can drive developers mad. Here is a very simple example:
+
+```js
+delegations: {
+    'click': {
+        '.foo': function(event, state, setState) {
+            setState(
+                [
+                    { foo: state.foo + 1 }, // Expected: 2, Actual: 2
+                    { foo: state.foo + 1 }, // Expected: 3, Actual: 2
+                    { foo: state.foo + 1 }, // Expected: 4, Actual: 2
+                    { foo: state.foo + 1 }  // Expected: 5, Actual: 2
+                ]
+            );
+        }
+    }
+},
+initialState: {
+    foo: 1
+}
+```
+
+The problem here is, that the local `state` is not changing if a value is changed with `setState()`. It stays untouched. Therefore the RIsland instances state is always set to `2` again and again. To make it work, it has to be done like this:
+
+```js
+delegations: {
+    'click': {
+        '.foo': function(event, _, setState) {
+            setState(
+                [
+                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 2, Actual: 2
+                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 3, Actual: 3
+                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 4, Actual: 4
+                    function(state) { return { foo: state.foo + 1 }; }  // Expected: 5, Actual: 5
+                ]
+            );
+        }
+    }
+},
+initialState: {
+    foo: 1
+}
+```
+
+This works, because in the callback function the `state` always contains the most current state of the RIsland instance.
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Always use the freshest and most current state. This can be done easily by using the callback function. In `setState()` the pure object should only be used if the state is not involved at all.
+
 ## <a name="lifecycles"></a> Lifecycles
 
 An instance of RIsland has several lifecycles.
@@ -550,3 +598,9 @@ The `partials` config object consists of keys and - like the `template` config -
 ## <a name="examples"></a> Examples
 
 ## <a name="final-thoughts"></a> Final thoughts
+
+First of all a big thanks to the people who have written the fantastic libraries RIsland is heavily relying on. Without their work RIsland wouldn't even exist!
+
+Before starting discussions like *"Can you please implement feature XY?"* or *"Why does RIsland not support plugins/hooks or any other way to extend it?"*: This library is meant to do what it does! The focus is on its rather small size, while still being very versatile, powerful, fast to use and easy to learn. Its code is pleasently short, which makes it stable and bugs unlikely. It is better to focus on something and doing it really good, inspite of trying to look for the "one ring to rule them all" and then unleashing a monster which nobody can maintain (especially in spare time). This does not mean that any kind of discussion should be avoided; this is not meant as a killer phrase. If you find yourself in need of feature XY again and again, then please start a discussion, but do not be disappointed, if others do not agree, because they think it is not the focus of RIsland and would unnecessarily bloat it. Besides there are fantastic libraries out there providing much more features than RIsland in a very good way. So this library is not trying to reinvent the wheel. It does what it does! A simple tautology.
+
+And finally: Thanks to everyone who had the patience to read this document. Hopefully you enjoy working with RIsland.
