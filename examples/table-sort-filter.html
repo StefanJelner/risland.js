@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Table example</title>
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <script type="text/html" id="squirrelly">
+            <div class="island">
+                <table class="island__table">
+                    <thead>
+                        <tr>
+                            {{@each(state.heads) => head}}
+                                <th class="island__column island__column--head">{{head.label}}</th>
+                            {{/each}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{@each(state.data) => row}}
+                            <tr>
+                                {{@each(row) => column}}
+                                    <td class="island__column island__column--body">{{column}}</td>
+                                {{/each}}
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <p>
+                    Taken from:
+                    <a href="https://ourworldindata.org/meat-production" target="_new">Our World In Data</a>
+                </p>
+            </div>
+        </script>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', './meat-supply-per-person.csv');
+
+                xhr.onreadystatechange = function() {
+                    if (
+                        xhr.readyState === 4 // DONE
+                        && xhr.status === 200 // OK
+                    ) {
+                        var countries = {};
+                        var years = [];
+
+                        xhr.responseText.trim().split(/\r?\n/g).slice(1).forEach(function(line) {
+                            var lineData = line.split(/,/g);
+
+                            if (lineData.length === 4) {
+                                var country = lineData[0];
+                                var code = lineData[1];
+                                var year = parseInt(lineData[2]);
+                                var value = parseFloat(lineData[3]);
+
+                                if (!(country in countries)) {
+                                    countries[country] = {
+                                        code: code
+                                        , data: {}
+                                    };
+                                }
+
+                                countries[country].data[year] = value;
+
+                                if (years.indexOf(year) === -1) {
+                                    years.push(year);
+                                }
+                            }
+                        });
+
+                        years.sort();
+
+                        var heads = [
+                            {
+                                label: 'Country'
+                                , sort: 'country'
+                                , type: 'string'
+                            }
+                            , {
+                                label: 'Code'
+                                , sort: 'code'
+                                , type: 'string'
+                            }
+                        ].concat(years.map(function(year) {
+                            return {
+                                label: year
+                                , sort: year
+                                , type: 'number'
+                            };
+                        }));
+
+                        var flatTable = Object.keys(countries).map(function(country) {
+                            return [country, countries[country].code].concat(
+                                years.map(function(year) {
+                                    if (year in countries[country].data) {
+                                        return countries[country].data[year];
+                                    }
+
+                                    return 0;
+                                })
+                            );
+                        });
+
+                        function sortToIndex(sort) {
+                            switch (sort) {
+                                case 'country': {
+                                    return 0;
+                                }
+                                case 'code': {
+                                    return 1;
+                                }
+                                default: {
+                                    var index = years.indexOf(sort);
+
+                                    if (index !== -1) {
+                                        return index + 2;
+                                    }
+
+                                    // if something goes wrong, use "country"
+                                    return 0;
+                                }
+                            }
+                        }
+
+                        function indexToSort(index) {
+                            if (heads.length > index) {
+                                return heads[index].sort;
+                            }
+
+                            // if something goes wrong, use "country"
+                            return heads[0].sort;
+                        }
+
+                        function indexDirToFunc(index, dir) {
+                            var type = heads[index].type;
+
+                            if (type === 'number') {
+                                if (dir === 'DESC') {
+                                    return function(a, b) {
+                                        return b[index] - a[index];
+                                    };
+                                } else {
+                                    return function(a, b) {
+                                        return a[index] - b[index];
+                                    };
+                                }
+                            } else {
+                                if (dir === 'DESC') {
+                                    return function(a, b) {
+                                        if (b[index] < a[index]) { return -1; }
+                                        if (b[index] > a[index]) { return 1; }
+                                        return 0;
+                                    };
+                                } else {
+                                    return function(a, b) {
+                                        if (a[index] < b[index]) { return -1; }
+                                        if (a[index] > b[index]) { return 1; }
+                                        return 0;
+                                    };
+                                }
+                            }
+                        }
+
+                        function getTableData(sort, dir, filter) {
+                            var index = sortToIndex(sort);
+                            var func = indexDirToFunc(index, dir);
+
+                            if (filter !== '') {
+                                var filterTL = filter.trim().toLowerCase();
+
+                                return flatTable.slice().filter(function(row) {
+                                    return row.some(function(column) {
+                                        return String(column).toLowerCase().indexOf(filterTL) !== -1;
+                                    });
+                                }).sort(func);
+                            }
+
+                            return flatTable.slice().sort(func);
+                        }
+
+                        new RIsland({
+                            $element: document.getElementById('island')
+                            , delegations: {
+                                'click': {
+                                    '.island__column--head': function(event, _, setState) {
+                                        var index = Array.from(
+                                            event.target.parentElement.children
+                                        ).indexOf(event.target);
+
+                                        if (index !== -1) {
+                                            var sort = indexToSort(index);
+
+                                            setState(function(state) {
+                                                var dir = (
+                                                    state.sort === sort && state.dir === 'ASC'
+                                                        ? 'DESC'
+                                                        : 'ASC'
+                                                );
+
+                                                return {
+                                                    data: getTableData(sort, dir, state.filter)
+                                                    , dir: dir
+                                                    , sort: sort
+                                                };
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                            , initialState: {
+                                data: getTableData('country', 'ASC', '')
+                                , dir: 'ASC'
+                                , filter: ''
+                                , heads: heads
+                                , sort: 'country'
+                            }
+                            , template: document.getElementById('squirrelly')
+                        });
+                    }
+                };
+
+                xhr.send(null);
+            });
+        </script>
+    </body>
+</html>

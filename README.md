@@ -11,6 +11,8 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Installation](#installation)
 - [Basic usage](#basic-usage)
 - [`template` tag](#template-tag)
+- [`template` tag and tables](#template-tag-table)
+- [`script` tag `type="text/html"`](#script-tag)
 - [Event delegation](#event-delegation)
 - [Event throttling](#event-throttling)
 - [State](#state)
@@ -41,7 +43,7 @@ RIsland is perfect for writing small widgets or configurators in static pages. Y
 - No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
-- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern template tags. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
+- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern `template` tags or `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader).
@@ -175,7 +177,7 @@ This already looks more like a dynamic application.
 
 There are several things which are quite obvious:
 
-1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag.
+1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag (or also the `script`tag with `type="text/html"`).
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
 ## <a name="template-tag"></a> `template` tag
@@ -233,6 +235,30 @@ Otherwise Typescript cannot determine whether the template is a `string` or a `H
 
 Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
+## <a name="template-tag-table"></a> `template` tag and tables
+
+There is one big drawback of using the `template` tag: If some HTML needs a strict structure of the tags, like for example in tables, in which a `tr` row element **MUST NOT** contain any other children than `td` or `th` elements and therefore any text nodes will get deleted or placed outside of the table by the HTML parser, your templates code will break, because `template` tags are not treated as is - as plain text - but become parsed by the browser and therefore malformed HTML will lead to unpredictable parsing results. In such rare cases it is better to use a `script` tag element with `type="text/html"` to activate syntax highlighting in most editors.
+
+## <a name="script-tag"></a> `script` tag `type="text/html"`
+
+In some rare cases the `template` tag causes the browser to parse the template as malformed HTML, leading to unpredictable or unexpected template code. One case is using `@each` in tables, or to be more precise: using text nodes in wrong places. In such cases using a `script` tag is the better choice. Because usually `script` tags are interpreted as JavaScript, this would lead to error messages, so a different `type`has to be set. Use `type="text/html"` to activate syntax highlighting for HTML in your editor.
+
+```html
+<script type="text/html" id="squirrelly">
+    <div class="island">
+        <table>
+            {{@each(state.rows) => row}}
+                <tr>
+                    {{@each(row.columns) => column}}
+                        <td>{{column}}</td>
+                    {{/each}}
+                </tr>
+            {{/each}}
+        </table>
+    </div>
+</script>
+```
+
 ## <a name="event-delegation"></a> Event delegation
 
 > Event bubbling is a type of event propagation where the event first triggers on the innermost target element, and then successively triggers on the ancestors (parents) of the target element in the same nesting hierarchy till it reaches the outermost DOM element or document object.
@@ -247,7 +273,7 @@ RIsland does not use event delegation to speed things up, that is a nice side ef
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` lifecycle together with the `setState()` method.
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
 
 > <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** When it comes to event delegation then the CSS paradigm [BEM](http://getbem.com/introduction/) shows another advantage: because with the [BEM](http://getbem.com/introduction/) notation every element gets a very precise - often unique - class name, it is much easier to address elements with event delegation. So one advice is, to use [BEM](http://getbem.com/introduction/) in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template (and the partials). All the examples in this readme and all the code examples in the `examples` folder use [BEM](http://getbem.com/introduction/).
 
@@ -438,6 +464,18 @@ setState(
     ]
 );
 
+// Working with an Observable (RxJS) in a Promise
+setState(
+    new Promise(
+        function(resolve) {
+            // getBar() returns an Observable
+            FooService.getBar().pipe(take(1)).subscribe(function(bar) {
+                resolve({ bar: bar });
+            });
+        }
+    )
+);
+
 // doing something after the state changes
 setState(
     [
@@ -528,19 +566,21 @@ This works, because in the callback function the `state` always contains the mos
 
 ## <a name="lifecycles"></a> Lifecycles
 
-An instance of RIsland has several lifecycles.
+"Lifecycle" means a specific action taking place in the RIsland instance. Like in a natural organism some lifecycles happen only once, like birth (constructor) and death (`unload`) and some happen cyclic, like sleeping, food intake and digestion (`shouldUpdate`, `render` and `update` triggered by a state change).
 
-The following lifecycles are in order of their occurence (`shouldUpdate`, `update` and `render` can run several times during the life of an RIsland instance):
+The following RIsland lifecycles are in logical order of their occurence:
 
 ### Constructor
 
-The constructor lifecycle does the configuration, precompiling of the [squirrelly](https://github.com/squirrellyjs/squirrelly) template, registering of [squirrelly](https://github.com/squirrellyjs/squirrelly) related `partial`s, `filter`s, `helper`s and `nativeHelper`s and adding DOM event listeners for the event delegation.
+The constructor lifecycle - the "birth" - does the configuration, precompiling of the [squirrelly](https://github.com/squirrellyjs/squirrelly) template, registering of [squirrelly](https://github.com/squirrellyjs/squirrelly) related `partial`s, `filter`s, `helper`s and `nativeHelper`s and adding DOM event listeners for the event delegation.
 
 ### `load`
 
 This is the lifecycle which runs when the initial content - based on the initial state - has been rendered and is present in the DOM. It invokes the `load` config callback if present.
 
-### `shouldUpdate`
+### `setState()` and `shouldUpdate`
+
+This lifecyle takes state changes applied by `setState()` and compares them (deeply) with the current state of the RIsland instance. If nothing changed, the process stops here, otherwise, in case of a change, the `render` lifecycle will be triggered. By default RIsland does a deep comparison, but a custom compare function can be provided with the configuration option `shouldUpdate`.
 
 ### `render`
 
@@ -569,10 +609,10 @@ This is the lifecycle which runs when the updated content - based on state chang
 ### `partials`
 
 ```ts
-partials: Record<string, string | HTMLTemplateElement>
+partials: Record<string, string | HTMLTemplateElement | HTMLScriptElement>
 ```
 
-The `partials` config object consists of keys and - like the `template` config - `string`s or `template` tag DOM elements. The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information, on how to use Partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
+The `partials` config object consists of keys and - like the `template` config - `string`s, `template` tag DOM elements or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information, on how to use Partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
 ### `shouldUpdate`
 
@@ -600,12 +640,45 @@ The `partials` config object consists of keys and - like the `template` config -
 
 The only method which an RIsland instance offers is `unload`. Everything else is done through the configuration object in the constructor. `unload` removes all event listeners from the element which gets managed by RIsland, empties its HTML and calls the configured `unload` callback - if present - with the final state.
 
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        <input class="island__checkbox" type="checkbox" />
+        {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+        <button class="island__close" type="button">Close</button>
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var island = new RIsland({
+            $element: document.getElementById('island'),
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, _, setState) {
+                        setState({ checked: event.target.checked });
+                    },
+                    '.island__close': function() {
+                        island.unload();
+                    }
+                }
+            },
+            initialState: { checked: false },
+            template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
 ## <a name="examples"></a> Examples
 
 ## <a name="final-thoughts"></a> Final thoughts
 
 First of all a big thanks to the people who have written the fantastic libraries RIsland is heavily relying on. Without their work RIsland wouldn't even exist!
 
-Before starting discussions like *"Can you please implement feature XY?"* or *"Why does RIsland not support plugins/hooks or any other way to extend it?"*: This library is meant to do what it does! The focus is on its rather small size, while still being very versatile, powerful, fast to use and easy to learn. Its code is pleasently short, which makes it stable and bugs unlikely. It is better to focus on something and doing it really good, inspite of trying to look for the "one ring to rule them all" and then unleashing a monster which nobody can maintain (especially in spare time). This does not mean that any kind of discussion should be avoided; this is not meant as a killer phrase. If you find yourself in need of feature XY again and again, then please start a discussion, but do not be disappointed, if others do not agree, because they think it is not the focus of RIsland and would unnecessarily bloat it. Besides there are fantastic libraries out there providing much more features than RIsland in a very good way. So this library is not trying to reinvent the wheel. It does what it does! A simple tautology.
+Before starting discussions like *"Can you please implement feature XY?"* or *"Why does RIsland not support plugins/hooks or any other way to extend it?"*: This library is meant to do what it does! The focus is on its rather small size, while still being very versatile, powerful, fast to use and easy to learn. Its code is pleasently short, which makes it stable and bugs unlikely. It is better to focus on something and doing it really good, inspite of trying to look for the "one ring to rule them all" and then unleashing a monster which nobody can maintain (especially in spare time). This does not mean that any kind of discussion should be avoided; this is not meant as a killer phrase. If you find yourself in need of feature XY again and again, then please start a discussion, but do not be disappointed, if others do not agree, because they think it is not the focus of RIsland and would unnecessarily bloat it. Besides there are fantastic libraries out there providing many more features than RIsland in a very good way. So this library is not trying to reinvent the wheel. It does what it does! A simple tautology.
 
 And finally: Thanks to everyone who had the patience to read this document. Hopefully you enjoy working with RIsland.

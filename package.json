@@ -6,7 +6,8 @@
     "build": "rollup -c",
     "lint": "eslint ./src/risland.ts",
     "start": "npm run build",
-    "watch": "chokidar ./src/risland.ts -c \"npm run lint && npm run build\""
+    "watch": "chokidar ./src/risland.ts -c \"npm run lint && npm run build\"",
+    "examples": "node ./examples/express.js"
   },
   "author": "Stefan Jelner",
   "license": "ISC",
@@ -35,10 +36,12 @@
     "eslint": "^8.8.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-typescript-sort-keys": "^2.1.0",
+    "express": "^4.17.2",
     "rollup": "^2.67.0",
     "rollup-plugin-filesize": "^9.1.2",
     "rollup-plugin-progress": "^1.1.2",
     "rollup-plugin-terser": "^7.0.2",
+    "serve-index": "^1.9.1",
     "tslib": "^2.3.1",
     "typescript": "^4.5.5"
   },

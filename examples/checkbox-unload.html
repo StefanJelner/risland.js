@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox unload example</title>
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <template id="squirrelly">
+            <div class="island{{@if(state.checked)}} island--checked{{/if}}">
+                <input class="island__checkbox" type="checkbox" />
+                {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+                <button class="island__close" type="button">Close</button>
+            </div>
+        </template>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var island = new RIsland({
+                    $element: document.getElementById('island')
+                    , delegations: {
+                        'click': {
+                            '.island__checkbox': function(event, _, setState) {
+                                setState({ checked: event.target.checked });
+                            }
+                            , '.island__close': function() {
+                                island.unload();
+                            }
+                        }
+                    }
+                    , initialState: {
+                        checked: false
+                    }
+                    , load: function() { console.log('load'); }
+                    , template: document.getElementById('squirrelly')
+                    , unload: function() { console.log('unload'); }
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>
