@@ -30,7 +30,7 @@ The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (q
 
 The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
 
-RIsland is perfect for writing small widgets or configurators in static pages. You can use it for a product configurator in your shop, for a dynamic form or for small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
+RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** It is important to understand, that RIsland is no replacement for fully featured libraries, like [Angular](https://github.com/angular/angular), [React](https://github.com/facebook/react) or [Vue](https://github.com/vuejs). Before using this library check whether its features are sufficient for your needs.
 
@@ -313,17 +313,17 @@ Example:
             delegations: {
                 'mousemove': {
                     '.island': function(event, closest, state, setState) {
-                        setState({ unthrottled: state.unthrottled + 1 });
+                        setState(function(state2) { return { unthrottled: state2.unthrottled + 1 }; });
                     }
                 },
                 'mousemove.throttled': {
                     '.island': function(event, closest, state, setState) {
-                        setState({ throttledRaf: state.throttledRaf + 1 });
+                        setState(function(state2) { return { throttledRaf: state2.throttledRaf + 1 }; });
                     }
                 },
                 'mousemove.throttled.1000': {
                     '.island': function(event, closest, state, setState) {
-                        setState({ throttled1s: state.throttled1s + 1 });
+                        setState(function(state2) { return { throttled1s: state2.throttled1s + 1 }; });
                     }
                 }
             },

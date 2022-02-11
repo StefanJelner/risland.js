@@ -168,9 +168,11 @@
                         function getTableData(sort, dir, filter) {
                             var index = sortToIndex(sort);
                             var func = indexDirToFunc(index, dir);
+                            var filterTrim = filter.trim();
 
-                            if (filter !== '') {
-                                var filterTL = filter.trim().toLowerCase();
+                            // only filter if the text is longer than 2 chars
+                            if (filterTrim.length > 2) {
+                                var filterTL = filterTrim.toLowerCase();
 
                                 return flatTable.slice().filter(function(row) {
                                     return row.some(function(column) {
@@ -187,9 +189,7 @@
                             , delegations: {
                                 'click': {
                                     '.island__column--head': function(_, closest, __, setState) {
-                                        var index = Array.from(
-                                            closest.parentElement.children
-                                        ).indexOf(closest);
+                                        var index = Array.from(closest.parentElement.children).indexOf(closest);
 
                                         if (index !== -1) {
                                             var sort = indexToSort(index);
