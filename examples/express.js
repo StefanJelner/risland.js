@@ -6,6 +6,7 @@ const PORT = 3000;
 
 app.use('/dist', express.static('./dist'));
 app.use('/examples', express.static('./examples'));
+app.use('/node_modules', express.static('./node_modules'));
 app.use('/examples', serveIndex('./examples'));
 
 app.get('/', (_, res) => { res.redirect('/examples'); });

@@ -37,9 +37,9 @@
                     $element: document.getElementById('island-checkbox')
                     , delegations: {
                         'click': {
-                            '.island-checkbox__checkbox': function(event, _, setState) {
+                            '.island-checkbox__checkbox': function(_, closest, __, setState) {
                                 setState([
-                                    { checked: event.target.checked }
+                                    { checked: closest.checked }
                                     , function(state) {
                                         exchange.next(state.checked);
 

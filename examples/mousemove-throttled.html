@@ -33,18 +33,18 @@
                     $element: document.getElementById('island')
                     , delegations: {
                         'mousemove': {
-                            '.island': function(_, state, setState) {
-                                setState({ unthrottled: state.unthrottled + 1 });
+                            '.island': function(_, __, ___, setState) {
+                                setState(function(state) { return { unthrottled: state.unthrottled + 1 }; });
                             }
                         }
                         , 'mousemove.throttled': {
-                            '.island': function(_, state, setState) {
-                                setState({ throttledRaf: state.throttledRaf + 1 });
+                            '.island': function(_, __, ___, setState) {
+                                setState(function(state) { return { throttledRaf: state.throttledRaf + 1 }; });
                             }
                         }
                         , 'mousemove.throttled.1000': {
-                            '.island': function(_, state, setState) {
-                                setState({ throttled1s: state.throttled1s + 1 });
+                            '.island': function(_, __, ___, setState) {
+                                setState(function(state) { return { throttled1s: state.throttled1s + 1 }; });
                             }
                         }
                     }

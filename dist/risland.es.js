@@ -2089,10 +2089,12 @@ var RIsland = function () {
       _this._delegationFuncs[eventName] = {
         capture: _this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1,
         func: function func(event) {
-          if (event.target instanceof HTMLElement) {
+          if (event.target instanceof Element) {
             Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
-              if (event.target.closest(selector) !== null) {
-                _this._config.delegations[eventName][selector](event, cloneDeep_1(_this._state), _this._setState.bind(_this));
+              var closest = event.target.closest(selector);
+
+              if (closest !== null) {
+                _this._config.delegations[eventName][selector](event, closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
               }
             });
           }

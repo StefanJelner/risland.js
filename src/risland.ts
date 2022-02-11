@@ -30,7 +30,7 @@ export default class RIsland<IState extends Record<string, any>> {
         , morphdom: {
             // speed up morphdom significantly.
             // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
-            onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => !$fromEl.isEqualNode($toEl)
+            onBeforeElUpdated: ($fromEl: Element, $toEl: Element) => !$fromEl.isEqualNode($toEl)
         }
         , nativeHelpers: {}
         // List of non-bubbling events, which need to have capture set to true.
@@ -150,11 +150,14 @@ export default class RIsland<IState extends Record<string, any>> {
             this._delegationFuncs[eventName] = {
                 capture: this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1
                 , func: (event: Event) => {
-                    if (event.target instanceof HTMLElement) {
+                    if (event.target instanceof Element) {
                         Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
-                            if ((event.target as HTMLElement).closest(selector) !== null) {
+                            const closest = (event.target as Element).closest(selector);
+
+                            if (closest !== null) {
                                 this._config.delegations[eventName][selector](
                                     event
+                                    , closest
                                     , cloneDeep(this._state)
                                     , this._setState.bind(this)
                                 );
@@ -468,7 +471,7 @@ export default class RIsland<IState extends Record<string, any>> {
 export type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
 
 export interface IRIslandConfig<IState extends Record<string, any>> {
-    $element: HTMLElement;
+    $element: Element;
     deepmerge: deepmerge.Options;
     delegations: Partial<Record<
         (
@@ -476,7 +479,12 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
             | `${TRIslandEventNames}.throttled`
             | `${TRIslandEventNames}.throttled.${number}`
         )
-        , Record<string, (event: Event, state: IState, setState: RIsland<IState>['_setState']) => void>
+        , Record<string, (
+            event: Event
+            , closest: Element
+            , state: IState
+            , setState: RIsland<IState>['_setState']
+        ) => void>
     >>;
     filters: Record<string, Parameters<typeof Sqrl['filters']['define']>[1]>;
     helpers: Record<string, Parameters<typeof Sqrl['helpers']['define']>[1]>;

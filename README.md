@@ -134,8 +134,8 @@ Let's add some dynamics:
             $element: document.getElementById('island'),
             delegations: {
                 'click': {
-                    '.island__checkbox': function(event, _, setState) {
-                        setState({ checked: event.target.checked });
+                    '.island__checkbox': function(event, closest, state, setState) {
+                        setState({ checked: closest.checked });
                     }
                 }
             },
@@ -159,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         $element: document.getElementById('island'),
         delegations: {
             'click': {
-                '.island__checkbox': (event, _, setState) => {
-                    setState({ checked: (event.target as HTMLFormElement).checked });
+                '.island__checkbox': (_, closest, __, setState) => {
+                    setState({ checked: (closest as HTMLFormElement).checked });
                 }
             }
         },
@@ -209,8 +209,8 @@ Enough theory, here is an example:
             $element: document.getElementById('island'),
             delegations: {
                 'click': {
-                    '.island__checkbox': function(event, _, setState) {
-                        setState({ checked: event.target.checked });
+                    '.island__checkbox': function(event, closest, state, setState) {
+                        setState({ checked: closest.checked });
                     }
                 }
             },
@@ -312,17 +312,17 @@ Example:
             $element: document.getElementById('island'),
             delegations: {
                 'mousemove': {
-                    '.island': function(_, state, setState) {
+                    '.island': function(event, closest, state, setState) {
                         setState({ unthrottled: state.unthrottled + 1 });
                     }
                 },
                 'mousemove.throttled': {
-                    '.island': function(_, state, setState) {
+                    '.island': function(event, closest, state, setState) {
                         setState({ throttledRaf: state.throttledRaf + 1 });
                     }
                 },
                 'mousemove.throttled.1000': {
-                    '.island': function(_, state, setState) {
+                    '.island': function(event, closest, state, setState) {
                         setState({ throttled1s: state.throttled1s + 1 });
                     }
                 }
@@ -521,7 +521,7 @@ The all time evergreen and most common pitfall is to use an obsolete state. This
 ```js
 delegations: {
     'click': {
-        '.foo': function(event, state, setState) {
+        '.foo': function(event, closest, state, setState) {
             setState(
                 [
                     { foo: state.foo + 1 }, // Expected: 2, Actual: 2
@@ -543,7 +543,7 @@ The problem here is, that the local `state` is not changing if a value is change
 ```js
 delegations: {
     'click': {
-        '.foo': function(event, _, setState) {
+        '.foo': function(event, closest, state, setState) {
             setState(
                 [
                     function(state) { return { foo: state.foo + 1 }; }, // Expected: 2, Actual: 2
@@ -658,8 +658,8 @@ The only method which an RIsland instance offers is `unload`. Everything else is
             $element: document.getElementById('island'),
             delegations: {
                 'click': {
-                    '.island__checkbox': function(event, _, setState) {
-                        setState({ checked: event.target.checked });
+                    '.island__checkbox': function(event, closest, state, setState) {
+                        setState({ checked: closest.checked });
                     },
                     '.island__close': function() {
                         island.unload();
