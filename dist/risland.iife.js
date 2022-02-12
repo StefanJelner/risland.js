@@ -2094,10 +2094,10 @@ var RIsland = (function () {
           func: function func(event) {
             if (event.target instanceof Element) {
               Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
-                var closest = event.target.closest(selector);
+                var $closest = event.target.closest(selector);
 
-                if (closest !== null) {
-                  _this._config.delegations[eventName][selector](event, closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
+                if ($closest !== null) {
+                  _this._config.delegations[eventName][selector](event, $closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
                 }
               });
             }

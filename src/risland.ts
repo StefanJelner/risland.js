@@ -152,12 +152,12 @@ export default class RIsland<IState extends Record<string, any>> {
                 , func: (event: Event) => {
                     if (event.target instanceof Element) {
                         Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
-                            const closest = (event.target as Element).closest(selector);
+                            const $closest = (event.target as Element).closest(selector);
 
-                            if (closest !== null) {
+                            if ($closest !== null) {
                                 this._config.delegations[eventName][selector](
                                     event
-                                    , closest
+                                    , $closest
                                     , cloneDeep(this._state)
                                     , this._setState.bind(this)
                                 );
@@ -481,7 +481,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
         )
         , Record<string, (
             event: Event
-            , closest: Element
+            , $closest: Element
             , state: IState
             , setState: RIsland<IState>['_setState']
         ) => void>

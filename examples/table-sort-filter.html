@@ -188,8 +188,8 @@
                             $element: document.getElementById('island')
                             , delegations: {
                                 'click': {
-                                    '.island__column--head': function(_, closest, __, setState) {
-                                        var index = Array.from(closest.parentElement.children).indexOf(closest);
+                                    '.island__column--head': function(_, $closest, __, setState) {
+                                        var index = Array.from($closest.parentElement.children).indexOf($closest);
 
                                         if (index !== -1) {
                                             var sort = indexToSort(index);

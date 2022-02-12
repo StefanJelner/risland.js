@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
         $element: document.getElementById('island')
         , delegations: {
             'click': {
-                '.island__checkbox': function(_, closest, __, setState) {
-                    setState({ checked: (closest as HTMLFormElement).checked });
+                '.island__checkbox': function(_, $closest, __, setState) {
+                    setState({ checked: ($closest as HTMLFormElement).checked });
                 }
             }
         }
