@@ -5,28 +5,139 @@
         <title>RIsland.js - Table example</title>
     </head>
     <body>
+        <style type="text/css">
+            @keyframes blinker {
+                50% {
+                    background-color: #faa;
+                }
+            }
+
+            body {
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 12px;
+            }
+
+            .island__wrapper {
+                border: 1px solid #ccc;
+                height: 50vh;
+                overflow: auto;
+                width: 50vw;
+            }
+
+            .island__table {
+                border-collapse: collapse;
+                border-style: hidden;
+            }
+
+            .island__column {
+                border: 1px solid #ccc;
+                padding: 5px;
+                white-space: nowrap;
+            }
+
+            .island__column--head {
+                background-color: #444;
+                color: #fff;
+                cursor: pointer;
+                position: sticky;
+                top: 0;
+            }
+
+            .island__column--sort {
+                padding-right: 20px;
+                position: relative;
+            }
+
+            .island__column--sort::after {
+                border: 5px solid transparent;
+                content: '';
+                height: 0;
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0;
+            }
+
+            .island__column--sort-ASC::after {
+                border-bottom: 5px solid #fff;
+                border-top: none;
+            }
+
+            .island__column--sort-DESC::after {
+                border-bottom: none;
+                border-top: 5px solid #fff;
+            }
+
+            .island__column--body {
+                background-color: #fff;
+                color: #000;
+            }
+
+            .island__column--number {
+                font-family: monospace;
+                text-align: right;
+            }
+
+            .island__row:nth-child(even) .island__column--body {
+                background-color: #eee;
+            }
+
+            .island__row:hover .island__column--body {
+                background-color: #eed;
+            }
+
+            .island__row:hover .island__column--body:hover {
+                background-color: #ee8;
+            }
+
+            .island__mark {
+                animation: blinker 2s linear infinite;
+            }
+        </style>
+
         <div id="island"></div>
 
         <script type="text/html" id="squirrelly">
             <div class="island">
-                <table class="island__table">
-                    <thead>
-                        <tr>
-                            {{@each(state.heads) => head}}
-                                <th class="island__column island__column--head">{{head.label}}</th>
-                            {{/each}}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{@each(state.data) => row}}
-                            <tr>
-                                {{@each(row) => column}}
-                                    <td class="island__column island__column--body">{{column}}</td>
+                <h1>Meat consumption (kilograms per person per year)</h1>
+                <p>Everyone is &quot;just eating a little bit of meat&quot;.</p>
+                <div>
+                    <label for="filter">Filter:</label>
+                    <input class="island__filter" type="text" id="filter" value="" />
+                </div>
+                <br />
+                <div class="island__wrapper">
+                    <table class="island__table">
+                        <thead>
+                            <tr class="island__row">
+                                {{@each(state.heads) => head}}
+                                    <th class="
+                                        island__column
+                                        island__column--head
+                                        {{@if(state.sort === head.sort)}}
+                                            island__column--sort
+                                            island__column--sort-{{state.dir}}
+                                        {{/if}}
+                                    ">{{head.label}}</th>
                                 {{/each}}
                             </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {{@each(state.data) => row}}
+                                <tr class="island__row">
+                                    {{@each(row) => column, index}}
+                                        <td class="
+                                        island__column
+                                        island__column--body
+                                        island__column--{{state.heads[index].type}}
+                                    ">{{column | format(state.heads[index].type) | mark(state.filter) | safe}}</td>
+                                    {{/each}}
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
                 <p>
                     Taken from:
                     <a href="https://ourworldindata.org/meat-production" target="_new">Our World In Data</a>
@@ -168,20 +279,41 @@
                         function getTableData(sort, dir, filter) {
                             var index = sortToIndex(sort);
                             var func = indexDirToFunc(index, dir);
-                            var filterTrim = filter.trim();
 
-                            // only filter if the text is longer than 2 chars
-                            if (filterTrim.length > 2) {
-                                var filterTL = filterTrim.toLowerCase();
-
+                            // only filter if the text is longer than 1 chars
+                            if (filter.length > 1) {
                                 return flatTable.slice().filter(function(row) {
                                     return row.some(function(column) {
-                                        return String(column).toLowerCase().indexOf(filterTL) !== -1;
+                                        return String(column).toLowerCase().indexOf(filter) !== -1;
                                     });
                                 }).sort(func);
                             }
 
                             return flatTable.slice().sort(func);
+                        }
+
+                        function sqrlFormatFilter(string, type) {
+                            if (type === 'number') {
+                                return string.toFixed(2);
+                            }
+
+                            return string;
+                        }
+
+                        // see https://stackoverflow.com/a/3561711
+                        function escapeRegex(string) {
+                            return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        }
+
+                        function sqrlMarkFilter(string, filter) {
+                            if (filter.length > 1 && string.toLowerCase().indexOf(filter) !== -1) {
+                                return string.replace(
+                                    new RegExp('(' + escapeRegex(filter) + ')', 'gi')
+                                    , '<span class="island__mark">$1</span>'
+                                );
+                            }
+
+                            return string;
                         }
 
                         new RIsland({
@@ -210,6 +342,22 @@
                                         }
                                     }
                                 }
+                                , 'input': {
+                                    '.island__filter': function(_, $closest, __, setState) {
+                                        setState(function(state) {
+                                            var filter = $closest.value.trim().toLowerCase();
+
+                                            return {
+                                                data: getTableData(state.sort, state.dir, filter)
+                                                , filter: filter
+                                            };
+                                        });
+                                    }
+                                }
+                            }
+                            , filters: {
+                                format: sqrlFormatFilter
+                                , mark: sqrlMarkFilter
                             }
                             , initialState: {
                                 data: getTableData('country', 'ASC', '')

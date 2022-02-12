@@ -285,7 +285,7 @@ module.exports = {
 
 Your Typescript file:
 ```ts
-const template: string = require('./template.squirrelly.html').default
+const template: string = require('./template.squirrelly.html').default;
 ```
 
 ## <a name="event-delegation"></a> Event delegation
@@ -342,17 +342,23 @@ Example:
             delegations: {
                 'mousemove': {
                     '.island': function(event, $closest, state, setState) {
-                        setState(function(state2) { return { unthrottled: state2.unthrottled + 1 }; });
+                        setState(function(state2) {
+                            return { unthrottled: state2.unthrottled + 1 };
+                        });
                     }
                 },
                 'mousemove.throttled': {
                     '.island': function(event, $closest, state, setState) {
-                        setState(function(state2) { return { throttledRaf: state2.throttledRaf + 1 }; });
+                        setState(function(state2) {
+                            return { throttledRaf: state2.throttledRaf + 1 };
+                        });
                     }
                 },
                 'mousemove.throttled.1000': {
                     '.island': function(event, $closest, state, setState) {
-                        setState(function(state2) { return { throttled1s: state2.throttled1s + 1 }; });
+                        setState(function(state2) {
+                            return { throttled1s: state2.throttled1s + 1 };
+                        });
                     }
                 }
             },
@@ -462,7 +468,9 @@ setState(
             function(resolve) {
                 window.setTimeout(
                     function() {
-                        resolve(function(state) { return state.baz === true ? { foo: state.foo + 1 } : null; });
+                        resolve(function(state) {
+                            return state.baz === true ? { foo: state.foo + 1 } : null;
+                        });
                     },
                     5000
                 );
@@ -482,7 +490,9 @@ setState(
                         resolve(
                             [
                                 { bar: 'quox' },
-                                function(state) { return state.baz === true ? { foo: state.foo + 1 } : null; })
+                                function(state) {
+                                    return state.baz === true ? { foo: state.foo + 1 } : null;
+                                })
                             ]
                         );
                     },
@@ -603,6 +613,10 @@ The following RIsland lifecycles are in logical order of their occurence:
 
 The constructor lifecycle - the "birth" - does the configuration, precompiling of the [squirrelly](https://github.com/squirrellyjs/squirrelly) template, registering of [squirrelly](https://github.com/squirrellyjs/squirrelly) related `partial`s, `filter`s, `helper`s and `nativeHelper`s and adding DOM event listeners for the event delegation.
 
+### Inital `render`
+
+See the `render` lifecycle.
+
 ### `load`
 
 This is the lifecycle which runs when the initial content - based on the initial state - has been rendered and is present in the DOM. It invokes the `load` config callback if present.
@@ -613,11 +627,15 @@ This lifecyle takes state changes applied by `setState()` and compares them (dee
 
 ### `render`
 
+This lifecycle uses the current state to render template output and morph the HTML result into the DOM. It is throttled by request animation frame to not run unnecessary rendering cycles even the browser does not show it.
+
 ### `update`
 
 This is the lifecycle which runs when the updated content - based on state changes - has been rendered and is present in the DOM. It invokes the `update` config callback if present.
 
 ### `unload`
+
+This lifecycle has to be actively triggered by the `unload`-method. It removes all event listeners from the DOM element which was managed by RIsland and empties it.
 
 ## <a name="options"></a> Options
 
@@ -703,6 +721,16 @@ The only method which an RIsland instance offers is `unload`. Everything else is
 ```
 
 ## <a name="examples"></a> Examples
+
+If you want to run the examples in your browser - and not just check the code - you have to do the following:
+
+- Clone this repository.
+- Install node.js if necessary.
+- Run `npm install`.
+- Run `npm run examples`.
+- Open http://localhost:3000 in your browser or press any key.
+
+The examples are not listed alphabetically, but in order of skill level.
 
 ## <a name="final-thoughts"></a> Final thoughts
 
