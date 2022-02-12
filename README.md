@@ -13,6 +13,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [`template` tag](#template-tag)
 - [`template` tag and tables](#template-tag-table)
 - [`script` tag `type="text/html"`](#script-tag)
+- [Bundlers and template files](#bundlers-template)
 - [Event delegation](#event-delegation)
 - [Event throttling](#event-throttling)
 - [State](#state)
@@ -263,6 +264,28 @@ In some rare cases the `template` tag causes the browser to parse the template a
         </table>
     </div>
 </script>
+```
+
+## <a name="bundlers-template"></a> Bundlers and template files
+
+Some bundlers are capable of injecting required files as strings during the process of bundling. A very well know example is the usage of [webpack](https://github.com/webpack/webpack) with [raw-loader](https://github.com/webpack-contrib/raw-loader).
+
+`webpack.config.js`:
+```js
+module.exports = {
+    module: {
+        rules: [{
+            test: /\.squirrelly\.html$/
+            , loader: 'raw-loader'
+            , exclude: /node_modules/
+        }]
+    }
+};
+```
+
+Your Typescript file:
+```ts
+const template: string = require('./template.squirrelly.html').default
 ```
 
 ## <a name="event-delegation"></a> Event delegation
