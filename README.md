@@ -229,7 +229,13 @@ In Typescript it is necessary to declare the type of the template:
 template: document.getElementById('squirrelly') as HTMLTemplateElement
 ```
 
-Otherwise Typescript cannot determine whether the template is a `string` or a `HTMLTemplateElement`.
+or:
+
+```ts
+template: document.getElementById('squirrelly') as HTMLScriptElement
+```
+
+Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 
@@ -237,11 +243,11 @@ Partials work the same way, the only difference is, that the namespace inside of
 
 ## <a name="template-tag-table"></a> `template` tag and tables
 
-There is one big drawback of using the `template` tag: If some HTML needs a strict structure of the tags, like for example in tables, in which a `tr` row element **MUST NOT** contain any other children than `td` or `th` elements and therefore any text nodes will get deleted or placed outside of the table by the HTML parser, your templates code will break, because `template` tags are not treated as is - as plain text - but become parsed by the browser and therefore malformed HTML will lead to unpredictable parsing results. In such rare cases it is better to use a `script` tag element with `type="text/html"` to activate syntax highlighting in most editors.
+There is one big drawback of using the `template` tag: If some HTML needs a strict structure of the tags, like for example in tables, in which a `tr` row element **MUST NOT** contain any other direct children than `td` or `th` elements and therefore any text nodes will get deleted or placed outside of the table by the HTML parser, your templates code will break, because `template` tags are not treated as is - as plain text - but become parsed by the browser and therefore malformed HTML will lead to unpredictable parsing results. In such rare cases it is better to use a `script` tag element (with `type="text/html"` to activate syntax highlighting in most editors).
 
 ## <a name="script-tag"></a> `script` tag `type="text/html"`
 
-In some rare cases the `template` tag causes the browser to parse the template as malformed HTML, leading to unpredictable or unexpected template code. One case is using `@each` in tables, or to be more precise: using text nodes in wrong places. In such cases using a `script` tag is the better choice. Because usually `script` tags are interpreted as JavaScript, this would lead to error messages, so a different `type`has to be set. Use `type="text/html"` to activate syntax highlighting for HTML in your editor.
+In some rare cases the `template` tag causes the browser to parse the template as malformed HTML, leading to unpredictable or unexpected template code. One case is using `@each` in tables, or to be more precise: using text nodes in wrong places ([squirrelly](https://github.com/squirrellyjs/squirrelly) code is usually treated like a text node). In such cases using a `script` tag is the better choice. Because usually `script` tags are interpreted as JavaScript, this would lead to error messages, so a different `type`has to be set. Use `type="text/html"` to activate syntax highlighting for HTML in your editor.
 
 ```html
 <script type="text/html" id="squirrelly">
