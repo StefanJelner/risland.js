@@ -8,7 +8,7 @@
         <div id="island"></div>
 
         <template id="squirrelly">
-            <div class="island{{@if(state.checked)}} island--checked{{/if}}">
+            <div class="island">
                 <input class="island__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
                 <p>{{state.counter}} second{{@if(state.counter !== 1)}}s{{/if}}</p>

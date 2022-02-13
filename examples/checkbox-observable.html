@@ -9,14 +9,14 @@
         <div id="island-log"></div>
 
         <template id="squirrelly-checkbox">
-            <div class="island-checkbox{{@if(state.checked)}} island-checkbox--checked{{/if}}">
+            <div class="island-checkbox">
                 <input class="island-checkbox__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
             </div>
         </template>
 
         <template id="squirrelly-log">
-            <div class="island-log{{@if(state.checked)}} island-log--checked{{/if}}">
+            <div class="island-log">
                 <ul>
                     {{@each(state.log) => checked}}
                         <li>
@@ -61,8 +61,7 @@
                     $element: document.getElementById('island-log')
                     , delegations: {}
                     , initialState: {
-                        checked: false
-                        , log: []
+                        log: []
                     }
                     , load: function(_, setState) {
                         console.log('log load');
@@ -70,8 +69,7 @@
                         exchange.subscribe(function(checked) {
                             setState(function(state) {
                                 return {
-                                    checked: checked
-                                    , log: state.log.concat(checked)
+                                    log: state.log.concat(checked)
                                 };
                             });
                         });

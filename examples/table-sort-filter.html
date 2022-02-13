@@ -45,7 +45,6 @@
 
             .island__column--sort {
                 padding-right: 20px;
-                position: relative;
             }
 
             .island__column--sort::after {
@@ -94,6 +93,15 @@
             .island__mark {
                 animation: blinker 2s linear infinite;
             }
+
+            .island__line {
+                background-color: #ccc;
+                border: 0;
+                height: 1px;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
         </style>
 
         <div id="island"></div>
@@ -135,6 +143,7 @@
                                     {{/each}}
                                 </tr>
                             {{/each}}
+                            <tr class="island__row island__row--last"><td colspan="{{state.heads.length}}"></td></tr>
                         </tbody>
                     </table>
                 </div>

@@ -43,6 +43,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - Easy to learn. RIsland is no rocket science!
 - No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
+- Clearer separation of concerns (logic, data, representation, HTML, CSS, JS)
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern `template` tags or `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
@@ -730,7 +731,39 @@ If you want to run the examples in your browser - and not just check the code - 
 - Run `npm run examples`.
 - Open http://localhost:3000 in your browser or press any key.
 
-The examples are not listed alphabetically, but in order of skill level.
+The examples are not listed alphabetically, but in order of skill level. The examples which are not mentioned here, are more for testing purposes (like testing error messages).
+
+### `checkbox.html`
+
+This is the most simple checkbox example, which is also shown in this readme.
+
+### `checkbox-promise.html`
+
+This is an example of a Promise with a time delay. 5 seconds after the checkbox has being changed a log entry is generated.
+
+### `checkbox-seconds-counter.html`
+
+This is an example of a simple checkbox with an additional seconds counter.
+
+### `checkbox-observable.html`
+
+This is an example of two RIsland instances commuicating through a Subject (RxJS). Whenever the checkbox changes, it generates a log entry.
+
+### `checkbox-unload.html`
+
+This is an example of the `unload` method as shown in this readme.
+
+### `squirrelly-partials-test.html`
+
+This is an example of how to use partials in RIsland. It shows a checkbox and whenever the checkbox changes, a log entry is generated.
+
+### `mousemove-throttled.html`
+
+This is an example which shows the event throttling options. Constantly move the mouse over the text box to see the throttling. Interestingly enough it seems that the `mousemove` event already gets throttled by request animation frame (at least in Chrome and Firefox).
+
+### `table-sort-filter.html`
+
+This is a basic example of a table, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
 
 ## <a name="final-thoughts"></a> Final thoughts
 
