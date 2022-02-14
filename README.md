@@ -25,6 +25,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Advanced - dangerous - options](#advanced-options)
 - [Methods](#methods)
 - [Examples](#examples)
+- [Hints](#hints)
 - [Final thoughts](#final-thoughts)
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
@@ -642,33 +643,159 @@ This lifecycle has to be actively triggered by the `unload`-method. It removes a
 
 ### `$element`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    $element: Element;
+}
+```
+
+The DOM element which should be managed by RIsland. All event listeners will become added to this element and the HTML will be injected into it.
+
+> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** You can place a loading notification inside of the DOM element. The moment RIsland is loaded, it will be replaced with the real content.
+
 ### `delegations`
+
+```ts
+private _setState(nextState: TRIslandSetState<IState>): void;
+
+type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
+
+type TRIslandSetState<IState extends Record<string, any>> = (
+    Partial<IState>
+    | null
+    | Promise<Partial<IState> | null>
+    | ((state: IState) => TRIslandSetState<IState>)
+    | Array<TRIslandSetState<IState>>
+);
+
+interface IRIslandConfig<IState extends Record<string, any>> {
+    delegations: Partial<Record<
+        (
+            TRIslandEventNames
+            | `${TRIslandEventNames}.throttled`
+            | `${TRIslandEventNames}.throttled.${number}`
+        ),
+        Record<string, (
+            event: Event,
+            $closest: Element,
+            state: IState,
+            setState: RIsland<IState>['_setState']
+        ) => void>
+    >>;
+}
+```
 
 ### `filters`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    filters: Record<string, Parameters<typeof Sqrl['filters']['define']>[1]>;
+}
+```
+
+The `filters` config object consists of keys and callback functions which become registered as filters in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Filters API](https://squirrelly.js.org/docs/api/filter-api) for more information on how to use filters in [squirrelly](https://github.com/squirrellyjs/squirrelly).
+
 ### `helpers`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    helpers: Record<string, Parameters<typeof Sqrl['helpers']['define']>[1]>;
+}
+```
+
+The `helpers` config object consists of keys and callback functions which become registered as helpers in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Helpers API](https://squirrelly.js.org/docs/api/helper-api/) for more information on how to use helpers in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
 ### `initialState`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    initialState: IState;
+}
+```
+
+These are the initial values of the state. Each value which gets used later should at least be initialized here, even with an empty object, empty array or a value of `null`. 
+
 ### `load`
 
+```ts
+private _setState(nextState: TRIslandSetState<IState>): void;
+
+type TRIslandSetState<IState extends Record<string, any>> = (
+    Partial<IState>
+    | null
+    | Promise<Partial<IState> | null>
+    | ((state: IState) => TRIslandSetState<IState>)
+    | Array<TRIslandSetState<IState>>
+);
+
+interface IRIslandConfig<IState extends Record<string, any>> {
+    load: (state: IState, setState: RIsland<IState>['_setState']) => void;
+}
+```
+
 ### `nativeHelpers`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    nativeHelpers: Record<string, Parameters<typeof Sqrl['nativeHelpers']['define']>[1]>;
+}
+```
+
+The `nativeHelpers` config object consists of keys and callback functions which become registered as nativeHelpers in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Native Helpers API](https://squirrelly.js.org/docs/api/native-helper-api) for more information on how to use nativeHelpers in [squirrelly](https://github.com/squirrellyjs/squirrelly).
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** As also stated in the Squirrelly documentation: "Native helpers are complicated and kind of messy. If you can implement something with a regular helper, do that instead."
 
 ### `partials`
 
 ```ts
-partials: Record<string, string | HTMLTemplateElement | HTMLScriptElement>
+interface IRIslandConfig<IState extends Record<string, any>> {
+    partials: Record<string, string | HTMLTemplateElement | HTMLScriptElement>;
+}
 ```
 
-The `partials` config object consists of keys and - like the `template` config - `string`s, `template` tag DOM elements or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information, on how to use Partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
+The `partials` config object consists of keys and - like the `template` config - `string`s, `template` tag DOM elements or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information on how to use partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
 ### `shouldUpdate`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    shouldUpdate: (state: IState, nextState: IState) => boolean;
+}
+```
+
 ### `template`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    template: string | HTMLTemplateElement | HTMLScriptElement;
+}
+```
 
 ### `unload`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    unload: (state: IState) => void;
+}
+```
+
 ### `update`
+
+```ts
+private _setState(nextState: TRIslandSetState<IState>): void;
+
+type TRIslandSetState<IState extends Record<string, any>> = (
+    Partial<IState>
+    | null
+    | Promise<Partial<IState> | null>
+    | ((state: IState) => TRIslandSetState<IState>)
+    | Array<TRIslandSetState<IState>>
+);
+
+interface IRIslandConfig<IState extends Record<string, any>> {
+    update: (state: IState, setState: RIsland<IState>['_setState']) => void;
+}
+```
 
 ## <a name="advanced-options"></a> Advanced - dangerous - options
 
@@ -676,15 +803,45 @@ The `partials` config object consists of keys and - like the `template` config -
 
 ### `deepmerge`
 
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    deepmerge: deepmerge.Options;
+}
+```
+
 ### `morphdom`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    morphdom: Parameters<typeof morphdom>[2];
+}
+```
 
 ### `nonBubblingEvents`
 
+```ts
+type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
+
+interface IRIslandConfig<IState extends Record<string, any>> {
+    nonBubblingEvents: Array<TRIslandEventNames>;
+}
+```
+
 ### `squirrelly`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    squirrelly: Partial<SqrlConfig>;
+}
+```
 
 ## <a name="methods"></a> Methods
 
 ### `unload`
+
+```ts
+public unload(): void;
+```
 
 The only method which an RIsland instance offers is `unload`. Everything else is done through the configuration object in the constructor. `unload` removes all event listeners from the element which gets managed by RIsland, empties its HTML and calls the configured `unload` callback - if present - with the final state.
 
@@ -737,6 +894,10 @@ The examples are not listed alphabetically, but in order of skill level. The exa
 
 This is the most simple checkbox example, which is also shown in this readme.
 
+### `checkbox-loading-notification.html`
+
+This is an example of how to place a loading notification in the DOM element which then gets manages by RIsland. For 10 seconds a notification blinks, until finally RIsland is loaded.
+
 ### `checkbox-promise.html`
 
 This is an example of a Promise with a time delay. 5 seconds after the checkbox has being changed a log entry is generated.
@@ -747,7 +908,7 @@ This is an example of a simple checkbox with an additional seconds counter.
 
 ### `checkbox-observable.html`
 
-This is an example of two RIsland instances commuicating through a Subject (RxJS). Whenever the checkbox changes, it generates a log entry.
+This is an example of two RIsland instances communicating through a Subject (RxJS). Whenever the checkbox changes, it generates a log entry.
 
 ### `checkbox-unload.html`
 
@@ -764,6 +925,20 @@ This is an example which shows the event throttling options. Constantly move the
 ### `table-sort-filter.html`
 
 This is a basic example of a table, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
+
+## <a name="hints"></a> Hints
+
+### `safe` flag in [squirrelly](https://github.com/squirrellyjs/squirrelly)
+
+If you want to output HTML in your variables you should use the `safe` flag as the last filter in your filter chain, otherwise the content will be HTML encoded. This is intentionally to prevent XSS attacks. See [The safe flag](https://squirrelly.js.org/docs/syntax/filters/#the-safe-flag).
+
+```html
+<template id="squirrelly">
+    <div class="island">
+        {{'<p>Hello world!</p>' | safe}}
+    </div>
+</template>
+```
 
 ## <a name="final-thoughts"></a> Final thoughts
 

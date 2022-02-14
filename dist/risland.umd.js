@@ -2177,8 +2177,8 @@
     RIsland.prototype._render = function () {
       var _this = this;
 
-      if (this._config.$element.firstChild === null) {
-        this._config.$element.appendChild(document.createElement('div'));
+      if (this._loaded === false || this._config.$element.firstChild === null) {
+        this._config.$element.innerHTML = '<div></div>';
       }
 
       morphdom(this._config.$element.firstChild, this._compiledTemplate(this._state, this._config.squirrelly), _assign(_assign({}, this._config.morphdom), {

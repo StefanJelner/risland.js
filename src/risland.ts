@@ -292,8 +292,11 @@ export default class RIsland<IState extends Record<string, any>> {
     private _render(): void {
         // morphdom replaces the element itself, this is why we have to add a fake element on the first call and
         // then use firstChild.
-        if (this._config.$element.firstChild === null) {
-            this._config.$element.appendChild(document.createElement('div'));
+        if (
+            this._loaded === false
+            || this._config.$element.firstChild === null
+        ) {
+            this._config.$element.innerHTML = '<div></div>';
         }
 
         morphdom(

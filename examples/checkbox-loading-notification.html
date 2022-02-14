@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox with loading notification</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div id="island">
+            <div class="island island--loading">
+                Widget still loading...
+            </div>
+        </div>
+
+        <template id="squirrelly">
+            <div class="island">
+                <input class="island__checkbox" type="checkbox" />
+                {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+            </div>
+        </template>
+
+        <style type="text/css">
+            @keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
+
+            .island--loading {
+                color: #f00;
+                animation: blinker 2s linear infinite;
+            }
+        </style>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                window.setTimeout(function() {
+                    new RIsland({
+                        $element: document.getElementById('island')
+                        , delegations: {
+                            'click': {
+                                '.island__checkbox': function(_, $closest, __, setState) {
+                                    setState({ checked: $closest.checked });
+                                }
+                            }
+                        }
+                        , initialState: {
+                            checked: false
+                        }
+                        , load: function() { console.log('load'); }
+                        , template: document.getElementById('squirrelly')
+                        , update: function() { console.log('update'); }
+                    });
+                }, 10000);
+            });
+        </script>
+    </body>
+</html>
