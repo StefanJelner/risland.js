@@ -145,7 +145,7 @@ export default class RIsland<IState extends Record<string, any>> {
             commaSeparatedEventNames: TRIslandEventNamesThrottled | TRIslandEventNamesCommaSeparated
             , index: number
         ) => {
-            commaSeparatedEventNames.split(/\s*,\s*/g).forEach((eventName: TRIslandEventNamesThrottled) => {
+            commaSeparatedEventNames.trim().split(/\s*,\s*/g).forEach((eventName: TRIslandEventNamesThrottled) => {
                 const funcName: TRIslandDelegationFuncsKey = `${eventName}:${index}`;
 
                 if (funcName in this._delegationFuncs) {
