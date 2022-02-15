@@ -687,7 +687,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
-The delegations config object consists of event names (plus throttling options) and sub objects, which consist of CSS selectors and a callback function. Whenever an event occurs, which matches one of the configure event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation) and [Event throttling](#event-throttling).
+The delegations config object consists of event names (plus throttling options) and sub objects, which consist of CSS selectors and a callback function. Whenever an event occurs, which matches one of the configured event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation) and [Event throttling](#event-throttling).
 
 Here is a list of the arguments of the callback function:
 
@@ -712,14 +712,14 @@ and following RIsland config:
     delegations: {
         'click': {
             '.foo': function(event, $closest, state, setState) {
-                event.target.preventDefault();
+                event.preventDefault();
             }
         }
     }
 }
 ```
 
-The first thought would be, that whenever someone clicks the link the URL would not be opened, but that assumption is wrong. The `event.target` could be the nested `span` tag and therefor using `preventDefault()` on the `span` tag does not prevent the link from being opened (it rather might throw an exception, like `event.target has no method preventDefault`). `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
+The first thought would be, that whenever someone clicks the link the URL would not be opened, but that assumption is wrong. The `event.target` could be the nested `span` tag and therefor using `preventDefault()` on the `span` tag does not prevent the link from being opened. `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
 
 ```js
 {
