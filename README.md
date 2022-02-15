@@ -2,6 +2,8 @@
 
 Feel free to pronounce it "Are-Island" or "Reyeland"!
 
+---
+
 ## Table of contents
 
 - [Introduction](#introduction)
