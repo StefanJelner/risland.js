@@ -28,6 +28,10 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Hints](#hints)
 - [Final thoughts](#final-thoughts)
 
+---
+
+## <a name="introduction"></a> Introduction
+
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
 The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
@@ -35,6 +39,8 @@ The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a scri
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** It is important to understand, that RIsland is no replacement for fully featured libraries, like [Angular](https://github.com/angular/angular), [React](https://github.com/facebook/react) or [Vue](https://github.com/vuejs). Before using this library check whether its features are sufficient for your needs.
+
+---
 
 ## <a name="pros"></a> Pros
 
@@ -52,6 +58,8 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader).
 - Can be combined with other frameworks, like [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, to make more sophisticated scenarios possible. This way several instances of RIsland can also intercommunicate and exchange states.
 
+---
+
 ## <a name="cons"></a> Cons
 
 - It is not a fully featured component library. This means sub components or nested islands are not possible. (Technically speaking it might be possible in some way, but the library is not intended to be used that way.) If you need features like this, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
@@ -61,6 +69,8 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - This library only takes care of templating, event handling, state management, rendering and throttling. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
+
+---
 
 ## <a name="technologies"></a> Technologies
 
@@ -73,6 +83,8 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - [raf-throttle](https://github.com/wuct/raf-throttle) - throttles method invocations by request animation frame
 
 Feel free to check the package.json, if you want to take a further look into the used technologies.
+
+---
 
 ## <a name="installation"></a> Installation
 
@@ -95,6 +107,8 @@ then import it:
 ```ts
 import RIsland from 'risland.js';
 ```
+
+---
 
 ## <a name="basic-usage"></a> Basic usage
 
@@ -183,6 +197,8 @@ There are several things which are quite obvious:
 1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag (or also the `script`tag with `type="text/html"`).
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
+---
+
 ## <a name="template-tag"></a> `template` tag
 
 > The template element is used to declare fragments of HTML that can be cloned and inserted in the document by script.
@@ -238,9 +254,13 @@ Otherwise Typescript cannot determine whether the template is a `string`, a `HTM
 
 Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
+---
+
 ## <a name="template-tag-table"></a> `template` tag and tables
 
 There is one big drawback of using the `template` tag: If some HTML needs a strict structure of the tags, like for example in tables, in which a `tr` row element **MUST NOT** contain any other direct children than `td` or `th` elements and therefore any text nodes will get deleted or placed outside of the table by the HTML parser, your templates code will break, because `template` tags are not treated as is - as plain text - but become parsed by the browser and therefore malformed HTML will lead to unpredictable parsing results. In such rare cases it is better to use a `script` tag element (with `type="text/html"` to activate syntax highlighting in most editors).
+
+---
 
 ## <a name="script-tag"></a> `script` tag `type="text/html"`
 
@@ -270,6 +290,8 @@ template: document.getElementById('squirrelly') as HTMLScriptElement
 
 Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
 
+---
+
 ## <a name="bundlers-template"></a> Bundlers and template files
 
 Some bundlers are capable of injecting required files as strings during the process of bundling. A very well know example is the usage of [webpack](https://github.com/webpack/webpack) with [raw-loader](https://github.com/webpack-contrib/raw-loader).
@@ -292,6 +314,8 @@ Your Typescript file:
 const template: string = require('./template.squirrelly.html').default;
 ```
 
+---
+
 ## <a name="event-delegation"></a> Event delegation
 
 > Event bubbling is a type of event propagation where the event first triggers on the innermost target element, and then successively triggers on the ancestors (parents) of the target element in the same nesting hierarchy till it reaches the outermost DOM element or document object.
@@ -309,6 +333,8 @@ RIsland does not use event delegation to speed things up, that is a nice side ef
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
 
 > <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** When it comes to event delegation then the CSS paradigm [BEM](http://getbem.com/introduction/) shows another advantage: because with the [BEM](http://getbem.com/introduction/) notation every element gets a very precise - often unique - class name, it is much easier to address elements with event delegation. So one advice is, to use [BEM](http://getbem.com/introduction/) in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template (and the partials). All the examples in this readme and all the code examples in the `examples` folder use [BEM](http://getbem.com/introduction/).
+
+---
 
 ## <a name="event-throttling"></a> Event throttling
 
@@ -394,11 +420,15 @@ resize.throttled
 focus
 ```
 
+---
+
 ## <a name="state"></a> State
 
 "State" means the current state of data at a specific point in time - leading to a predictable template output and DOM representation. An RIsland instance always has an inner encapsulated state, which can be initialized and then changed with `setState()`. Everytime the state gets changed by `setState()`, the lifecycle `shouldUpdate` gets triggered to decide whether something in the state has changed, which makes a rerendering with `render` necessary. If so, the current state will be handed over to the [squirrelly](https://github.com/squirrellyjs/squirrelly) template and the HTML output will then be morphed into the DOM. No direct DOM manipulations take place this way, but the whole applications representational state (in the DOM) depends on its inner data state. This is why this paradigm is called "reactive", because inspite of changing things directly and in an imperative way in the DOM, you change the state and then the RIsland instance reacts on these changes and rerenders - or not.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, your direct changes might be gone. This leads to an unpredictable and inconsistent application. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
+
+---
 
 ## <a name="why-cloning"></a> Why cloning?
 
@@ -413,6 +443,8 @@ For a state pattern, this is a very bad situation, because the state - as a tota
 RIsland takes care of that problem by always creating deep clones of the state. It is not enough to create a shallow clone, because f.ex. in an array of objects, it is not sufficient to only clone the array, because in the cloned array, the objects are still references to the original objects. The only way is to deeply clone **EVERYTHING**. It is clear that this strategy has some performance drawbacks, but on the other hand it leads to a totally encapsulated inner state of the component without any side effects. Most reactive libraries with state management follow this pattern. So even event and lifecycle callbacks get a current snapshot of the state as an argument, it is a clone. The only way to change the state is by using the `setState()` method, which also gets passed as an argument.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practice to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
+
+---
 
 ## <a name="setstate"></a> `setState()`
 
@@ -557,6 +589,8 @@ setState(
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** RIsland gives the ability to handle very complex state scenarios with one single method. You could possibly use an Array of Promises, which return functions, which return null or more Promises, which return Arrays of Promises, which return simple objects. You can do that! But do yourself a favour and avoid rocket science! If the scenarios get too complex, you might want to rethink your applications structure.
 
+---
+
 ## <a name="state-pitfalls"></a> Common state and `setState()` pitfalls
 
 The all time evergreen and most common pitfall is to use an obsolete state. This means that a state clone is used which is outdated, because the state has already changed, so an old value is used, which leads to unexpected behaviour. These problems are very hard to debug and find and can drive developers mad. Here is a very simple example:
@@ -607,6 +641,8 @@ This works, because in the callback function the `state` always contains the mos
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Always use the freshest and most current state. This can be done easily by using the callback function. In `setState()` the pure object should only be used if the state is not involved at all.
 
+---
+
 ## <a name="lifecycles"></a> Lifecycles
 
 "Lifecycle" means a specific action taking place in the RIsland instance. Like in a natural organism some lifecycles happen only once, like birth (constructor) and death (`unload`) and some happen cyclic, like sleeping, food intake and digestion (`shouldUpdate`, `render` and `update` triggered by a state change).
@@ -640,6 +676,8 @@ This is the lifecycle which runs when the updated content - based on state chang
 ### `unload`
 
 This lifecycle has to be actively triggered by the `unload`-method. It removes all event listeners from the DOM element which was managed by RIsland and empties it.
+
+---
 
 ## <a name="options"></a> Options
 
@@ -697,7 +735,7 @@ This is the original event, which was triggered. It is possible to use `preventD
 
 #### `$closest`
 
-This is the closest ancestor of the event target. Imagine the following structure:
+This is the closest ancestor of the event target. See [`Element.closest()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest). Imagine the following structure:
 
 ```html
 <a class="foo" href="http://www.foo.com">
@@ -855,6 +893,8 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+---
+
 ## <a name="advanced-options"></a> Advanced - dangerous - options
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** the following options should only be used, if you really know what you are doing, because they can change the way, how RIsland works internally and affect the result - in the worst case cause exceptions, errors or unwanted behaviour.
@@ -892,6 +932,8 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     squirrelly: Partial<SqrlConfig>;
 }
 ```
+
+---
 
 ## <a name="methods"></a> Methods
 
@@ -935,6 +977,8 @@ The only method which an RIsland instance offers is `unload`. Everything else is
     });
 </script>
 ```
+
+---
 
 ## <a name="examples"></a> Examples
 
@@ -984,6 +1028,8 @@ This is an example which shows the event throttling options. Constantly move the
 
 This is a basic example of a table, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
 
+---
+
 ## <a name="hints"></a> Hints
 
 ### `safe` flag in [squirrelly](https://github.com/squirrellyjs/squirrelly)
@@ -997,6 +1043,8 @@ If you want to output HTML in your variables you should use the `safe` flag as t
     </div>
 </template>
 ```
+
+---
 
 ## <a name="final-thoughts"></a> Final thoughts
 
