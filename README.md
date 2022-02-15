@@ -232,12 +232,6 @@ In Typescript it is necessary to declare the type of the template:
 template: document.getElementById('squirrelly') as HTMLTemplateElement
 ```
 
-or:
-
-```ts
-template: document.getElementById('squirrelly') as HTMLScriptElement
-```
-
 Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
@@ -267,6 +261,14 @@ In some rare cases the `template` tag causes the browser to parse the template a
     </div>
 </script>
 ```
+
+In Typescript it is necessary to declare the type of the template:
+
+```ts
+template: document.getElementById('squirrelly') as HTMLScriptElement
+```
+
+Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
 
 ## <a name="bundlers-template"></a> Bundlers and template files
 
@@ -684,6 +686,62 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     >>;
 }
 ```
+
+The delegations config object consists of event names (plus throttling options) and sub objects, which consist of CSS selectors and a callback function. Whenever an event occurs, which matches one of the configure event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation) and [Event throttling](#event-throttling).
+
+Here is a list of the arguments of the callback function:
+
+#### `event`
+
+This is the original event, which was triggered. It is possible to use `preventDefault()` or `stopPropagation()` if necessary.
+
+#### `$closest`
+
+This is the closest ancestor of the event target. Imagine the following structure:
+
+```html
+<a class="foo" href="http://www.foo.com">
+    <span class="foo__bar">Baz</span>
+</a>
+```
+
+and following RIsland config:
+
+```js
+{
+    delegations: {
+        'click': {
+            '.foo': function(event, $closest, state, setState) {
+                event.target.preventDefault();
+            }
+        }
+    }
+}
+```
+
+The first thought would be, that whenever someone clicks the link the URL would not be opened, but that assumption is wrong. The `event.target` could be the nested `span` tag and therefor using `preventDefault()` on the `span` tag does not prevent the link from being opened (it rather might throw an exception, like `event.target has no method preventDefault`). `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
+
+```js
+{
+    delegations: {
+        'click': {
+            '.foo': function(event, $closest, state, setState) {
+                $closest.preventDefault();
+            }
+        }
+    }
+}
+```
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you depend on working exactly with the DOM element which is addressed by the CSS selector use the `$closest` argument.
+
+#### `state`
+
+This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
+
+#### `setState`
+
+This is the `setState()` method as an argument. See [`setState()`](setstate).
 
 ### `filters`
 
