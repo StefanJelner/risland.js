@@ -2086,34 +2086,43 @@ var RIsland = (function () {
         })));
       });
       this._compiledTemplate = squirrelly_min$1.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
-      Object.keys(this._config.delegations).forEach(function (eventName) {
-        var throttling = _this._getThrottling(eventName);
+      Object.keys(this._config.delegations).forEach(function (commaSeparatedEventNames, index) {
+        commaSeparatedEventNames.split(/\s*,\s*/g).forEach(function (eventName) {
+          var funcName = "".concat(eventName, ":").concat(index);
 
-        _this._delegationFuncs[eventName] = {
-          capture: _this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1,
-          func: function func(event) {
-            if (event.target instanceof Element) {
-              Object.keys(_this._config.delegations[eventName]).forEach(function (selector) {
-                var $closest = event.target.closest(selector);
+          if (funcName in _this._delegationFuncs) {
+            console.warn("RIsland: event name \"".concat(eventName, "\" exists more than once in \"").concat(commaSeparatedEventNames, "\". This occurence will simply be ignored."));
+            return;
+          }
 
-                if ($closest !== null) {
-                  _this._config.delegations[eventName][selector](event, $closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
-                }
-              });
+          var throttling = _this._getThrottling(eventName);
+
+          _this._delegationFuncs[funcName] = {
+            capture: _this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1,
+            func: function func(event) {
+              if (event.target instanceof Element) {
+                Object.keys(_this._config.delegations[commaSeparatedEventNames]).forEach(function (selector) {
+                  var $closest = event.target.closest(selector);
+
+                  if ($closest !== null) {
+                    _this._config.delegations[commaSeparatedEventNames][selector](event, $closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
+                  }
+                });
+              }
+            }
+          };
+
+          if (throttling.throttled === true) {
+            if ('ms' in throttling) {
+              _this._delegationFuncs[funcName].func = throttle_1(throttling.ms, _this._delegationFuncs[funcName].func);
+            } else {
+              _this._delegationFuncs[funcName].func = rafThrottle_1(_this._delegationFuncs[funcName].func);
             }
           }
-        };
 
-        if (throttling.throttled === true) {
-          if ('ms' in throttling) {
-            _this._delegationFuncs[eventName].func = throttle_1(throttling.ms, _this._delegationFuncs[eventName].func);
-          } else {
-            _this._delegationFuncs[eventName].func = rafThrottle_1(_this._delegationFuncs[eventName].func);
-          }
-        }
-
-        _this._config.$element.addEventListener(throttling.eventName, _this._delegationFuncs[eventName].func, {
-          capture: _this._delegationFuncs[eventName].capture
+          _this._config.$element.addEventListener(throttling.eventName, _this._delegationFuncs[funcName].func, {
+            capture: _this._delegationFuncs[funcName].capture
+          });
         });
       });
 
@@ -2129,9 +2138,9 @@ var RIsland = (function () {
     RIsland.prototype.unload = function () {
       var _this = this;
 
-      Object.keys(this._config.delegations).forEach(function (eventName) {
-        _this._config.$element.removeEventListener(eventName, _this._delegationFuncs[eventName].func, {
-          capture: _this._delegationFuncs[eventName].capture
+      Object.keys(this._delegationFuncs).forEach(function (funcName) {
+        _this._config.$element.removeEventListener(funcName.split(/:/g)[0], _this._delegationFuncs[funcName].func, {
+          capture: _this._delegationFuncs[funcName].capture
         });
       });
       this._config.$element.innerHTML = '';

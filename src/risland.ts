@@ -77,7 +77,7 @@ export default class RIsland<IState extends Record<string, any>> {
 
     private _config: IRIslandConfig<IState>;
     private _compiledTemplate: TemplateFunction;
-    private _delegationFuncs: Partial<Record<TRIslandEventNames, {
+    private _delegationFuncs: Partial<Record<TRIslandDelegationFuncsKey, {
         capture: boolean;
         func: (event: Event) => void;
     }>> = {};
@@ -142,49 +142,70 @@ export default class RIsland<IState extends Record<string, any>> {
         this._compiledTemplate = Sqrl.compile(this._getTemplate(this._config.template), this._config.squirrelly);
 
         (Object.keys(this._config.delegations) as Array<TRIslandEventNames>).forEach((
-            eventName: TRIslandEventNames
+            commaSeparatedEventNames: TRIslandEventNamesThrottled | TRIslandEventNamesCommaSeparated
+            , index: number
         ) => {
-            // add throttling, if necessary.
-            const throttling = this._getThrottling(eventName);
+            commaSeparatedEventNames.split(/\s*,\s*/g).forEach((eventName: TRIslandEventNamesThrottled) => {
+                const funcName: TRIslandDelegationFuncsKey = `${eventName}:${index}`;
 
-            this._delegationFuncs[eventName] = {
-                capture: this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1
-                , func: (event: Event) => {
-                    if (event.target instanceof Element) {
-                        Object.keys(this._config.delegations[eventName]).forEach((selector: string) => {
-                            const $closest = (event.target as Element).closest(selector);
+                if (funcName in this._delegationFuncs) {
+                    /* eslint-disable no-console */
+                    console.warn(
+                        `RIsland: event name "${
+                            eventName
+                        }" exists more than once in "${
+                            commaSeparatedEventNames
+                        }". This occurence will simply be ignored.`
+                    );
+                    /* eslint-enable no-console */
 
-                            if ($closest !== null) {
-                                this._config.delegations[eventName][selector](
-                                    event
-                                    , $closest
-                                    , cloneDeep(this._state)
-                                    , this._setState.bind(this)
-                                );
-                            }
-                        });
+                    return;
+                }
+
+                // add throttling, if necessary.
+                const throttling = this._getThrottling(eventName);
+
+                this._delegationFuncs[funcName] = {
+                    capture: this._config.nonBubblingEvents.indexOf(throttling.eventName) !== -1
+                    , func: (event: Event) => {
+                        if (event.target instanceof Element) {
+                            Object.keys(this._config.delegations[commaSeparatedEventNames]).forEach(
+                                (selector: string) => {
+                                    const $closest = (event.target as Element).closest(selector);
+
+                                    if ($closest !== null) {
+                                        this._config.delegations[commaSeparatedEventNames][selector](
+                                            event
+                                            , $closest
+                                            , cloneDeep(this._state)
+                                            , this._setState.bind(this)
+                                        );
+                                    }
+                                }
+                            );
+                        }
+                    }
+                };
+
+                if (throttling.throttled === true) {
+                    if ('ms' in throttling) {
+                        // conventional throttling.
+                        this._delegationFuncs[funcName].func = throttle(
+                            throttling.ms
+                            , this._delegationFuncs[funcName].func
+                        );
+                    } else {
+                        // throttling by request animation frame.
+                        this._delegationFuncs[funcName].func = rafThrottle(this._delegationFuncs[funcName].func);
                     }
                 }
-            };
 
-            if (throttling.throttled === true) {
-                if ('ms' in throttling) {
-                    // conventional throttling.
-                    this._delegationFuncs[eventName].func = throttle(
-                        throttling.ms
-                        , this._delegationFuncs[eventName].func
-                    );
-                } else {
-                    // throttling by request animation frame.
-                    this._delegationFuncs[eventName].func = rafThrottle(this._delegationFuncs[eventName].func);
-                }
-            }
-
-            this._config.$element.addEventListener(
-                throttling.eventName
-                , this._delegationFuncs[eventName].func
-                , { capture: this._delegationFuncs[eventName].capture }
-            );
+                this._config.$element.addEventListener(
+                    throttling.eventName
+                    , this._delegationFuncs[funcName].func
+                    , { capture: this._delegationFuncs[funcName].capture }
+                );
+            });
         });
 
         if (Object.keys(this._config.initialState).length === 0) {
@@ -210,11 +231,11 @@ export default class RIsland<IState extends Record<string, any>> {
      */
     public unload(): void {
         // remove all event listeners on the island container
-        Object.keys(this._config.delegations).forEach((eventName: string) => {
+        Object.keys(this._delegationFuncs).forEach((funcName: TRIslandDelegationFuncsKey) => {
             this._config.$element.removeEventListener(
-                eventName
-                , this._delegationFuncs[eventName].func
-                , { capture: this._delegationFuncs[eventName].capture }
+                funcName.split(/:/g)[0]
+                , this._delegationFuncs[funcName].func
+                , { capture: this._delegationFuncs[funcName].capture }
             );
         });
 
@@ -473,15 +494,22 @@ export default class RIsland<IState extends Record<string, any>> {
 
 export type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
 
+export type TRIslandEventNamesThrottled = (
+    TRIslandEventNames
+    | `${TRIslandEventNames}.throttled`
+    | `${TRIslandEventNames}.throttled.${number}`
+);
+
+// Typescript is not capable of recursions in template literal types and unions become too complex.
+// This is why we unfortunately have to use this loose typing here for comma separated events.
+// See https://github.com/microsoft/TypeScript/issues/44792
+export type TRIslandEventNamesCommaSeparated = `${string},${string}`;
+
 export interface IRIslandConfig<IState extends Record<string, any>> {
     $element: Element;
     deepmerge: deepmerge.Options;
     delegations: Partial<Record<
-        (
-            TRIslandEventNames
-            | `${TRIslandEventNames}.throttled`
-            | `${TRIslandEventNames}.throttled.${number}`
-        )
+        TRIslandEventNamesThrottled | TRIslandEventNamesCommaSeparated
         , Record<string, (
             event: Event
             , $closest: Element
@@ -517,3 +545,5 @@ export interface IRIslandThrottling {
     ms?: number;
     throttled: boolean;
 }
+
+export type TRIslandDelegationFuncsKey = `${TRIslandEventNamesThrottled}:${number}`;

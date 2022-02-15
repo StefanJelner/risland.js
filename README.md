@@ -18,6 +18,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Bundlers and template files](#bundlers-template)
 - [Event delegation](#event-delegation)
 - [Event throttling](#event-throttling)
+- [Complex Event Delegation](#complex-event-delegation)
 - [State](#state)
 - [Why cloning?](#why-cloning)
 - [`setState()`](#setstate)
@@ -334,7 +335,7 @@ RIsland does not use event delegation to speed things up, that is a nice side ef
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
 
-It is also possible to use combined or complex selectors, like:
+It is possible to use combined or complex selectors, like:
 
 ```
 .foo, .bar, input[type="checkbox"], div.baz > div.quox:first-child
@@ -482,6 +483,31 @@ scroll.throttled.250
 resize.throttled
 focus
 ```
+
+---
+
+## <a name="complex-event-delegation"></a> Complex Event Delegation
+
+It is possible to use comma separated event names (also with throttling) and combined CSS selectors, like:
+
+```js
+{
+    delegations: {
+        'mouseover, mouseout, mousemove.throttled.1000': {
+            '.foo, .bar, input[type="checkbox"], div.baz > div.quox:first-child': function(
+                event,
+                $closest,
+                state,
+                setState
+            ) {
+                console.log(event.type, $closest);
+            }
+        }
+    }
+}
+```
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** RIsland gives a lot of flexibility when it comes to delegating events. But, even if this sounds repetitive: avoid rocket science. As you can already see in the above example, reading such a code is a nightmare. Try to use comma separated event names as rarely as possible and try to use [BEM](http://getbem.com/introduction/) for your CSS selectors.
 
 ---
 
@@ -763,6 +789,14 @@ private _setState(nextState: TRIslandSetState<IState>): void;
 
 type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
 
+export type TRIslandEventNamesThrottled = (
+    TRIslandEventNames
+    | `${TRIslandEventNames}.throttled`
+    | `${TRIslandEventNames}.throttled.${number}`
+);
+
+export type TRIslandEventNamesCommaSeparated = `${string},${string}`;
+
 type TRIslandSetState<IState extends Record<string, any>> = (
     Partial<IState>
     | null
@@ -773,11 +807,7 @@ type TRIslandSetState<IState extends Record<string, any>> = (
 
 interface IRIslandConfig<IState extends Record<string, any>> {
     delegations: Partial<Record<
-        (
-            TRIslandEventNames
-            | `${TRIslandEventNames}.throttled`
-            | `${TRIslandEventNames}.throttled.${number}`
-        ),
+        TRIslandEventNamesThrottled | TRIslandEventNamesCommaSeparated,
         Record<string, (
             event: Event,
             $closest: Element,
@@ -788,7 +818,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
-The delegations config object consists of event names (plus throttling options) and sub objects, which consist of CSS selectors and a callback function. Whenever an event occurs, which matches one of the configured event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation) and [Event throttling](#event-throttling).
+The delegations config object consists of (comma separated) event names (plus throttling options) and sub objects, which consist of (combined) CSS selectors and a callback function. Whenever an event occurs, which matches one of the configured event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation), [Event throttling](#event-throttling) and [Complex Event Delegation](#complex-event-delegation).
 
 Here is a list of the arguments of the callback function:
 
@@ -1082,6 +1112,10 @@ This is an example of the `unload` method as shown in this readme.
 ### `squirrelly-partials-test.html`
 
 This is an example of how to use partials in RIsland. It shows a checkbox and whenever the checkbox changes, a log entry is generated.
+
+### `comma-separated-events.html`
+
+This is an example which shows the usage of comma separated event names in the delegations.
 
 ### `mousemove-throttled.html`
 

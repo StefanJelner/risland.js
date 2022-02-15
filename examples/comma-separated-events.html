@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Comma separated events</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <template id="squirrelly">
+            <div class="island">
+                <div class="island__box island__box--1"></div>
+                <div class="island__box island__box--2"></div>
+                <div class="island__box island__box--3"></div>
+                <button class="island__close" type="button">Close</button>
+            </div>
+        </template>
+
+        <style type="text/css">
+            .island__box {
+                border: 1px solid black;
+                cursor: pointer;
+                height: 100px;
+                margin-bottom: 10px;
+                width: 100px;
+            }
+
+            .island__box--1 {
+                background-color: red;
+            }
+
+            .island__box--2 {
+                background-color: green;
+            }
+
+            .island__box--3 {
+                background-color: blue;
+            }
+        </style>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var island = new RIsland({
+                    $element: document.getElementById('island')
+                    , delegations: {
+                        'mouseover, mouseout, mouseover, mousemove.throttled.1000': {
+                            '.island__box': function(event, $closest) {
+                                console.log(event.type, $closest.className);
+                            }
+                        }
+                        , 'mousedown, mouseup': {
+                            '.island__box': function(event, $closest) {
+                                console.log(event.type, $closest.className);
+                            }
+                        }
+                        , 'mouseover': {
+                            '.island__close': function(event, $closest) {
+                                console.log(event.type, $closest.className);
+                            }
+                        }
+                        , 'click': {
+                            '.island__close': function() {
+                                island.unload();
+                            }
+                        }
+                    }
+                    , load: function() { console.log('load'); }
+                    , template: document.getElementById('squirrelly')
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>
