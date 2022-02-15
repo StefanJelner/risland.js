@@ -2087,7 +2087,7 @@ var RIsland = (function () {
       });
       this._compiledTemplate = squirrelly_min$1.exports.compile(this._getTemplate(this._config.template), this._config.squirrelly);
       Object.keys(this._config.delegations).forEach(function (commaSeparatedEventNames, index) {
-        commaSeparatedEventNames.split(/\s*,\s*/g).forEach(function (eventName) {
+        commaSeparatedEventNames.trim().split(/\s*,\s*/g).forEach(function (eventName) {
           var funcName = "".concat(eventName, ":").concat(index);
 
           if (funcName in _this._delegationFuncs) {
