@@ -324,7 +324,7 @@ const template: string = require('./template.squirrelly.html').default;
 >
 > -- <cite>[Wikipedia - Event bubbling](https://en.wikipedia.org/wiki/Event_bubbling)</cite>
 
-In simpler words: If an event happens, all the parent elements get informed about that event. So actually you can also register an event listener on an elements parent and it also gets fired on the parent. There is one final problem: If a parent contains many child elements, how can you distinguish between those elements? The solution is simple: By using the `event.target` and the `closest()`-method, which uses a CSS selector and checks whether the element itself or any parent in the DOM fulfills that CSS selector. All you need to do is to give the elements unique classnames (or use a selector that clearly can distinguish the element from others). This concept is called event delegation.
+In simpler words: If an event happens, all the parent elements get informed about that event. So actually you can also register an event listener on an elements parent and it also gets fired on the parent. There is one final problem: If a parent contains many child elements, how can you distinguish between those elements? The solution is simple: By using the `event.target` and the [`Element.closest()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest) method, which uses a CSS selector and checks whether the element itself or any parent in the DOM fulfills that CSS selector. All you need to do is to give the elements unique classnames (or use a selector that clearly can distinguish the element from others). This concept is called event delegation.
 
 Event delegation can speed up applications significantly and also can save many `addEventListener()`-calls. Imagine you have a table with thousands of rows. Wouldn't it be much more convenient to check for a `mouseover` and `mouseout` on the `table` element itself - then distinguish the row that caused the event - rather than on each row? And is one event listener handling all by delegation not much faster than thousands of event listeners?
 
@@ -333,6 +333,67 @@ RIsland does not use event delegation to speed things up, that is a nice side ef
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
+
+It is also possible to use combined or complex selectors, like:
+
+```
+.foo, .bar, input[type="checkbox"], div.baz > div.quox:first-child
+```
+
+In the RIsland config it would look like this:
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        <p class="foo">Foo</p>
+        <p class="bar">Bar</p>
+        <input type="checkbox" />
+        <div class="baz">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div class="quox">
+                <div>First</div>
+                <div>Second</div>
+                <div class="quox">
+                    <div>First</div>
+                    <div>Second</div>
+                    <div>Last</div>
+                </div>
+            </div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island'),
+            delegations: {
+                'click': {
+                    '.foo, .bar, input[type="checkbox"], div.baz > div.quox:first-child': function(
+                        event,
+                        $closest,
+                        state,
+                        setState
+                    ) {
+                        console.log($closest);
+                    }
+                }
+            },
+            template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
+Problem is, that such selectors are hard to read and can lead to unwanted behaviour. Do not make rocket science when it comes to selectors. Use [BEM](http://getbem.com/introduction/)!
 
 > <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** When it comes to event delegation then the CSS paradigm [BEM](http://getbem.com/introduction/) shows another advantage: because with the [BEM](http://getbem.com/introduction/) notation every element gets a very precise - often unique - class name, it is much easier to address elements with event delegation. So one advice is, to use [BEM](http://getbem.com/introduction/) in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template (and the partials). All the examples in this readme and all the code examples in the `examples` folder use [BEM](http://getbem.com/introduction/).
 
@@ -752,21 +813,21 @@ and following RIsland config:
     delegations: {
         'click': {
             '.foo': function(event, $closest, state, setState) {
-                event.preventDefault();
+                event.target.classList.add('quox');
             }
         }
     }
 }
 ```
 
-The first thought would be, that whenever someone clicks the link the URL would not be opened, but that assumption is wrong. The `event.target` could be the nested `span` tag and therefor using `preventDefault()` on the `span` tag does not prevent the link from being opened. `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
+The first thought would be, that whenever someone clicks the link the `a` tag will have the class `quox` added, but this assumption is wrong. The `event.target` could be the nested `span` tag and therefore the class could possibly added to the `span` tag. `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
 
 ```js
 {
     delegations: {
         'click': {
             '.foo': function(event, $closest, state, setState) {
-                $closest.preventDefault();
+                $closest.classList.add('quox');
             }
         }
     }
