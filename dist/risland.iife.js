@@ -2042,7 +2042,7 @@ var RIsland = (function () {
           }
         },
         nativeHelpers: {},
-        nonBubblingEvents: ['abort', 'blur', 'error', 'focus', 'load', 'loadend', 'loadstart', 'pointerenter', 'pointerleave', 'progress', 'scroll', 'unload'],
+        nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS,
         partials: {},
         shouldUpdate: function shouldUpdate(state, nextState) {
           return !fastDeepEqual(state, nextState);
@@ -2295,6 +2295,7 @@ var RIsland = (function () {
       }
     };
 
+    RIsland.NON_BUBBLING_EVENTS = ['abort', 'blur', 'error', 'focus', 'load', 'loadend', 'loadstart', 'pointerenter', 'pointerleave', 'progress', 'scroll', 'unload'];
     return RIsland;
   }();
 

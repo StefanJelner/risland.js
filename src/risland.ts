@@ -17,6 +17,21 @@ import { throttle } from 'throttle-debounce';
  * See the README.md file for further documentation.
  */
 export default class RIsland<IState extends Record<string, any>> {
+    public static NON_BUBBLING_EVENTS: Array<TRIslandEventNames> = [
+        'abort'
+        , 'blur'
+        , 'error'
+        , 'focus'
+        , 'load'
+        , 'loadend'
+        , 'loadstart'
+        , 'pointerenter'
+        , 'pointerleave'
+        , 'progress'
+        , 'scroll'
+        , 'unload'
+    ];
+
     private _initialConfig: IRIslandConfig<IState> = {
         $element: document.body
         , deepmerge: {
@@ -35,20 +50,7 @@ export default class RIsland<IState extends Record<string, any>> {
         , nativeHelpers: {}
         // List of non-bubbling events, which need to have capture set to true.
         // See https://en.wikipedia.org/wiki/DOM_events#Events
-        , nonBubblingEvents: [
-            'abort'
-            , 'blur'
-            , 'error'
-            , 'focus'
-            , 'load'
-            , 'loadend'
-            , 'loadstart'
-            , 'pointerenter'
-            , 'pointerleave'
-            , 'progress'
-            , 'scroll'
-            , 'unload'
-        ]
+        , nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS
         , partials: {}
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
         , squirrelly: Sqrl.defaultConfig

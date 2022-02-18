@@ -26,6 +26,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Lifecycles](#lifecycles)
 - [Options](#options)
 - [Advanced - dangerous - options](#advanced-options)
+- [Properties](#properties)
 - [Methods](#methods)
 - [Examples](#examples)
 - [Hints](#hints)
@@ -331,7 +332,7 @@ Event delegation can speed up applications significantly and also can save many 
 
 RIsland does not use event delegation to speed things up, that is a nice side effect, but it needs it, so that after every template rerendering and DOM morphing it is unnecessary to remove or add event listeners. The main island element never gets changed. So adding the event listeners to this element and delegating all the events by selectors is a convenient way to add the listeners only once.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`) RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Some events do not bubble by default (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`). RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
 
@@ -922,6 +923,18 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+The `load` config callback is a function, which becomes invoked when the initial state and template rendering has been done and all elements are present in the DOM - the `load` lifecycle is reached, so that the RIsland instance is ready for changes. The function can have two arguments:
+
+#### `state`
+
+This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
+
+#### `setState`
+
+This is the `setState()` method as an argument. See [`setState()`](setstate).
+
+> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The `load` config callback can be used to initialize any mechanism which is not event based (so event delegation is not possible), but might need the possiblity to set the state. F.ex. observables, stores, things which might become invoked asynchronously (timeouts, sockets, broadcast channels aso) or handing over `setState()` to other systems, so they can change the state of the RIsland instance.
+
 ### `nativeHelpers`
 
 ```ts
@@ -1000,6 +1013,10 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+These are additional options which influence the way deepmerge works. See [deepmerge](https://github.com/TehShrike/deepmerge).
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `clone` option is forced to be `false`, because RIsland uses its own cloning mechanism and a double cloning would waste performance.
+
 ### `morphdom`
 
 ```ts
@@ -1007,6 +1024,10 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     morphdom: Parameters<typeof morphdom>[2];
 }
 ```
+
+These are additional options which influence the way morphdom works. See [morphdom](https://github.com/patrick-steele-idem/morphdom).
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland.
 
 ### `nonBubblingEvents`
 
@@ -1018,6 +1039,42 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`). RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. It is possible to override the list of events with this config option. If f.ex. the bubbling of the `scroll` event is unwanted or causing any performance issues, then remove it from the list (by filtering it out of the static property `RIsland.NON_BUBBLING_EVENTS`).
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        <input class="island__checkbox" type="checkbox" />
+        {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island'),
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, $closest, state, setState) {
+                        setState({ checked: $closest.checked });
+                    }
+                }
+            },
+            initialState: { checked: false },
+            nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS.filter(function(eventName) {
+                return eventName !== 'scroll';
+            }),
+            template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you want to change the list of non bubbling events, please filter the static property `RIsland.NON_BUBBLING_EVENTS`. If you accidently add events, which already support bubbling, you change the way, event bubbling works, which might lead to unwanted behaviour.
+
 ### `squirrelly`
 
 ```ts
@@ -1025,6 +1082,25 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     squirrelly: Partial<SqrlConfig>;
 }
 ```
+
+These are additional options which influence the way squirrelly works. See [squirrelly](https://github.com/squirrellyjs/squirrelly).
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `varName` option is forced to be `state`
+ (and `partialState` in partials) to ensure naming consistency.
+
+---
+
+## <a name="properties"></a> Properties
+
+### `NON_BUBBLING_EVENTS`
+
+```ts
+type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unload';
+
+public static NON_BUBBLING_EVENTS: Array<TRIslandEventNames>;
+```
+
+The only static property which RIsland offers is `NON_BUBBLING_EVENTS`. It is a list of events which do not bubble by default. See the `nonBubblingEvents` config option.
 
 ---
 
