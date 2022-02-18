@@ -31,6 +31,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Examples](#examples)
 - [Hints](#hints)
 - [Final thoughts](#final-thoughts)
+- [License](#license)
 
 ---
 
@@ -1226,3 +1227,9 @@ First of all a big thanks to the people who have written the fantastic libraries
 Before starting discussions like *"Can you please implement feature XY?"* or *"Why does RIsland not support plugins/hooks or any other way to extend it?"*: This library is meant to do what it does! The focus is on its rather small size, while still being very versatile, powerful, fast to use and easy to learn. Its code is pleasently short, which makes it stable and bugs unlikely. It is better to focus on something and doing it really good, inspite of trying to look for the "one ring to rule them all" and then unleashing a monster which nobody can maintain (especially in spare time). This does not mean that any kind of discussion should be avoided; this is not meant as a killer phrase. If you find yourself in need of feature XY again and again, then please start a discussion, but do not be disappointed, if others do not agree, because they think it is not the focus of RIsland and would unnecessarily bloat it. Besides there are fantastic libraries out there providing many more features than RIsland in a very good way. So this library is not trying to reinvent the wheel. It does what it does! A simple tautology.
 
 And finally: Thanks to everyone who had the patience to read this document. Hopefully you enjoy working with RIsland.
+
+---
+
+## <a name="license"></a> License
+
+This software is offered and distributed under the ISC license. See `LICENSE.txt` and [Wikipedia](https://en.wikipedia.org/wiki/ISC_license) for more information.
