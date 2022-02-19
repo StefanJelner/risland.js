@@ -966,6 +966,25 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+The `shouldUpdate` config callback is a function which takes two states as the arguments, the current state and the incoming state changes, and compares them, to finally decide, whether an update and rerendering should be done. By default this callback does a deep comparison of all data. If it is necessary to omit some parts of the data from the comparison, you can provide your own custom function.
+
+```js
+{
+    initialState: {
+        foo: 0,
+        bar: 1,
+        baz: 2
+    },
+    shouldUpdate: function(state, nextState) {
+        return state.foo !== nextState.foo || state.baz !== nextState.baz;
+    }
+}
+```
+
+In the above example only changes to `foo` or `baz` will lead to an update and rerendering, while changes to `bar` will be ignored.
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you intentionally ignore data changes, you have to know what you are doing, otherwise it could lead to inconsistencies between the state and the intended representation. Only omit some data, if it is clear, that this data is not necessary for the represenation or the represenation already gets updated by something else.
+
 ### `template`
 
 ```ts
@@ -974,6 +993,8 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
+The `template` config consists of a `string` (simple string, if necessary with concatenation or a template string), `template` tag DOM element or `script` tag DOM element (use `type="text/html"` to activate syntax highlighting in editors). It contains template information for usage with [squirrelly](https://github.com/squirrellyjs/squirrelly). See [`template` tag](#template-tag), [`script` tag `type="text/html"`](#script-tag) and [Bundlers and template files](#bundlers-template).
+
 ### `unload`
 
 ```ts
@@ -981,6 +1002,12 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     unload: (state: IState) => void;
 }
 ```
+
+The `unload` config callback is a function, which becomes invoked when the `unload` method has been called - the `unload` lifecycle is reached, so that the event handlers become removed and the HTML becomes deleted from the element which was managed by RIsland. The function can have one (final) argument:
+
+#### `state`
+
+This is a final snapshot of the state. See [State](#state).
 
 ### `update`
 
@@ -999,6 +1026,8 @@ interface IRIslandConfig<IState extends Record<string, any>> {
     update: (state: IState, setState: RIsland<IState>['_setState']) => void;
 }
 ```
+
+The `update` config callback works the same way as the `load` config callback. The difference is, that it becomes invoked after a `setState()`, `shouldUpdate`, `render` loop, after everything is present in the DOM.
 
 ---
 
@@ -1200,7 +1229,7 @@ This is an example which shows the event throttling options. Constantly move the
 
 ### `table-sort-filter.html`
 
-This is a basic example of a table, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
+This is a basic example of a table with information from a CSV file, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
 
 ---
 
