@@ -714,10 +714,10 @@ delegations: {
         '.foo': function(event, $closest, state, setState) {
             setState(
                 [
-                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 2, Actual: 2
-                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 3, Actual: 3
-                    function(state) { return { foo: state.foo + 1 }; }, // Expected: 4, Actual: 4
-                    function(state) { return { foo: state.foo + 1 }; }  // Expected: 5, Actual: 5
+                    function(state2) { return { foo: state2.foo + 1 }; }, // Expected: 2, Actual: 2
+                    function(state2) { return { foo: state2.foo + 1 }; }, // Expected: 3, Actual: 3
+                    function(state2) { return { foo: state2.foo + 1 }; }, // Expected: 4, Actual: 4
+                    function(state2) { return { foo: state2.foo + 1 }; }  // Expected: 5, Actual: 5
                 ]
             );
         }
@@ -728,7 +728,7 @@ initialState: {
 }
 ```
 
-This works, because in the callback function the `state` always contains the most current state of the RIsland instance.
+This works, because in the callback function the `state2` always contains the most current state of the RIsland instance.
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Always use the freshest and most current state. This can be done easily by using the callback function. In `setState()` the pure object should only be used if the state is not involved at all.
 
