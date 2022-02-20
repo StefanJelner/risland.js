@@ -42,11 +42,7 @@ export default class RIsland<IState extends Record<string, any>> {
         , helpers: {}
         , initialState: {} as IState
         , load: () => {}
-        , morphdom: {
-            // speed up morphdom significantly.
-            // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
-            onBeforeElUpdated: ($fromEl: Element, $toEl: Element) => !$fromEl.isEqualNode($toEl)
-        }
+        , morphdom: {}
         , nativeHelpers: {}
         // List of non-bubbling events, which need to have capture set to true.
         // See https://en.wikipedia.org/wiki/DOM_events#Events
@@ -327,6 +323,17 @@ export default class RIsland<IState extends Record<string, any>> {
             , this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig)
             , {
                 ...this._config.morphdom
+                , onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => {
+                    if ('onBeforeElUpdated' in this._config.morphdom) {
+                        if (this._config.morphdom.onBeforeElUpdated($fromEl, $toEl) === false) {
+                            return false;
+                        }
+                    }
+
+                    // speed up morphdom significantly.
+                    // see https://www.npmjs.com/package/morphdom#can-i-make-morphdom-blaze-through-the-dom-tree-even-faster-yes
+                    return !$fromEl.isEqualNode($toEl);
+                }
                 // because morphdom keeps firing the following events for each element, which gets updated, added or
                 // discarded, we wait until everything is done or at least limit firing to every request animation
                 // frame, by throttling it. Actually it would be nice, if morphdom would offer something like a

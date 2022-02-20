@@ -2033,11 +2033,7 @@ var RIsland = function () {
       helpers: {},
       initialState: {},
       load: function load() {},
-      morphdom: {
-        onBeforeElUpdated: function onBeforeElUpdated($fromEl, $toEl) {
-          return !$fromEl.isEqualNode($toEl);
-        }
-      },
+      morphdom: {},
       nativeHelpers: {},
       nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS,
       partials: {},
@@ -2185,6 +2181,15 @@ var RIsland = function () {
     }
 
     morphdom(this._config.$element.firstChild, this._compiledTemplate(this._state, this._config.squirrelly), _assign(_assign({}, this._config.morphdom), {
+      onBeforeElUpdated: function onBeforeElUpdated($fromEl, $toEl) {
+        if ('onBeforeElUpdated' in _this._config.morphdom) {
+          if (_this._config.morphdom.onBeforeElUpdated($fromEl, $toEl) === false) {
+            return false;
+          }
+        }
+
+        return !$fromEl.isEqualNode($toEl);
+      },
       onElUpdated: function onElUpdated($element) {
         _this._throttledLoadOrUpdate();
 

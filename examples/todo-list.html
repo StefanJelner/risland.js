@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Todo list example</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <style type="text/css">
+        </style>
+
+        <div id="island"></div>
+
+        <script type="text/html" id="squirrelly">
+            <div class="island">
+                <select class="island__locale">
+                    <option
+                        value="en"
+                        {{@if(state.locale === 'en')}}selected="selected"{{/if}}
+                    >
+                        English
+                    </option>
+                    <option
+                        value="de"
+                        {{@if(state.locale === 'de')}}
+                        selected="selected"{{/if}}
+                    >
+                        Deutsch
+                    </option>
+                </select>
+                <input
+                    class="island__show-done"
+                    type="checkbox"
+                    id="show-done"
+                />
+                <label for="show-done">{{'showDone' | t}}</label>
+                <table class="island__table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th></th>
+                            <th>{{'task' | t}}</th>
+                            <th>{{'creationDate' | t}}</th>
+                            <th colspan="4">{{'actions' | t}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{@include('tbody', {
+                            class: 'important'
+                            , i: 0
+                            , ids: state.sort.important
+                            , form: state.form
+                            , locale: state.locale
+                            , showActions: true
+                            , tasks: state.tasks
+                        })/}}
+                        {{@include('tbody', {
+                            class: 'normal'
+                            , i: state.sort.important.length
+                            , ids: state.sort.normal
+                            , form: state.form
+                            , locale: state.locale
+                            , showActions: true
+                            , tasks: state.tasks
+                        })/}}
+                        {{@if(state.showDone === true)}}
+                            {{@include('tbody', {
+                                class: 'done'
+                                , i: state.sort.important.length + state.sort.normal.length
+                                , ids: state.sort.done
+                                , form: state.form
+                                , locale: state.locale
+                                , showActions: false
+                                , tasks: state.tasks
+                            })/}}
+                        {{/if}}
+                    </tbody>
+                </table>
+                <label for="task-name-{{state.form.suffix}}">{{'taskName' | t}}</label>
+                <input
+                    class="island__task-name"
+                    type="text"
+                    name="task-name-{{state.form.suffix}}"
+                    id="task-name-{{state.form.suffix}}"
+                    value=""
+                />
+                <input
+                    class="island__important"
+                    type="checkbox"
+                    name="important-{{state.form.suffix}}"
+                    id="important-{{state.form.suffix}}"
+                />
+                <label for="important-{{state.form.suffix}}">
+                    <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
+                    {{'important' | t}}
+                </label>
+                <button
+                    class="island__add"
+                    type="button"
+                    {{@if(state.form.value === '')}}disabled="disabled"{{/if}}
+                >
+                    <i class="fa-solid fa-plus" title="{{'add' | t}}"></i>
+                </button>
+            </div>
+        </script>
+
+        <script type="text/html" id="squirrelly-tbody">
+            {{@each(partialState.ids) => id, j}}
+                <tr class="island__row island__row--{{partialState.class}}">
+                    <td>{{partialState.i + j + 1}}</td>
+                    <td>
+                        {{@if(partialState.tasks[id].important === true)}}
+                            <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
+                        {{/if}}
+                    </td>
+                    <td>{{partialState.tasks[id].taskName}}</td>
+                    <td>{{partialState.tasks[id].creationDate | t(partialState.locale)}}</td>
+                    {{@if(partialState.showActions === true)}}
+                        <td>
+                            <button
+                                class="island__up"
+                                type="button"
+                                {{@if(j === 0)}}disabled="disabled"{{/if}}
+                            >
+                                <i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button
+                                class="island__down"
+                                type="button"
+                                {{@if(j >= partialState.ids.length - 1)}}disabled="disabled"{{/if}}
+                            >
+                                <i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button
+                                class="island__done"
+                                type="button"
+                            >
+                                <i class="fa-solid fa-check" title="{{'done' | t}}"></i>
+                            </button>
+                        </td>
+                    {{#else}}
+                        <td colspan="3"></td>
+                    {{/if}}
+                    <td>
+                        <button
+                            class="island__delete"
+                            type="button"
+                        >
+                            <i class="fa-solid fa-trash" title="{{'delete' | t}}"></i>
+                        </button>
+                    </td>
+                </tr>
+            {{/each}}
+        </script>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script src="../node_modules/i18next/dist/umd/i18next.min.js"></script>
+        <script>
+            window.FontAwesomeConfig = {
+                // the 'nest' setting is important, otherwise it is not possible to leave the nodes, which get
+                // manipulated by Fontawesome untouched.
+                autoReplaceSvg: 'nest'
+                // observing mutations on the whole DOM is too costy here, because we know when to do updates.
+                , observeMutations: false
+            };
+        </script>
+        <script src="../node_modules/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+        <script src="../node_modules/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var $island = document.getElementById('island');
+                var initialLocale = 'en';
+
+                i18next.init({
+                    lng: initialLocale
+                    , resources: {
+                        de: {
+                            translation: {
+                                actions: "Aktionen"
+                                , add: "Hinzufügen"
+                                , creationDate: "Erstellungsdatum"
+                                , delete: "Delete"
+                                , done: "Done"
+                                , down: "Down"
+                                , important: "Wichtig"
+                                , showDone: "Zeige erledigt"
+                                , task: "Aufgabe"
+                                , taskName: "Aufgabenname"
+                                , up: "Up"
+                            }
+                        }
+                        , en: {
+                            translation: {
+                                actions: "Actions"
+                                , add: "Add"
+                                , creationDate: "Creation date"
+                                , delete: "Löschen"
+                                , done: "Erledigt"
+                                , down: "Nach unten"
+                                , important: "Important"
+                                , showDone: "Show done"
+                                , task: "Task"
+                                , taskName: "Task name"
+                                , up: "Nach oben"
+                            }
+                        }
+                    }
+                });
+
+                function initialForm() {
+                    return {
+                        important: false
+                        , suffix: String(+new Date())
+                        , value: ''
+                    };
+                }
+
+                function refreshIcons() {
+                    FontAwesome.dom.i2svg({ node: $island });
+                }
+
+                new RIsland({
+                    $element: $island
+                    , delegations: {
+                        'change': {
+                            '.island__locale': function(_, $closest, __, setState) {
+                                var locale = $closest.value;
+
+                                i18next.changeLanguage(locale);
+
+                                setState({ locale: locale });
+                            }
+                        }
+                        , 'click': {
+                            '.island__add': function(_, $closest, __, setState) {
+                                setState(function(state) {
+                                    var taskName = state.form.value;
+                                    var important = state.form.important;
+                                    var creationDate = new Date();
+                                    var id = String(+creationDate);
+
+                                    var tasksPartial = {};
+                                    tasksPartial[id] = {
+                                        creationDate: creationDate
+                                        , done: false
+                                        , important: important
+                                        , taskName: taskName
+                                    };
+
+                                    return {
+                                        form: initialForm()
+                                        , sort: (
+                                            important === true
+                                                // important tasks will be placed at the top of the important task
+                                                ? {
+                                                    important: [id].concat(state.sort.important)
+                                                }
+                                                // normal tasks will be placed at the bottom of the normal tasks
+                                                : {
+                                                    normal: state.sort.normal.concat(id)
+                                                }
+                                        )
+                                        , tasks: tasksPartial
+                                    };
+                                });
+                            }
+                            , '.island__important': function(_, $closest, __, setState) {
+                                setState({ form: { important: $closest.checked } });
+                            }
+                            , '.island__show-done': function(_, $closest, __, setState) {
+                                setState({ showDone: $closest.checked });
+                            }
+                        }
+                        , 'input': {
+                            '.island__task-name': function(_, $closest, __, setState) {
+                                setState({ form: { value: $closest.value.trim() } });
+                            }
+                        }
+                    }
+                    , filters: {
+                        t: function(keyOrDate, locale) {
+                            if (keyOrDate instanceof Date) {
+                                return keyOrDate.toLocaleString(locale);
+                            } else {
+                                return i18next.t(keyOrDate);
+                            }
+                        }
+                    }
+                    , initialState: {
+                        form: initialForm()
+                        , locale: initialLocale
+                        , sort: {
+                            done: []
+                            , important: []
+                            , normal: []
+                        }
+                        , showDone: false
+                        , tasks: {}
+                    }
+                    , load: refreshIcons
+                    , morphdom: {
+                        onBeforeElUpdated: function($fromEl) {
+                            return !(
+                                $fromEl.tagName.toLowerCase() === 'i'
+                                && $fromEl.hasAttribute('data-fa-i2svg') === true
+                            );
+                        }
+                    }
+                    , partials: {
+                        'tbody': document.getElementById('squirrelly-tbody')
+                    }
+                    , template: document.getElementById('squirrelly')
+                    , update: refreshIcons
+                });
+            });
+        </script>
+    </body>
+</html>

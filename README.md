@@ -55,7 +55,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - Easy to learn. RIsland is no rocket science!
 - No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
-- Clearer separation of concerns (logic, data, representation, HTML, CSS, JS)
+- Clearer separation of concerns (logic, data, representation, events, HTML, CSS, JS)
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern `template` tags or `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
@@ -1055,7 +1055,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
-These are additional options which influence the way morphdom works. See [morphdom](https://github.com/patrick-steele-idem/morphdom).
+These are additional options which influence the way [morphdom](https://github.com/patrick-steele-idem/morphdom) works. See [morphdom](https://github.com/patrick-steele-idem/morphdom).
 
 > <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland.
 
@@ -1246,6 +1246,74 @@ If you want to output HTML in your variables you should use the `safe` flag as t
     </div>
 </template>
 ```
+
+### Working with Fontawesome 5+
+
+Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an iconfont any more, but replaces occurences of an `i`-tag and icon-classes with SVG-content. This can cause trouble with the way [morphdom](https://github.com/patrick-steele-idem/morphdom) works and besides using the system out of the box with mutation observers is costy. So if you are planning on using [Fontawesome](https://fontawesome.com/) 5+ in your RIsland instance, you have to do some adjustments:
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        <input class="island__checkbox" type="checkbox" />
+        {{@if(state.checked)}}
+            <i class="fa-solid fa-thumbs-up"></i>
+            is checked
+        {{#else}}
+            <i class="fa-solid fa-thumbs-down"></i>
+            is not checked
+        {{/if}}
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    window.FontAwesomeConfig = {
+        autoReplaceSvg: 'nest'
+        , observeMutations: false
+    };
+</script>
+<script src="fontawesome-free/js/solid.min.js"></script>
+<script src="fontawesome-free/js/fontawesome.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var $island = document.getElementById('island');
+
+        function refreshIcons() {
+            // this only refreshes the icons in your RIsland instance
+            FontAwesome.dom.i2svg({ node: $island });
+        }
+
+        new RIsland({
+            $element: $island,
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, $closest, state, setState) {
+                        setState({ checked: $closest.checked });
+                    }
+                }
+            },
+            initialState: { checked: false },
+            load: refreshIcons,
+            morphdom: {
+                onBeforeElUpdated: function($fromEl) {
+                    return !(
+                        $fromEl.tagName.toLowerCase() === 'i'
+                        && $fromEl.hasAttribute('data-fa-i2svg') === true
+                    );
+                }
+            },
+            template: document.getElementById('squirrelly'),
+            update: refreshIcons
+        });
+    });
+</script>
+```
+
+What this does: `autoReplaceSvg` set to `nest` tells [Fontawesome](https://fontawesome.com/) to nest the SVGs into the `i`-tags, which is the only way to work with it in [morphdom](https://github.com/patrick-steele-idem/morphdom). (The usual way is to transform the `i`-tag into an HTML-comment and add the SVG, which triggers `onBeforeNodeAdded` and `onBeforeNodeDiscarded`. In `onBeforeNodeDiscarded` it is possible to prevent the SVG from being discarded, but in `onBeforeNodeAdded` the node has no DOM context yet, so it is not possible to check whether it should be added or an SVG is already present. So `nest` with `onBeforeElUpdated` is the only way to go here.) `observeMutations` set to `false` prevents [Fontawesome](https://fontawesome.com/) from observing the whole DOM for mutations. We know things changed in the `load` and `update` config callbacks, so we can refresh the icons there.
+
+> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The default bundles of [Fontawesome](https://fontawesome.com/) 5+ are usually huge. It is possible to create your own custom [Fontawesome](https://fontawesome.com/) bundles now with a few clicks. They call this a "Kit". Give it a try!
 
 ---
 
