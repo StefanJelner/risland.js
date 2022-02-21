@@ -1231,6 +1231,10 @@ This is an example which shows the event throttling options. Constantly move the
 
 This is a basic example of a table with information from a CSV file, which can be sorted and filtered. This could be useful for a product comparison or specifications table on a shop page.
 
+### `todo-list.html`
+
+This is an example of a simple todo list, with different priorities, manual sorting and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()` and [Fontawesome](https://fontawesome.com/). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom).
+
 ---
 
 ## <a name="hints"></a> Hints
@@ -1314,6 +1318,8 @@ Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an icon
 What this does: `autoReplaceSvg` set to `nest` tells [Fontawesome](https://fontawesome.com/) to nest the SVGs into the `i`-tags, which is the only way to work with it in [morphdom](https://github.com/patrick-steele-idem/morphdom). (The usual way is to transform the `i`-tag into an HTML-comment and add the SVG, which triggers `onBeforeNodeAdded` and `onBeforeNodeDiscarded`. In `onBeforeNodeDiscarded` it is possible to prevent the SVG from being discarded, but in `onBeforeNodeAdded` the node has no DOM context yet, so it is not possible to check whether it should be added or an SVG is already present. So `nest` with `onBeforeElUpdated` is the only way to go here.) `observeMutations` set to `false` prevents [Fontawesome](https://fontawesome.com/) from observing the whole DOM for mutations. We know things changed in the `load` and `update` config callbacks, so we can refresh the icons there.
 
 > <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The default bundles of [Fontawesome](https://fontawesome.com/) 5+ are usually huge. It is possible to create your own custom [Fontawesome](https://fontawesome.com/) bundles now with a few clicks. They call this a "Kit". Give it a try!
+
+> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** Have a look at the `todo-list.html` example, because [Fontawesome](https://fontawesome.com/) is used there and additionally the `title`-attributes and SVG `title` tags become updated manually.
 
 ### Deleting an object key with [deepmerge](https://github.com/TehShrike/deepmerge)
 

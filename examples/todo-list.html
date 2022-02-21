@@ -7,146 +7,260 @@
     </head>
     <body>
         <style type="text/css">
+            .island__header {
+                align-items: center;
+                display: flex;
+                margin-bottom: 10px;
+                white-space: nowrap;
+                width: 50vw;
+            }
+
+            .island__locale {
+                flex-grow: 1;
+            }
+
+            .island__header > * + * {
+                margin: 0 0 0 10px;
+            }
+
+            .island__wrapper {
+                border: 1px solid #ccc;
+                height: 50vh;
+                margin-bottom: 10px;
+                overflow: auto;
+                width: 50vw;
+            }
+
+            .island__table {
+                border-collapse: collapse;
+                border-style: hidden;
+                width: 100%;
+            }
+
+            .island__column {
+                border: 1px solid #ccc;
+                padding: 5px;
+                white-space: nowrap;
+            }
+
+            .island__column {
+                border: 1px solid #ccc;
+                padding: 5px;
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+
+            .island__column--head {
+                background-color: #444;
+                color: #fff;
+                cursor: pointer;
+                position: sticky;
+                top: 0;
+            }
+
+            .island__column--body {
+                background-color: #fff;
+                color: #000;
+            }
+
+            .island__column--index {
+                text-align: right;
+            }
+
+            .island__column--important {
+                color: #b00;
+                min-width: 16px;
+            }
+
+            .island__row--important .island__column {
+                background-color: #fdd;
+            }
+
+            .island__row--done .island__column {
+                color: #aaa;
+                background-color: #eee;
+            }
+
+            .island__column--task {
+                width: 100%;
+            }
+
+            .island__footer {
+                align-items: center;
+                display: flex;
+                white-space: nowrap;
+                width: 50vw;
+            }
+
+            .island__task-name {
+                flex-grow: 1;
+            }
+
+            .island__important-label {
+                align-items: center;
+                display: flex;
+            }
+
+            .island__important-label i[data-fa-i2svg] {
+                color: #b00;
+            }
+
+            .island__important-label > * + *,
+            .island__footer > * + * {
+                margin: 0 0 0 10px;
+            }
+
+            .island__button {
+                cursor: pointer;
+                padding: 2px;
+            }
+
+            .island__button:disabled {
+                opacity: 0.4;
+            }
+
+            .island i[data-fa-i2svg] {
+                display: flex;
+            }
+
+            .island .svg-inline--fa {
+                height: 16px;
+                width: 16px;
+            }
         </style>
 
         <div id="island"></div>
 
         <script type="text/html" id="squirrelly">
             <div class="island">
-                <select class="island__locale">
-                    <option
-                        value="en"
-                        {{@if(state.locale === 'en')}}selected="selected"{{/if}}
-                    >
-                        English
-                    </option>
-                    <option
-                        value="de"
-                        {{@if(state.locale === 'de')}}selected="selected"{{/if}}
-                    >
-                        Deutsch
-                    </option>
-                </select>
-                <input
-                    class="island__show-done"
-                    type="checkbox"
-                    id="show-done"
-                />
-                <label for="show-done">{{'showDone' | t}}</label>
-                <table class="island__table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th></th>
-                            <th>{{'task' | t}}</th>
-                            <th>{{'creationDate' | t}}</th>
-                            <th colspan="4">{{'actions' | t}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{@include('tbody', {
-                            class: 'important'
-                            , i: 0
-                            , ids: state.sort.important
-                            , form: state.form
-                            , locale: state.locale
-                            , tasks: state.tasks
-                        })/}}
-                        {{@include('tbody', {
-                            class: 'normal'
-                            , i: state.sort.important.length
-                            , ids: state.sort.normal
-                            , form: state.form
-                            , locale: state.locale
-                            , tasks: state.tasks
-                        })/}}
-                        {{@if(state.showDone === true)}}
-                            {{@include('tbody', {
-                                class: 'done'
-                                , i: state.sort.important.length + state.sort.normal.length
-                                , ids: state.sort.done
-                                , form: state.form
-                                , locale: state.locale
-                                , tasks: state.tasks
-                            })/}}
-                        {{/if}}
-                    </tbody>
-                </table>
-                <label for="task-name">{{'taskName' | t}}</label>
-                <input
-                    class="island__task-name"
-                    type="text"
-                    name="task-name-{{state.form.suffix}}"
-                    id="task-name"
-                    value=""
-                />
-                <input
-                    class="island__important"
-                    type="checkbox"
-                    name="important-{{state.form.suffix}}"
-                    id="important"
-                />
-                <label for="important">
-                    <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
-                    {{'important' | t}}
-                </label>
-                <button
-                    class="island__add"
-                    type="button"
-                    {{@if(state.form.value === '')}}disabled="disabled"{{/if}}
-                >
-                    <i class="fa-solid fa-plus" title="{{'add' | t}}"></i>
-                </button>
+                <header class="island__header">
+                    <select class="island__locale">
+                        <option value="de" {{@if(state.locale === 'de')}}selected="selected"{{/if}}>Deutsch</option>
+                        <option value="en" {{@if(state.locale === 'en')}}selected="selected"{{/if}}>English</option>
+                        <option value="es" {{@if(state.locale === 'es')}}selected="selected"{{/if}}>Español</option>
+                        <option value="fr" {{@if(state.locale === 'fr')}}selected="selected"{{/if}}>Français</option>
+                        <option value="it" {{@if(state.locale === 'it')}}selected="selected"{{/if}}>Italiano</option>
+                    </select>
+                    <input class="island__show-done" type="checkbox" id="show-done" />
+                    <label for="show-done">{{'showDone' | t}}</label>
+                </header>
+                <div class="island__wrapper">
+                    {{@if(Object.keys(state.tasks).length > 0)}}
+                        <table class="island__table">
+                            <thead>
+                                <tr>
+                                    <th class="island__column island__column--head">#</th>
+                                    <th class="island__column island__column--head"></th>
+                                    <th class="island__column island__column--head">{{'task' | t}}</th>
+                                    <th class="island__column island__column--head">{{'creationDate' | t}}</th>
+                                    <th class="island__column island__column--head" colspan="4">{{'actions' | t}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{@include('tbody', {
+                                    class: 'important'
+                                    , i: 0
+                                    , ids: state.sort.important
+                                    , form: state.form
+                                    , locale: state.locale
+                                    , tasks: state.tasks
+                                })/}}
+                                {{@include('tbody', {
+                                    class: 'normal'
+                                    , i: state.sort.important.length
+                                    , ids: state.sort.normal
+                                    , form: state.form
+                                    , locale: state.locale
+                                    , tasks: state.tasks
+                                })/}}
+                                {{@if(state.showDone === true)}}
+                                    {{@include('tbody', {
+                                        class: 'done'
+                                        , i: state.sort.important.length + state.sort.normal.length
+                                        , ids: state.sort.done
+                                        , form: state.form
+                                        , locale: state.locale
+                                        , tasks: state.tasks
+                                    })/}}
+                                {{/if}}
+                                <tr class="island__row island__row--last"><td colspan="8"></td></tr>
+                            </tbody>
+                        </table>
+                    {{/if}}
+                </div>
+                <footer class="island__footer">
+                    <label for="task-name">{{'taskName' | t}}:</label>
+                    <input
+                        class="island__task-name"
+                        type="text"
+                        name="task-name-{{state.form.suffix}}"
+                        id="task-name"
+                        value=""
+                    />
+                    <input
+                        class="island__important"
+                        type="checkbox"
+                        name="important-{{state.form.suffix}}"
+                        id="important"
+                    />
+                    <label class="island__important-label" for="important">
+                        <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
+                        <span>{{'important' | t}}</span>
+                    </label>
+                    <button
+                        class="island__button island__add"
+                        type="button"
+                        {{@if(state.form.value === '')}}disabled="disabled"{{/if}}
+                    ><i class="fa-solid fa-plus" title="{{'add' | t}}"></i></button>
+                </footer>
             </div>
         </script>
 
         <script type="text/html" id="squirrelly-tbody">
             {{@each(partialState.ids) => id, j}}
                 <tr class="island__row island__row--{{partialState.class}}">
-                    <td>{{partialState.i + j + 1}}</td>
-                    <td>
+                    <td class="island__column island__column--body island__column--index">
+                        {{partialState.i + j + 1}}
+                    </td>
+                    <td class="island__column island__column--body island__column--important">
                         {{@if(partialState.tasks[id].important === true)}}
                             <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
                         {{/if}}
                     </td>
-                    <td>{{partialState.tasks[id].taskName}}</td>
-                    <td>{{partialState.tasks[id].creationDate | t(partialState.locale)}}</td>
-                    <td>
+                    <td class="island__column island__column--body island__column--task">
+                        {{partialState.tasks[id].taskName}}
+                    </td>
+                    <td class="island__column island__column--body">
+                        {{partialState.tasks[id].creationDate | t(partialState.locale)}}
+                    </td>
+                    <td class="island__column island__column--body">
                         <button
-                            class="island__up"
+                            class="island__button island__up"
                             type="button"
                             {{@if(j === 0 || partialState.class === 'done')}}disabled="disabled"{{/if}}
-                        >
-                            <i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i>
-                        </button>
+                        ><i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i></button>
                     </td>
-                    <td>
+                    <td class="island__column island__column--body">
                         <button
-                            class="island__down"
+                            class="island__button island__down"
                             type="button"
                             {{@if(j >= partialState.ids.length - 1  || partialState.class === 'done')}}
                                 disabled="disabled"
                             {{/if}}
-                        >
-                            <i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i>
-                        </button>
+                        ><i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i></button>
                     </td>
-                    <td>
+                    <td class="island__column island__column--body">
                         <button
-                            class="island__done"
+                            class="island__button island__done"
                             type="button"
                             {{@if(partialState.class === 'done')}}disabled="disabled"{{/if}}
-                        >
-                            <i class="fa-solid fa-check" title="{{'done' | t}}"></i>
-                        </button>
+                        ><i class="fa-solid fa-check" title="{{'done' | t}}"></i></button>
                     </td>
-                    <td>
+                    <td class="island__column island__column--body">
                         <button
-                            class="island__delete"
+                            class="island__button island__delete"
                             type="button"
-                        >
-                            <i class="fa-solid fa-trash" title="{{'delete' | t}}"></i>
-                        </button>
+                        ><i class="fa-solid fa-trash" title="{{'delete' | t}}"></i></button>
                     </td>
                 </tr>
             {{/each}}
@@ -175,48 +289,85 @@
                     , resources: {
                         de: {
                             translation: {
-                                actions: "Aktionen"
-                                , add: "Hinzufügen"
-                                , creationDate: "Erstellungsdatum"
-                                , delete: "Delete"
-                                , done: "Done"
-                                , down: "Down"
-                                , important: "Wichtig"
-                                , showDone: "Zeige erledigt"
-                                , task: "Aufgabe"
-                                , taskName: "Aufgabenname"
-                                , up: "Up"
+                                actions: 'Aktionen'
+                                , add: 'Hinzufügen'
+                                , creationDate: 'Erstellungsdatum'
+                                , delete: 'Löschen'
+                                , done: 'Erledigt'
+                                , down: 'Nach unten'
+                                , important: 'Wichtig'
+                                , showDone: 'Zeige erledigt'
+                                , task: 'Aufgabe'
+                                , taskName: 'Aufgabenname'
+                                , up: 'Nach oben'
                             }
                         }
                         , en: {
                             translation: {
-                                actions: "Actions"
-                                , add: "Add"
-                                , creationDate: "Creation date"
-                                , delete: "Löschen"
-                                , done: "Erledigt"
-                                , down: "Nach unten"
-                                , important: "Important"
-                                , showDone: "Show done"
-                                , task: "Task"
-                                , taskName: "Task name"
-                                , up: "Nach oben"
+                                actions: 'Actions'
+                                , add: 'Add'
+                                , creationDate: 'Creation date'
+                                , delete: 'Delete'
+                                , done: 'Done'
+                                , down: 'Down'
+                                , important: 'Important'
+                                , showDone: 'Show done'
+                                , task: 'Task'
+                                , taskName: 'Task name'
+                                , up: 'Up'
+                            }
+                        }
+                        , es: {
+                            translation: {
+                                actions: 'Acciones'
+                                , add: 'Añadir'
+                                , creationDate: 'Fecha de creación'
+                                , delete: 'Borrar'
+                                , done: 'Hecho'
+                                , down: 'Abajo'
+                                , important: 'Importante'
+                                , showDone: 'Mostrar hecho'
+                                , task: 'Tarea'
+                                , taskName: 'Nombre de la tarea'
+                                , up: 'Hasta ahora'
+                            }
+                        }
+                        , fr: {
+                            translation: {
+                                actions: 'Actions'
+                                , add: 'Ajouter'
+                                , creationDate: 'Date de création'
+                                , delete: 'Supprimer'
+                                , done: 'Fait'
+                                , down: 'Vers le bas'
+                                , important: 'Important'
+                                , showDone: 'Montrer fait'
+                                , task: 'Tâche'
+                                , taskName: 'Nom de la tâche'
+                                , up: 'Vers le haut'
+                            }
+                        }
+                        , it: {
+                            translation: {
+                                actions: 'Azioni'
+                                , add: 'Aggiungi'
+                                , creationDate: 'Data di creazione'
+                                , delete: 'Cancellare'
+                                , done: 'Fatto'
+                                , down: 'Giù'
+                                , important: 'Importante'
+                                , showDone: 'Mostra fatto'
+                                , task: 'Compito'
+                                , taskName: 'Nome del compito'
+                                , up: 'Verso l\'alto'
                             }
                         }
                     }
                 });
 
-                function initialForm() {
-                    return {
-                        important: false
-                        , suffix: String(+new Date())
-                        , value: ''
-                    };
-                }
+                function initialForm() { return { important: false, suffix: String(+new Date()), value: ''}; }
 
-                function refreshIcons() {
-                    FontAwesome.dom.i2svg({ node: $island });
-                }
+                function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
 
                 function getSortKeyIndex($closest, sort) {
                     var $tr = $closest.closest('.island__row');
@@ -226,23 +377,14 @@
 
                         if (index !== -1) {
                             if (index >= sort.important.length + sort.normal.length) {
-                                return {
-                                    index: index - (sort.important.length + sort.normal.length)
-                                    , key: 'done'
-                                };
+                                return { index: index - (sort.important.length + sort.normal.length), key: 'done' };
                             }
 
                             if (index >= sort.important.length) {
-                                return {
-                                    index: index - sort.important.length
-                                    , key: 'normal'
-                                };
+                                return { index: index - sort.important.length, key: 'normal' };
                             }
 
-                            return {
-                                index: index
-                                , key: 'important'
-                            };
+                            return { index: index, key: 'important' };
                         }
                     }
 
@@ -261,7 +403,7 @@
                                         {},
                                         Object.keys(a).reduce(function(result, key) {
                                             if (!(key in b) || typeof b[key] !== 'undefined') {
-                                                var tmp = {}
+                                                var tmp = {};
                                                 tmp[key] = a[key];
 
                                                 return Object.assign({}, result, tmp);
@@ -271,7 +413,7 @@
                                         }, {}),
                                         Object.keys(b).reduce(function(result, key) {
                                             if (typeof b[key] !== 'undefined') {
-                                                var tmp = {}
+                                                var tmp = {};
                                                 tmp[key] = b[key];
 
                                                 return Object.assign({}, result, tmp);
@@ -290,9 +432,7 @@
                         'change': {
                             '.island__locale': function(_, $closest, __, setState) {
                                 var locale = $closest.value;
-
                                 i18next.changeLanguage(locale);
-
                                 setState({ locale: locale });
                             }
                         }
@@ -320,13 +460,9 @@
                                         , sort: (
                                             important === true
                                                 // important tasks will be placed at the top of the important tasks
-                                                ? {
-                                                    important: [id].concat(state.sort.important)
-                                                }
+                                                ? { important: [id].concat(state.sort.important) }
                                                 // normal tasks will be placed at the bottom of the normal tasks
-                                                : {
-                                                    normal: state.sort.normal.concat(id)
-                                                }
+                                                : { normal: state.sort.normal.concat(id) }
                                         )
                                         , tasks: tasksPartial
                                     };
@@ -334,22 +470,16 @@
                             }
                             , '.island__delete': function(_, $closest, __, setState) {
                                 setState(function(state) {
-                                    console.log(state);
-
                                     var sortKeyIndex = getSortKeyIndex($closest, state.sort);
 
                                     if (sortKeyIndex !== null) {
-                                        var nextState = {
-                                            sort: {}
-                                            , tasks: {}
-                                        };
-                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+                                        var nextState = { sort: {}, tasks: {} };
+                                        var currentSort = state.sort[sortKeyIndex.key];
+                                        var id = currentSort[sortKeyIndex.index];
 
-                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                        nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index
-                                        ).concat(
-                                            state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
-                                        );
+                                        ).concat(currentSort.slice(sortKeyIndex.index + 1));
                                         nextState.tasks[id] = undefined;
 
                                         return nextState;
@@ -363,27 +493,19 @@
                                     var sortKeyIndex = getSortKeyIndex($closest, state.sort);
 
                                     if (sortKeyIndex !== null) {
-                                        var nextState = {
-                                            sort: {}
-                                            , tasks: {}
-                                        };
-                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+                                        var nextState = { sort: {}, tasks: {} };
+                                        var currentSort = state.sort[sortKeyIndex.key];
+                                        var id = currentSort[sortKeyIndex.index];
 
-                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                        nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index
-                                        ).concat(
-                                            state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
-                                        );
+                                        ).concat(currentSort.slice(sortKeyIndex.index + 1));
                                         nextState.sort.done = [id].concat(state.sort.done);
-                                        nextState.tasks[id] = Object.assign(
-                                            {}
-                                            , state.tasks[id]
-                                            , {
-                                                done: true
-                                                // done tasks are not important any more
-                                                , important: false
-                                            }
-                                        );
+                                        nextState.tasks[id] = Object.assign({} , state.tasks[id], {
+                                            done: true
+                                            // done tasks are not important any more
+                                            , important: false
+                                        });
 
                                         return nextState;
                                     }
@@ -396,17 +518,16 @@
                                     var sortKeyIndex = getSortKeyIndex($closest, state.sort);
 
                                     if (sortKeyIndex !== null) {
-                                        var nextState = {
-                                            sort: {}
-                                        };
-                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+                                        var nextState = { sort: {} };
+                                        var currentSort = state.sort[sortKeyIndex.key];
+                                        var id = currentSort[sortKeyIndex.index];
 
-                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                        nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index
                                         ).concat(
-                                            state.sort[sortKeyIndex.key][sortKeyIndex.index + 1]
-                                            , state.sort[sortKeyIndex.key][sortKeyIndex.index]
-                                            , state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 2)
+                                            currentSort[sortKeyIndex.index + 1]
+                                            , currentSort[sortKeyIndex.index]
+                                            , currentSort.slice(sortKeyIndex.index + 2)
                                         );
 
                                         return nextState;
@@ -426,17 +547,16 @@
                                     var sortKeyIndex = getSortKeyIndex($closest, state.sort);
 
                                     if (sortKeyIndex !== null) {
-                                        var nextState = {
-                                            sort: {}
-                                        };
-                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+                                        var nextState = { sort: {} };
+                                        var currentSort = state.sort[sortKeyIndex.key];
+                                        var id = currentSort[sortKeyIndex.index];
 
-                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                        nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index - 1
                                         ).concat(
-                                            state.sort[sortKeyIndex.key][sortKeyIndex.index]
-                                            , state.sort[sortKeyIndex.key][sortKeyIndex.index - 1]
-                                            , state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
+                                            currentSort[sortKeyIndex.index]
+                                            , currentSort[sortKeyIndex.index - 1]
+                                            , currentSort.slice(sortKeyIndex.index + 1)
                                         );
 
                                         return nextState;
@@ -454,36 +574,42 @@
                     }
                     , filters: {
                         t: function(keyOrDate, locale) {
-                            if (keyOrDate instanceof Date) {
-                                return keyOrDate.toLocaleString(locale);
-                            } else {
-                                return i18next.t(keyOrDate);
-                            }
+                            return keyOrDate instanceof Date ? keyOrDate.toLocaleString(locale) : i18next.t(keyOrDate);
                         }
                     }
                     , initialState: {
                         form: initialForm()
                         , locale: initialLocale
-                        , sort: {
-                            done: []
-                            , important: []
-                            , normal: []
-                        }
+                        , sort: { done: [], important: [], normal: []}
                         , showDone: false
                         , tasks: {}
                     }
                     , load: refreshIcons
                     , morphdom: {
-                        onBeforeElUpdated: function($fromEl) {
-                            return !(
-                                $fromEl.tagName.toLowerCase() === 'i'
-                                && $fromEl.hasAttribute('data-fa-i2svg') === true
-                            );
+                        // prevent Fontawesome SVGs from being updated
+                        onBeforeElUpdated: function($fromEl, $toEl) {
+                            if ($fromEl.tagName.toLowerCase() === 'i' && $fromEl.hasAttribute('data-fa-i2svg')) {
+                                // we update the title-attributes and SVG titles manually
+                                var fromTitle = $fromEl.getAttribute('title');
+                                var toTitle = $toEl.getAttribute('title');
+
+                                if (fromTitle !== toTitle) {
+                                    $fromEl.setAttribute('title', toTitle);
+
+                                    var $svgTitle = $fromEl.querySelector('title');
+
+                                    if ($svgTitle !== null) {
+                                        $svgTitle.innerHTML = toTitle;
+                                    }
+                                }
+
+                                return false;
+                            }
+
+                            return true;
                         }
                     }
-                    , partials: {
-                        'tbody': document.getElementById('squirrelly-tbody')
-                    }
+                    , partials: { tbody: document.getElementById('squirrelly-tbody') }
                     , template: document.getElementById('squirrelly')
                     , update: refreshIcons
                 });
