@@ -1247,7 +1247,7 @@ If you want to output HTML in your variables you should use the `safe` flag as t
 </template>
 ```
 
-### Working with Fontawesome 5+
+### Working with [Fontawesome](https://fontawesome.com/) 5+
 
 Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an iconfont any more, but replaces occurences of an `i`-tag and icon-classes with SVG-content. This can cause trouble with the way [morphdom](https://github.com/patrick-steele-idem/morphdom) works and besides using the system out of the box with mutation observers is costy. So if you are planning on using [Fontawesome](https://fontawesome.com/) 5+ in your RIsland instance, you have to do some adjustments:
 
@@ -1314,6 +1314,92 @@ Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an icon
 What this does: `autoReplaceSvg` set to `nest` tells [Fontawesome](https://fontawesome.com/) to nest the SVGs into the `i`-tags, which is the only way to work with it in [morphdom](https://github.com/patrick-steele-idem/morphdom). (The usual way is to transform the `i`-tag into an HTML-comment and add the SVG, which triggers `onBeforeNodeAdded` and `onBeforeNodeDiscarded`. In `onBeforeNodeDiscarded` it is possible to prevent the SVG from being discarded, but in `onBeforeNodeAdded` the node has no DOM context yet, so it is not possible to check whether it should be added or an SVG is already present. So `nest` with `onBeforeElUpdated` is the only way to go here.) `observeMutations` set to `false` prevents [Fontawesome](https://fontawesome.com/) from observing the whole DOM for mutations. We know things changed in the `load` and `update` config callbacks, so we can refresh the icons there.
 
 > <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The default bundles of [Fontawesome](https://fontawesome.com/) 5+ are usually huge. It is possible to create your own custom [Fontawesome](https://fontawesome.com/) bundles now with a few clicks. They call this a "Kit". Give it a try!
+
+### Deleting an object key with [deepmerge](https://github.com/TehShrike/deepmerge)
+
+In JavaScript an object key cannot be deleted by setting its value to `undefined`. It has to be done with `delete`.
+
+```js
+var foo = { bar: 1 };
+
+foo.bar = undefined;
+
+console.log(foo); // output { bar: undefined }
+
+delete foo.bar;
+
+console.log(foo); // output {}
+```
+
+This leads to the problem, that [deepmerge](https://github.com/TehShrike/deepmerge) does not offer any way to tell it, that an object key should be deleted inspite of being set to `undefined`. And there is no option to tell it to delete keys. The only way to achieve this is to provide a `customMerge` function in the [deepmerge](https://github.com/TehShrike/deepmerge) config.
+
+```html
+<div id="island"></div>
+
+<template id="squirrelly">
+    <div class="island">
+        {{@if(state.foo.bar)}}<span class="island__foo-bar">{{state.foo.bar}}</span>{{/if}}
+        <button class="island__button" type="button">Delete bar</button>
+    </div>
+</template>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island'),
+            deepmerge: {
+                customMerge: function(key) {
+                    if (key === 'foo') {
+                        return function(a, b) {
+                            return Object.assign(
+                                {},
+                                Object.keys(a).reduce(function(result, key) {
+                                    if (!(key in b) || typeof b[key] !== 'undefined') {
+                                        var tmp = {}
+                                        tmp[key] = a[key];
+
+                                        return Object.assign({}, result, tmp);
+                                    }
+
+                                    return result;
+                                }, {}),
+                                Object.keys(b).reduce(function(result, key) {
+                                    if (typeof b[key] !== 'undefined') {
+                                        var tmp = {}
+                                        tmp[key] = b[key];
+
+                                        return Object.assign({}, result, tmp);
+                                    }
+
+                                    return result;
+                                }, {})
+                            );
+                        };
+                    }
+
+                    return undefined;
+                }
+            },
+            delegations: {
+                'click': {
+                    '.island__button': function(event, $closest, state, setState) {
+                        setState({ foo: { bar: undefined } });
+                    }
+                }
+            },
+            initialState: {
+                foo: {
+                    bar: 'baz'
+                }
+            },
+            template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
+What happens here is that `foo` gets a custom merge function, which omits all keys with a value of `undefined` on both objects.
 
 ---
 

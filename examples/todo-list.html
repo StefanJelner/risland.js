@@ -22,8 +22,7 @@
                     </option>
                     <option
                         value="de"
-                        {{@if(state.locale === 'de')}}
-                        selected="selected"{{/if}}
+                        {{@if(state.locale === 'de')}}selected="selected"{{/if}}
                     >
                         Deutsch
                     </option>
@@ -51,7 +50,6 @@
                             , ids: state.sort.important
                             , form: state.form
                             , locale: state.locale
-                            , showActions: true
                             , tasks: state.tasks
                         })/}}
                         {{@include('tbody', {
@@ -60,7 +58,6 @@
                             , ids: state.sort.normal
                             , form: state.form
                             , locale: state.locale
-                            , showActions: true
                             , tasks: state.tasks
                         })/}}
                         {{@if(state.showDone === true)}}
@@ -70,27 +67,26 @@
                                 , ids: state.sort.done
                                 , form: state.form
                                 , locale: state.locale
-                                , showActions: false
                                 , tasks: state.tasks
                             })/}}
                         {{/if}}
                     </tbody>
                 </table>
-                <label for="task-name-{{state.form.suffix}}">{{'taskName' | t}}</label>
+                <label for="task-name">{{'taskName' | t}}</label>
                 <input
                     class="island__task-name"
                     type="text"
                     name="task-name-{{state.form.suffix}}"
-                    id="task-name-{{state.form.suffix}}"
+                    id="task-name"
                     value=""
                 />
                 <input
                     class="island__important"
                     type="checkbox"
                     name="important-{{state.form.suffix}}"
-                    id="important-{{state.form.suffix}}"
+                    id="important"
                 />
-                <label for="important-{{state.form.suffix}}">
+                <label for="important">
                     <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
                     {{'important' | t}}
                 </label>
@@ -115,36 +111,35 @@
                     </td>
                     <td>{{partialState.tasks[id].taskName}}</td>
                     <td>{{partialState.tasks[id].creationDate | t(partialState.locale)}}</td>
-                    {{@if(partialState.showActions === true)}}
-                        <td>
-                            <button
-                                class="island__up"
-                                type="button"
-                                {{@if(j === 0)}}disabled="disabled"{{/if}}
-                            >
-                                <i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i>
-                            </button>
-                        </td>
-                        <td>
-                            <button
-                                class="island__down"
-                                type="button"
-                                {{@if(j >= partialState.ids.length - 1)}}disabled="disabled"{{/if}}
-                            >
-                                <i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i>
-                            </button>
-                        </td>
-                        <td>
-                            <button
-                                class="island__done"
-                                type="button"
-                            >
-                                <i class="fa-solid fa-check" title="{{'done' | t}}"></i>
-                            </button>
-                        </td>
-                    {{#else}}
-                        <td colspan="3"></td>
-                    {{/if}}
+                    <td>
+                        <button
+                            class="island__up"
+                            type="button"
+                            {{@if(j === 0 || partialState.class === 'done')}}disabled="disabled"{{/if}}
+                        >
+                            <i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button
+                            class="island__down"
+                            type="button"
+                            {{@if(j >= partialState.ids.length - 1  || partialState.class === 'done')}}
+                                disabled="disabled"
+                            {{/if}}
+                        >
+                            <i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button
+                            class="island__done"
+                            type="button"
+                            {{@if(partialState.class === 'done')}}disabled="disabled"{{/if}}
+                        >
+                            <i class="fa-solid fa-check" title="{{'done' | t}}"></i>
+                        </button>
+                    </td>
                     <td>
                         <button
                             class="island__delete"
@@ -223,8 +218,74 @@
                     FontAwesome.dom.i2svg({ node: $island });
                 }
 
+                function getSortKeyIndex($closest, sort) {
+                    var $tr = $closest.closest('.island__row');
+
+                    if ($tr !== null) {
+                        var index = Array.from($tr.parentElement.children).indexOf($tr);
+
+                        if (index !== -1) {
+                            if (index >= sort.important.length + sort.normal.length) {
+                                return {
+                                    index: index - (sort.important.length + sort.normal.length)
+                                    , key: 'done'
+                                };
+                            }
+
+                            if (index >= sort.important.length) {
+                                return {
+                                    index: index - sort.important.length
+                                    , key: 'normal'
+                                };
+                            }
+
+                            return {
+                                index: index
+                                , key: 'important'
+                            };
+                        }
+                    }
+
+                    return null;
+                }
+
                 new RIsland({
                     $element: $island
+                    , deepmerge: {
+                        customMerge: function(key) {
+                            // we need a custom merge function here to remove keys from the object completely,
+                            // because setting an object key to "undefined" in JS does not delete it.
+                            if (key === 'tasks') {
+                                return function(a, b) {
+                                    return Object.assign(
+                                        {},
+                                        Object.keys(a).reduce(function(result, key) {
+                                            if (!(key in b) || typeof b[key] !== 'undefined') {
+                                                var tmp = {}
+                                                tmp[key] = a[key];
+
+                                                return Object.assign({}, result, tmp);
+                                            }
+
+                                            return result;
+                                        }, {}),
+                                        Object.keys(b).reduce(function(result, key) {
+                                            if (typeof b[key] !== 'undefined') {
+                                                var tmp = {}
+                                                tmp[key] = b[key];
+
+                                                return Object.assign({}, result, tmp);
+                                            }
+
+                                            return result;
+                                        }, {})
+                                    );
+                                };
+                            }
+
+                            return undefined;
+                        }
+                    }
                     , delegations: {
                         'change': {
                             '.island__locale': function(_, $closest, __, setState) {
@@ -252,10 +313,13 @@
                                     };
 
                                     return {
+                                        // this is a dirty, old trick: if the names of the form elements change,
+                                        // they are usually reset to their original state. So it is not necessary
+                                        // to do direct DOM manipulations here.
                                         form: initialForm()
                                         , sort: (
                                             important === true
-                                                // important tasks will be placed at the top of the important task
+                                                // important tasks will be placed at the top of the important tasks
                                                 ? {
                                                     important: [id].concat(state.sort.important)
                                                 }
@@ -268,11 +332,118 @@
                                     };
                                 });
                             }
+                            , '.island__delete': function(_, $closest, __, setState) {
+                                setState(function(state) {
+                                    console.log(state);
+
+                                    var sortKeyIndex = getSortKeyIndex($closest, state.sort);
+
+                                    if (sortKeyIndex !== null) {
+                                        var nextState = {
+                                            sort: {}
+                                            , tasks: {}
+                                        };
+                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+
+                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                            0, sortKeyIndex.index
+                                        ).concat(
+                                            state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
+                                        );
+                                        nextState.tasks[id] = undefined;
+
+                                        return nextState;
+                                    }
+
+                                    return null;
+                                });
+                            }
+                            , '.island__done': function(_, $closest, __, setState) {
+                                setState(function(state) {
+                                    var sortKeyIndex = getSortKeyIndex($closest, state.sort);
+
+                                    if (sortKeyIndex !== null) {
+                                        var nextState = {
+                                            sort: {}
+                                            , tasks: {}
+                                        };
+                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+
+                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                            0, sortKeyIndex.index
+                                        ).concat(
+                                            state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
+                                        );
+                                        nextState.sort.done = [id].concat(state.sort.done);
+                                        nextState.tasks[id] = Object.assign(
+                                            {}
+                                            , state.tasks[id]
+                                            , {
+                                                done: true
+                                                // done tasks are not important any more
+                                                , important: false
+                                            }
+                                        );
+
+                                        return nextState;
+                                    }
+
+                                    return null;
+                                });
+                            }
+                            , '.island__down': function(_, $closest, __, setState) {
+                                setState(function(state) {
+                                    var sortKeyIndex = getSortKeyIndex($closest, state.sort);
+
+                                    if (sortKeyIndex !== null) {
+                                        var nextState = {
+                                            sort: {}
+                                        };
+                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+
+                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                            0, sortKeyIndex.index
+                                        ).concat(
+                                            state.sort[sortKeyIndex.key][sortKeyIndex.index + 1]
+                                            , state.sort[sortKeyIndex.key][sortKeyIndex.index]
+                                            , state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 2)
+                                        );
+
+                                        return nextState;
+                                    }
+
+                                    return null;
+                                });
+                            }
                             , '.island__important': function(_, $closest, __, setState) {
                                 setState({ form: { important: $closest.checked } });
                             }
                             , '.island__show-done': function(_, $closest, __, setState) {
                                 setState({ showDone: $closest.checked });
+                            }
+                            , '.island__up': function(_, $closest, __, setState) {
+                                setState(function(state) {
+                                    var sortKeyIndex = getSortKeyIndex($closest, state.sort);
+
+                                    if (sortKeyIndex !== null) {
+                                        var nextState = {
+                                            sort: {}
+                                        };
+                                        var id = state.sort[sortKeyIndex.key][sortKeyIndex.index];
+
+                                        nextState.sort[sortKeyIndex.key] = state.sort[sortKeyIndex.key].slice(
+                                            0, sortKeyIndex.index - 1
+                                        ).concat(
+                                            state.sort[sortKeyIndex.key][sortKeyIndex.index]
+                                            , state.sort[sortKeyIndex.key][sortKeyIndex.index - 1]
+                                            , state.sort[sortKeyIndex.key].slice(sortKeyIndex.index + 1)
+                                        );
+
+                                        return nextState;
+                                    }
+
+                                    return null;
+                                });
                             }
                         }
                         , 'input': {
