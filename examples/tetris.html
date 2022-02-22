@@ -329,9 +329,17 @@
 
                 function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
 
-                function TetrisCore() {
+                function TetrisCore(_rows, _columns) {
                     // private properties
-                    var _setState = function() {};
+                    var _currentTetrominos = null;
+                    var _interval = null;
+                    var _initialSpeed = 2000;
+                    var _lines = null;
+                    var _matrix = null;
+                    var _positionY = null;
+                    var _positionX = null;
+                    var _setState = null;
+                    var _speed = null;
                     var _tetrominos = {
                         I: [['cyan', 'cyan', 'cyan', 'cyan']]
                         , J: [['blue', false, false], ['blue', 'blue', 'blue']]
@@ -341,67 +349,189 @@
                         , T: [[false, 'purple', false], ['purple', 'purple', 'purple']]
                         , Z: [['red', 'red', false], [false, 'red', 'red']]
                     };
+                    var _tetrominoStartY = null;
 
-                    //public methods
+                    // public methods
+
+                    // drop tetromino
                     function drop() {
                         console.log('drop');
                     }
 
-                    function init(setState) {
-                        _setState = setState;
+                    // calculate initial values
+                    function getEmptyState() {
+                        _currentTetrominos = [
+                            _getRandomTetromino()
+                            , _getRandomTetromino()
+                        ];
+                        _lines = 0;
+                        _matrix = _getEmptyMatrix();
 
-                        _setState({
-                            delete: [3, 14]
-                            , matrix: [
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, 'cyan', false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, 'blue', false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, 'orange', false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, 'yellow', false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, 'green', 'green', false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false],
-                                [false, false, false, false, 'purple', false, false, false, false, false],
-                                [false, false, 'red', false, false, false, false, false, false, false],
-                                [false, false, 'red', false, false, false, false, false, false, false],
-                                [false, false, false, false, false, false, false, false, false, false]
-                            ]
-                            , next: _getRandomTetromino()
-                        });
+                        return {
+                            delete: []
+                            , gameOver: false
+                            , level: 1
+                            , lines: _lines
+                            , matrix: _matrix
+                            , next: _currentTetrominos[1]
+                            , score: 0
+                            , tetrominos: 0
+                        };
                     }
 
+                    // initialize the system
+                    function init(setState) {
+                        _setState = setState;
+                        _start();
+                    }
+
+                    // move tetromino to the left
                     function left() {
                         console.log('left');
                     }
 
+                    // restart the whole process (with setting initial values)
                     function restart() {
-                        console.log('restart');
+                        _setState(getEmptyState());
+                        _start();
                     }
 
+                    // move tetromino to the right
                     function right() {
                         console.log('right');
                     }
 
+                    // rotate tetromino
                     function rotate() {
                         console.log('rotate');
                     }
 
                     // private methods
+
+                    // stop the running interval
+                    function _clearInterval() {
+                        if (_interval !== null) {
+                            window.clearInterval(_interval);
+                            _interval = null;
+                        }
+                    }
+
+                    // GAME OVER!
+                    function _gameOver() {
+                        _clearInterval();
+                        _setState({ gameOver: true });
+                    }
+
+                    // calculate an empty matrix based on the number of rows and columns
+                    function _getEmptyMatrix() {
+                        return Array.from({ length: _rows }).map(function() {
+                            return Array.from({ length: _columns }).map(function() {
+                                return false;
+                            });
+                        });
+                    }
+
+                    // gets a new random tetromino, removes the old one from the list and increases the counter
+                    function _getNewTetromino() {
+                        _currentTetrominos = [
+                            _currentTetrominos[1]
+                            , _getRandomTetromino()
+                        ];
+                        _setTetrominoStart();
+                        _setState(function(state) {
+                            return {
+                                next: _currentTetrominos[1]
+                                , tetrominos: state.tetrominos + 1
+                            };
+                        });
+                    }
+
+                    // caclulate a random tetromino out of the list of possible tetrominos
                     function _getRandomTetromino() {
                         var shapes = Object.keys(_tetrominos);
+
                         return _tetrominos[shapes[Math.floor(Math.random() * shapes.length)]];
                     }
 
+                    // merges the matrix and the tetromino into each other
+                    function _mergeMatrix(permanent) {
+                        var newMatrix = [];
+
+                        if (permanent === true) {
+                            _matrix = newMatrix;
+                        } else {
+                            _setState({ matrix: newMatrix });
+                        }
+                    }
+
+                    // move tetromino down step by step in the matrix
+                    function _moveTetromino() {
+                        _positionY++;
+                        _mergeMatrix(false);
+                    }
+
+                    // removes the filled lines with a blinking animation and sets the lines counter and score
+                    function _removeFilledLines() {
+
+                    }
+
+                    // the running interval based on the speed
+                    function _setInterval() {
+                        if (_speed !== null) {
+                            _setInterval2();
+                            _interval = window.setInterval(_setInterval2, _speed);
+                        }
+                    }
+
+                    // helper function for _setInterval (to call it immediately, because window.setInterval always
+                    // delays execution by the amount of interval time.)
+                    function _setInterval2() {
+                        if (_testCollision() === true) {
+                            // if the collision already happens at the initial position, then the game is over
+                            if (_positionY === _tetrominoStartY) {
+                                _gameOver();
+                            } else {
+                                _clearInterval();
+                                _mergeMatrix(true);
+                                _removeFilledLines();
+                                _getNewTetromino();
+                                _setSpeed();
+                                _setInterval();
+                            }
+                        } else {
+                            _moveTetromino();
+                        }
+                    }
+
+                    // set the speed based on the amount of filled lines
+                    function _setSpeed() {
+                        _speed = _initialSpeed;
+                    }
+
+                    // set the initial position of the tetromino above the matrix
+                    function _setTetrominoStart() {
+                        _tetrominoStartY = 0 - _currentTetrominos.length;
+                        _positionX = Math.floor(Math.random() * (cols - _currentTetrominos[0].length));
+                        _positionY = _tetrominoStartY;
+                    }
+
+                    // start the whole process (without setting initial values)
+                    function _start() {
+                        _setTetrominoStart();
+                        _setSpeed();
+                        _clearInterval();
+                        _setInterval();
+                    }
+
+                    // test whether the tetromino reached its final possible position
+                    function _testCollision() {
+                        return false;
+                    }
+
+                    // return public properties and methods
                     return {
                         drop: drop
+                        , getEmptyState: getEmptyState
                         , init: init
                         , left: left
                         , restart: restart
@@ -410,7 +540,12 @@
                     };
                 }
 
-                var tetrisInstance = new TetrisCore();
+                var computedStyles = window.getComputedStyle(document.documentElement);
+
+                var tetrisInstance = new TetrisCore(
+                    parseInt(computedStyles.getPropertyValue('--rows'))
+                    , parseInt(computedStyles.getPropertyValue('--columns'))
+                );
 
                 window.addEventListener('keydown', function(event) {
                     switch (event.code) {
@@ -440,23 +575,20 @@
                     , filters: {
                         t: function(key) { return i18next.t(key); }
                     }
-                    , initialState: {
-                        delete: []
-                        , level: 1
-                        , lines: 0
-                        , locale: initialLocale
-                        , locales: {
-                            de: 'Deutsch'
-                            , en: 'English'
-                            , es: 'Español'
-                            , fr: 'Français'
-                            , it: 'Italiano'
+                    , initialState: Object.assign(
+                        {}
+                        , {
+                            locale: initialLocale
+                            , locales: {
+                                de: 'Deutsch'
+                                , en: 'English'
+                                , es: 'Español'
+                                , fr: 'Français'
+                                , it: 'Italiano'
+                            }
                         }
-                        , matrix: []
-                        , next: []
-                        , score: 0
-                        , tetrominos: 0
-                    }
+                        , tetrisInstance.getEmptyState()
+                    )
                     , load: function(_, setState) {
                         refreshIcons();
                         tetrisInstance.init(setState);
