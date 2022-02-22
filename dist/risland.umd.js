@@ -2229,35 +2229,13 @@
         return template;
       }
 
-      if (_typeof(template) === 'object') {
-        if (template instanceof HTMLScriptElement) {
-          return template.innerHTML;
-        }
-
-        if ('content' in template && template.content instanceof DocumentFragment) {
-          if (this._checkWrapping(template.content) === false) {
-            var nestingError = 'RIsland: First element in the template must be a single element, without any ' + 'siblings. The content should at least be wrapped in a div-tag.';
-            console.error(nestingError);
-            return "<p style=\"color:red;\">".concat(nestingError, "</p>");
-          }
-
-          var $textarea = document.createElement('textarea');
-          $textarea.innerHTML = Array.from(template.content.childNodes).map(function (childNode) {
-            return childNode.outerHTML;
-          }).join('');
-          return $textarea.value;
-        }
+      if (template instanceof HTMLScriptElement) {
+        return template.innerHTML;
       }
 
-      var typeError = 'RIsland: template must be a string, a template tag element or a script tag element.';
+      var typeError = 'RIsland: template must be a string or a script tag element.';
       console.error(typeError);
       return "<p style=\"color:red;\">".concat(typeError, "</p>");
-    };
-
-    RIsland.prototype._checkWrapping = function (fragment) {
-      return Array.from(fragment.childNodes).filter(function (child) {
-        return child instanceof Element;
-      }).length === 1;
     };
 
     RIsland.prototype._getThrottling = function (combinedEventName) {

@@ -8,12 +8,12 @@
     <body>
         <div id="island"></div>
 
-        <template id="squirrelly">
+        <script type="text/html" id="squirrelly">
             <div class="island">
                 <input class="island__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
             </div>
-        </template>
+        </script>
 
         <script src="../dist/risland.iife.min.js"></script>
         <script>

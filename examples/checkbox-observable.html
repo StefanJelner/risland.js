@@ -9,14 +9,14 @@
         <div id="island-checkbox"></div>
         <div id="island-log"></div>
 
-        <template id="squirrelly-checkbox">
+        <script type="text/html" id="squirrelly-checkbox">
             <div class="island-checkbox">
                 <input class="island-checkbox__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
             </div>
-        </template>
+        </script>
 
-        <template id="squirrelly-log">
+        <script type="text/html" id="squirrelly-log">
             <div class="island-log">
                 <ul>
                     {{@each(state.log) => checked}}
@@ -26,7 +26,7 @@
                     {{/each}}
                 </ul>
             </div>
-        </template>
+        </script>
 
         <script src="../dist/risland.iife.min.js"></script>
         <script src="../node_modules/rxjs/dist/bundles/rxjs.umd.min.js"></script>

@@ -368,68 +368,27 @@ export default class RIsland<IState extends Record<string, any>> {
     }
 
     /**
-     * Tries to determine, whether the template is already a given string or a DOM element which is a tag element.
-     * If it is a tag element, the content will be read, stringified and HTML decoded.
+     * Tries to determine, whether the template is already a given string or a script tag element.
      * 
-     * @param template the template as a string or a tag element
+     * @param template the template as a string or a script tag element
      * @returns the template
      */
-    private _getTemplate(template: string | HTMLTemplateElement | HTMLScriptElement): string {
+    private _getTemplate(template: string | HTMLScriptElement): string {
         if (typeof template === 'string') {
             return template;
         }
 
-        if (typeof template === 'object') {
-            // script tag
-            if (template instanceof HTMLScriptElement) {
-                return template.innerHTML;
-            }
-
-            // template tag
-            if (
-                'content' in template
-                && template.content instanceof DocumentFragment
-            ) {
-                if (this._checkWrapping(template.content) === false) {
-                    // otherwise show a nice error message.
-                    const nestingError = 'RIsland: First element in the template must be a single element, without any '
-                        + 'siblings. The content should at least be wrapped in a div-tag.';
-                    /* eslint-disable no-console */
-                    console.error(nestingError);
-                    /* eslint-enable no-console */
-                    return `<p style="color:red;">${nestingError}</p>`;
-                }
-
-                // putting the content of the template tag into a textarea to do a simple html decode.
-                const $textarea = document.createElement('textarea');
-                // making a string out of the content of the template tag.
-                $textarea.innerHTML = Array.from(
-                    template.content.childNodes
-                ).map((childNode: Element) => childNode.outerHTML).join('');
-
-                return $textarea.value;
-            }
+        // script tag
+        if (template instanceof HTMLScriptElement) {
+            return template.innerHTML;
         }
 
         // otherwise show a nice error message.
-        const typeError = 'RIsland: template must be a string, a template tag element or a script tag element.';
+        const typeError = 'RIsland: template must be a string or a script tag element.';
         /* eslint-disable no-console */
         console.error(typeError);
         /* eslint-enable no-console */
         return `<p style="color:red;">${typeError}</p>`;
-    }
-
-    /**
-     * Checks whether a document fragment contains more than one Element on the root
-     * 
-     * @param fragment a document fragment
-     * @returns whether a document fragment contains more than one Element on the root
-     */
-    private _checkWrapping(fragment: DocumentFragment): boolean {
-        // here we filter out all child nodes which are not an Element, like f.ex. text nodes.
-        return Array.from(fragment.childNodes).filter((child: Node) => {
-            return child instanceof Element;
-        }).length === 1;
     }
 
     /**
@@ -533,10 +492,10 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     morphdom: Parameters<typeof morphdom>[2];
     nativeHelpers: Record<string, Parameters<typeof Sqrl['nativeHelpers']['define']>[1]>;
     nonBubblingEvents: Array<TRIslandEventNames>;
-    partials: Record<string, string | HTMLTemplateElement | HTMLScriptElement>;
+    partials: Record<string, string | HTMLScriptElement>;
     shouldUpdate: (state: IState, nextState: IState) => boolean;
     squirrelly: Partial<SqrlConfig>;
-    template: string | HTMLTemplateElement | HTMLScriptElement;
+    template: string | HTMLScriptElement;
     unload: (state: IState) => void;
     update: (state: IState, setState: RIsland<IState>['_setState']) => void;
 }

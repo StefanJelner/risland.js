@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Tetris example</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <style type="text/css">
+            @keyframes blinker {
+                50% {
+                    background-color: lightgrey;
+                    opacity: 1;
+                }
+            }
+
+            :root {
+                --tetromino-size: 20px;
+                --columns: 10;
+                --rows: 20;
+            }
+
+            .island {
+                align-items: flex-start;
+                display: flex;
+                left: 50%;
+                position: absolute;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                white-space: nowrap;
+            }
+
+            .island__main {
+                border: 1px solid black;
+                border-top: 0;
+                height: calc(var(--rows) * var(--tetromino-size));
+                margin-right: 10px;
+                position: relative;
+                width: calc(var(--columns) * var(--tetromino-size));
+            }
+
+            .island__tetromino {
+                box-sizing: border-box;
+                border: 1px inset lightgray;
+                height: var(--tetromino-size);
+                position: absolute;
+                width: var(--tetromino-size);
+                z-index: 1;
+            }
+
+            .island__delete {
+                animation: blinker 1s linear infinite;
+                background-color: white;
+                height: var(--tetromino-size);
+                left: 0;
+                opacity: 0;
+                position: absolute;
+                right: 0;
+                z-index: 2;
+            }
+
+            .island__aside {
+                align-items: center;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .island__locale {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            .island__next {
+                border: 1px solid black;
+                height: calc(2 * var(--tetromino-size));
+                margin-bottom: 10px;
+                padding: 10px;
+                position: relative;
+                width: calc(4 * var(--tetromino-size));
+            }
+
+            .island__next-wrapper {
+                left: 50%;
+                position: absolute;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .island__statistics {
+                border-collapse: collapse;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            .island__column--label {
+                font-weight: bold;
+                width: 100%;
+            }
+
+            .island__buttons {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .island__buttons {
+                align-items: center;
+                display: flex;
+            }
+
+            .island__buttons > * + * {
+                margin-left: 5px;
+            }
+
+            .island__button {
+                cursor: pointer;
+                padding: 2px;
+            }
+
+            .island i[data-fa-i2svg] {
+                display: flex;
+            }
+
+            .island .svg-inline--fa {
+                height: 16px;
+                width: 16px;
+            }
+        </style>
+
+        <div id="island"></div>
+
+        <script type="text/html" id="squirrelly">
+            <div class="island">
+                <main class="island__main">
+                    {{@if(state.matrix.length > 0)}}
+                        {{@each(state.matrix) => row, i}}
+                            {{@each(row) => column, j}}
+                                {{@if(column !== false)}}
+                                    <div
+                                        class="island__tetromino"
+                                        style="
+                                            background-color: {{column}};
+                                            left: calc({{j}} * var(--tetromino-size));
+                                            top: calc({{i}} * var(--tetromino-size));
+                                        "
+                                    ></div>
+                                {{/if}}
+                            {{/each}}
+                        {{/each}}
+                    {{/if}}
+                    {{@if(state.delete.length > 0)}}
+                        {{@each(state.delete) => i}}
+                            <div
+                                class="island__delete"
+                                style="top: calc({{i}} * var(--tetromino-size));"
+                            ></div>
+                        {{/each}}
+                    {{/if}}
+                </main>
+                <aside class="island__aside">
+                    <select class="island__locale">
+                        {{@foreach(state.locales) => code, name}}
+                            <option
+                                value="{{code}}"
+                                {{@if(state.locale === code)}}selected="selected"{{/if}}
+                            >
+                                {{name}}
+                            </option>
+                        {{/foreach}}
+                    </select>
+                    <div class="island__next">
+                        {{@if(state.next.length > 0)}}
+                            <div
+                                class="island__next-wrapper"
+                                style="
+                                    height: calc({{state.next.length}} * var(--tetromino-size));
+                                    width: calc({{state.next[0].length}} * var(--tetromino-size));
+                                "
+                            >
+                                {{@each(state.next) => row, i}}
+                                    {{@each(row) => column, j}}
+                                        {{@if(column !== false)}}
+                                            <div
+                                                class="island__tetromino"
+                                                style="
+                                                    background-color: {{column}};
+                                                    left: calc({{j}} * var(--tetromino-size));
+                                                    top: calc({{i}} * var(--tetromino-size));
+                                                "
+                                            ></div>
+                                        {{/if}}
+                                    {{/each}}
+                                {{/each}}
+                            </div>
+                        {{/if}}
+                    </div>
+                    <table class="island__statistics">
+                        {{@each(['score', 'level', 'tetrominos', 'lines']) => key}}
+                            <tr>
+                                <td class="island__column island__column--label">{{key | t}}</td>
+                                <td class="island__column island__column--value">{{state[key]}}</td>
+                            </tr>
+                        {{/each}}
+                    </table>
+                    <ul class="island__buttons">
+                        <li>
+                            <button class="island__button island__left" type="button">
+                                <i class="fa-solid fa-arrow-left" title="{{'left' | t}}"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="island__button island__rotate" type="button">
+                                <i class="fa-solid fa-arrow-rotate-right" title="{{'rotate' | t}}"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="island__button island__right" type="button">
+                                <i class="fa-solid fa-arrow-right" title="{{'right' | t}}"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="island__button island__drop" type="button">
+                                <i class="fa-solid fa-arrow-down" title="{{'drop' | t}}"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="island__button island__restart" type="button">
+                                <i class="fa-solid fa-eject" title="{{'restart' | t}}"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+        </script>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script src="../node_modules/i18next/dist/umd/i18next.min.js"></script>
+        <script>
+            window.FontAwesomeConfig = {
+                // the 'nest' setting is important, otherwise it is not possible to leave the nodes, which get
+                // manipulated by Fontawesome untouched.
+                autoReplaceSvg: 'nest'
+                // observing mutations on the whole DOM is too costy here, because we know when to do updates.
+                , observeMutations: false
+            };
+        </script>
+        <script src="../node_modules/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+        <script src="../node_modules/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var $island = document.getElementById('island');
+                var initialLocale = 'en';
+
+                i18next.init({
+                    lng: initialLocale
+                    , resources: {
+                        de: {
+                            translation: {
+                                drop: 'Fallenlassen'
+                                , left: 'Nach links'
+                                , level: 'Stufe'
+                                , lines: 'Zeilen'
+                                , next: 'Als Nächstes'
+                                , restart: 'Neu starten'
+                                , right: 'Nach rechts'
+                                , rotate: 'Drehen'
+                                , score: 'Punktzahl'
+                                , tetrominos: 'Tetrominos'
+                            }
+                        }
+                        , en: {
+                            translation: {
+                                drop: 'Drop'
+                                , left: 'Move left'
+                                , level: 'Level'
+                                , lines: 'Lines'
+                                , next: 'Coming next'
+                                , restart: 'Restart'
+                                , right: 'Move right'
+                                , rotate: 'Rotate'
+                                , score: 'Score'
+                                , tetrominos: 'Tetrominos'
+                            }
+                        }
+                        , es: {
+                            translation: {
+                                drop: 'Dejar ir'
+                                , left: 'Muévete a la izquierda'
+                                , level: 'Nivel'
+                                , lines: 'Líneas'
+                                , next: 'Próximamente'
+                                , restart: 'Reiniciar'
+                                , right: 'Muévete a la derecha'
+                                , rotate: 'Girar'
+                                , score: 'Puntuación'
+                                , tetrominos: 'Tetrominos'
+                            }
+                        }
+                        , fr: {
+                            translation: {
+                                drop: 'Laisser aller'
+                                , left: 'Déplacement à gauche'
+                                , level: 'Niveau'
+                                , lines: 'Lignes'
+                                , next: 'A venir'
+                                , restart: 'Redémarrer'
+                                , right: 'Déplacement á droite'
+                                , rotate: 'Rotation'
+                                , score: 'Score'
+                                , tetrominos: 'Tetrominos'
+                            }
+                        }
+                        , it: {
+                            translation: {
+                                drop: 'Lasciare andare'
+                                , left: 'Spostati a sinistra'
+                                , level: 'Livello'
+                                , lines: 'Linee'
+                                , next: 'Prossimamente'
+                                , restart: 'Riavviare'
+                                , right: 'Spostati a destra'
+                                , rotate: 'Ruota'
+                                , score: 'Punteggio'
+                                , tetrominos: 'Tetrominos'
+                            }
+                        }
+                    }
+                });
+
+                function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
+
+                function TetrisCore() {
+                    // private properties
+                    var _setState = function() {};
+                    var _tetrominos = {
+                        I: [['cyan', 'cyan', 'cyan', 'cyan']]
+                        , J: [['blue', false, false], ['blue', 'blue', 'blue']]
+                        , L: [[false, false, 'orange'], ['orange', 'orange', 'orange']]
+                        , O: [['yellow', 'yellow'], ['yellow', 'yellow']]
+                        , S: [[false, 'green', 'green'], ['green', 'green', false]]
+                        , T: [[false, 'purple', false], ['purple', 'purple', 'purple']]
+                        , Z: [['red', 'red', false], [false, 'red', 'red']]
+                    };
+
+                    //public methods
+                    function drop() {
+                        console.log('drop');
+                    }
+
+                    function init(setState) {
+                        _setState = setState;
+
+                        _setState({
+                            delete: [3, 14]
+                            , matrix: [
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, 'cyan', false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, 'blue', false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, 'orange', false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, 'yellow', false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, 'green', 'green', false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false],
+                                [false, false, false, false, 'purple', false, false, false, false, false],
+                                [false, false, 'red', false, false, false, false, false, false, false],
+                                [false, false, 'red', false, false, false, false, false, false, false],
+                                [false, false, false, false, false, false, false, false, false, false]
+                            ]
+                            , next: _getRandomTetromino()
+                        });
+                    }
+
+                    function left() {
+                        console.log('left');
+                    }
+
+                    function restart() {
+                        console.log('restart');
+                    }
+
+                    function right() {
+                        console.log('right');
+                    }
+
+                    function rotate() {
+                        console.log('rotate');
+                    }
+
+                    // private methods
+                    function _getRandomTetromino() {
+                        var shapes = Object.keys(_tetrominos);
+                        return _tetrominos[shapes[Math.floor(Math.random() * shapes.length)]];
+                    }
+
+                    return {
+                        drop: drop
+                        , init: init
+                        , left: left
+                        , restart: restart
+                        , right: right
+                        , rotate: rotate
+                    };
+                }
+
+                var tetrisInstance = new TetrisCore();
+
+                window.addEventListener('keydown', function(event) {
+                    switch (event.code) {
+                        case 'ArrowDown': { tetrisInstance.drop(); break; }
+                        case 'ArrowLeft': { tetrisInstance.left(); break; }
+                        case 'ArrowRight': { tetrisInstance.right(); break; }
+                        case 'Space': { tetrisInstance.rotate(); break; }
+                    }
+                });
+
+                new RIsland({
+                    $element: $island
+                    , delegations: {
+                        'change': {
+                            '.island__locale': function(_, $closest, __, setState) {
+                                var locale = $closest.value;
+                                i18next.changeLanguage(locale);
+                                setState({ locale: locale });
+                            }
+                        }
+                        , 'click': ['drop', 'left', 'restart', 'right', 'rotate'].reduce(function(result, key) {
+                            var tmp = {};
+                            tmp['.island__' + key] = tetrisInstance[key];
+                            return Object.assign({}, result, tmp);
+                        }, {})
+                    }
+                    , filters: {
+                        t: function(key) { return i18next.t(key); }
+                    }
+                    , initialState: {
+                        delete: []
+                        , level: 1
+                        , lines: 0
+                        , locale: initialLocale
+                        , locales: {
+                            de: 'Deutsch'
+                            , en: 'English'
+                            , es: 'Español'
+                            , fr: 'Français'
+                            , it: 'Italiano'
+                        }
+                        , matrix: []
+                        , next: []
+                        , score: 0
+                        , tetrominos: 0
+                    }
+                    , load: function(_, setState) {
+                        refreshIcons();
+                        tetrisInstance.init(setState);
+                    }
+                    , morphdom: {
+                        // prevent Fontawesome SVGs from being updated
+                        onBeforeElUpdated: function($fromEl, $toEl) {
+                            if ($fromEl.tagName.toLowerCase() === 'i' && $fromEl.hasAttribute('data-fa-i2svg')) {
+                                // we update the title-attributes and SVG titles manually
+                                var fromTitle = $fromEl.getAttribute('title');
+                                var toTitle = $toEl.getAttribute('title');
+
+                                if (fromTitle !== toTitle) {
+                                    $fromEl.setAttribute('title', toTitle);
+
+                                    var $svgTitle = $fromEl.querySelector('title');
+
+                                    if ($svgTitle !== null) {
+                                        $svgTitle.innerHTML = toTitle;
+                                    }
+                                }
+
+                                return false;
+                            }
+
+                            return true;
+                        }
+                    }
+                    , template: document.getElementById('squirrelly')
+                    , update: refreshIcons
+                });
+            });
+        </script>
+    </body>
+</html>

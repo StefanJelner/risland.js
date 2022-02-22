@@ -8,15 +8,15 @@
     <body>
         <div id="island"></div>
 
-        <template id="squirrelly-checkbox">
+        <script type="text/html" id="squirrelly-checkbox">
             <div class="island">
                 <input class="island__checkbox" type="checkbox" />
                 {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
                 {{@include('log', { log: state.log })/}}
             </div>
-        </template>
+        </script>
 
-        <template id="squirrelly-log">
+        <script type="text/html" id="squirrelly-log">
             <ul class="island__log">
                 {{@each(partialState.log) => checked}}
                     <li class="island__log__entry">
@@ -24,7 +24,7 @@
                     </li>
                 {{/each}}
             </ul>
-        </template>
+        </script>
 
         <script src="../dist/risland.iife.js"></script>
         <script>

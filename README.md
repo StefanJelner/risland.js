@@ -12,8 +12,6 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Technologies](#technologies)
 - [Installation](#installation)
 - [Basic usage](#basic-usage)
-- [`template` tag](#template-tag)
-- [`template` tag and tables](#template-tag-table)
 - [`script` tag `type="text/html"`](#script-tag)
 - [Bundlers and template files](#bundlers-template)
 - [Event delegation](#event-delegation)
@@ -57,7 +55,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
 - Clearer separation of concerns (logic, data, representation, events, HTML, CSS, JS)
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
-- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in modern `template` tags or `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
+- [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader).
@@ -199,32 +197,24 @@ This already looks more like a dynamic application.
 
 There are several things which are quite obvious:
 
-1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient the HTML `template` tag (or also the `script`tag with `type="text/html"`).
+1. To pass the template as a string can be painful. Especially when the template grows. The solution can be template strings (like in the TypeScript example) or even more convenient a `script` tag with `type="text/html"`.
 2. Event delegation works in a way, that you have to provide an object with event names. Each event name introduces another inner object which consists of DOM selectors. These DOM selectors mark the potential origin of the event. Each DOM selector then has a callback function which gets invoked in case of an event matching the event name and the selector.
 
 ---
 
-## <a name="template-tag"></a> `template` tag
+## <a name="script-tag"></a> `script` tag `type="text/html"`
 
-> The template element is used to declare fragments of HTML that can be cloned and inserted in the document by script.
->
-> In a rendering, the template element represents nothing.
->
-> -- <cite>[HTML standard - 4.12.3 The template element](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element)</cite>
-
-The `template` tag is perfect for placing [squirrelly](https://github.com/squirrellyjs/squirrelly) template code inside. Actually it is meant for things like that. By default it is not represented in any way, so it is neither shown visually nor does it affect the representation of the document in any other way. One nice aspect is, that editors show the code in the `template` tag with HTML syntax highlighting. One drawback is, that it is hard to handle in JavaScript, because it is not easily accessible with `innerHTML` and text content gets HTML encoded (&quot;, &lt;, &gt;, &amp;), which means that some chars in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template code might get HTML encoded. RIsland therefore accepts the `template` tag DOM element and does the extraction and decoding of the code for you. So no worries!
-
-Enough theory, here is an example:
+[squirrelly](https://github.com/squirrellyjs/squirrelly) code can be placed in `script` tags with `type="text/html"` to activate syntax highlighting in most modern editors. (Unfortunately the modern `template` tag does not work, because browsers parse it as HTML leading to broken code, because [squirrelly](https://github.com/squirrellyjs/squirrelly) code gets skrewed up, when used to generate attributes or parsed as a text node, which causes trouble with `table` tags and their children.)
 
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         <input class="island__checkbox" type="checkbox" />
         {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
@@ -245,55 +235,17 @@ Enough theory, here is an example:
 </script>
 ```
 
-Even everything is in one code block, the concerns have a much cleaner separation here. Wonderful!
-
-In Typescript it is necessary to declare the type of the template:
-
-```ts
-template: document.getElementById('squirrelly') as HTMLTemplateElement
-```
-
-Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
-
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
-
-Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
-
----
-
-## <a name="template-tag-table"></a> `template` tag and tables
-
-There is one big drawback of using the `template` tag: If some HTML needs a strict structure of the tags, like for example in tables, in which a `tr` row element **MUST NOT** contain any other direct children than `td` or `th` elements and therefore any text nodes will get deleted or placed outside of the table by the HTML parser, your templates code will break, because `template` tags are not treated as is - as plain text - but become parsed by the browser and therefore malformed HTML will lead to unpredictable parsing results. In such rare cases it is better to use a `script` tag element (with `type="text/html"` to activate syntax highlighting in most editors).
-
----
-
-## <a name="script-tag"></a> `script` tag `type="text/html"`
-
-In some rare cases the `template` tag causes the browser to parse the template as malformed HTML, leading to unpredictable or unexpected template code. One case is using `@each` in tables, or to be more precise: using text nodes in wrong places ([squirrelly](https://github.com/squirrellyjs/squirrelly) code is usually treated like a text node). In such cases using a `script` tag is the better choice. Because usually `script` tags are interpreted as JavaScript, this would lead to error messages, so a different `type`has to be set. Use `type="text/html"` to activate syntax highlighting for HTML in your editor.
-
-```html
-<script type="text/html" id="squirrelly">
-    <div class="island">
-        <table>
-            {{@each(state.rows) => row}}
-                <tr>
-                    {{@each(row.columns) => column}}
-                        <td>{{column}}</td>
-                    {{/each}}
-                </tr>
-            {{/each}}
-        </table>
-    </div>
-</script>
-```
-
 In Typescript it is necessary to declare the type of the template:
 
 ```ts
 template: document.getElementById('squirrelly') as HTMLScriptElement
 ```
 
-Otherwise Typescript cannot determine whether the template is a `string`, a `HTMLTemplateElement` or a `HTMLScriptElement`.
+Otherwise Typescript cannot determine whether the template is a `string` or a `HTMLScriptElement`.
+
+> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+
+Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
 ---
 
@@ -348,7 +300,7 @@ In the RIsland config it would look like this:
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         <p class="foo">Foo</p>
         <p class="bar">Bar</p>
@@ -371,7 +323,7 @@ In the RIsland config it would look like this:
             <div></div>
         </div>
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
@@ -411,13 +363,13 @@ Example:
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         unthrottled: {{state.unthrottled}}<br />
         raf: {{state.throttledRaf}}<br />
         1 second: {{state.throttled1s}}
     </div>
-</template>
+</script>
 
 <style type="text/css">
     .island {
@@ -952,11 +904,11 @@ The `nativeHelpers` config object consists of keys and callback functions which 
 
 ```ts
 interface IRIslandConfig<IState extends Record<string, any>> {
-    partials: Record<string, string | HTMLTemplateElement | HTMLScriptElement>;
+    partials: Record<string, string | HTMLScriptElement>;
 }
 ```
 
-The `partials` config object consists of keys and - like the `template` config - `string`s, `template` tag DOM elements or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information on how to use partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
+The `partials` config object consists of keys and - like the `template` config - `string`s or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information on how to use partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
 ### `shouldUpdate`
 
@@ -989,11 +941,11 @@ In the above example only changes to `foo` or `baz` will lead to an update and r
 
 ```ts
 interface IRIslandConfig<IState extends Record<string, any>> {
-    template: string | HTMLTemplateElement | HTMLScriptElement;
+    template: string | HTMLScriptElement;
 }
 ```
 
-The `template` config consists of a `string` (simple string, if necessary with concatenation or a template string), `template` tag DOM element or `script` tag DOM element (use `type="text/html"` to activate syntax highlighting in editors). It contains template information for usage with [squirrelly](https://github.com/squirrellyjs/squirrelly). See [`template` tag](#template-tag), [`script` tag `type="text/html"`](#script-tag) and [Bundlers and template files](#bundlers-template).
+The `template` config consists of a `string` (simple string, if necessary with concatenation or a template string) or `script` tag DOM element (use `type="text/html"` to activate syntax highlighting in editors). It contains template information for usage with [squirrelly](https://github.com/squirrellyjs/squirrelly). See [`script` tag `type="text/html"`](#script-tag) and [Bundlers and template files](#bundlers-template).
 
 ### `unload`
 
@@ -1074,12 +1026,12 @@ Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         <input class="island__checkbox" type="checkbox" />
         {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
@@ -1147,13 +1099,13 @@ The only method which an RIsland instance offers is `unload`. Everything else is
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         <input class="island__checkbox" type="checkbox" />
         {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
         <button class="island__close" type="button">Close</button>
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
@@ -1244,11 +1196,11 @@ This is an example of a simple todo list, with different priorities, manual sort
 If you want to output HTML in your variables you should use the `safe` flag as the last filter in your filter chain, otherwise the content will be HTML encoded. This is intentionally to prevent XSS attacks. See [The safe flag](https://squirrelly.js.org/docs/syntax/filters/#the-safe-flag).
 
 ```html
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         {{'<p>Hello world!</p>' | safe}}
     </div>
-</template>
+</script>
 ```
 
 ### Working with [Fontawesome](https://fontawesome.com/) 5+
@@ -1258,7 +1210,7 @@ Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an icon
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         <input class="island__checkbox" type="checkbox" />
         {{@if(state.checked)}}
@@ -1269,7 +1221,7 @@ Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an icon
             is not checked
         {{/if}}
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
@@ -1342,12 +1294,12 @@ This leads to the problem, that [deepmerge](https://github.com/TehShrike/deepmer
 ```html
 <div id="island"></div>
 
-<template id="squirrelly">
+<script type="text/html" id="squirrelly">
     <div class="island">
         {{@if(state.foo.bar)}}<span class="island__foo-bar">{{state.foo.bar}}</span>{{/if}}
         <button class="island__button" type="button">Delete bar</button>
     </div>
-</template>
+</script>
 
 <script src="risland.iife.min.js"></script>
 <script>
