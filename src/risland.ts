@@ -17,6 +17,8 @@ import { throttle } from 'throttle-debounce';
  * See the README.md file for further documentation.
  */
 export default class RIsland<IState extends Record<string, any>> {
+    // List of non-bubbling events, which need to have capture set to true.
+    // See https://en.wikipedia.org/wiki/DOM_events#Events
     public static NON_BUBBLING_EVENTS: Array<TRIslandEventNames> = [
         'abort'
         , 'blur'
@@ -44,8 +46,6 @@ export default class RIsland<IState extends Record<string, any>> {
         , load: () => {}
         , morphdom: {}
         , nativeHelpers: {}
-        // List of non-bubbling events, which need to have capture set to true.
-        // See https://en.wikipedia.org/wiki/DOM_events#Events
         , nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS
         , partials: {}
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)

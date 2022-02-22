@@ -135,11 +135,11 @@
             <div class="island">
                 <header class="island__header">
                     <select class="island__locale">
-                        <option value="de" {{@if(state.locale === 'de')}}selected="selected"{{/if}}>Deutsch</option>
-                        <option value="en" {{@if(state.locale === 'en')}}selected="selected"{{/if}}>English</option>
-                        <option value="es" {{@if(state.locale === 'es')}}selected="selected"{{/if}}>Español</option>
-                        <option value="fr" {{@if(state.locale === 'fr')}}selected="selected"{{/if}}>Français</option>
-                        <option value="it" {{@if(state.locale === 'it')}}selected="selected"{{/if}}>Italiano</option>
+                        {{@foreach(state.locales) => code, name}}
+                            <option value="{{code}}" {{@if(state.locale === code)}}selected="selected"{{/if}}>
+                                {{name}}
+                            </option>
+                        {{/foreach}}
                     </select>
                     <input class="island__show-done" type="checkbox" id="show-done" />
                     <label for="show-done">{{'showDone' | t}}</label>
@@ -365,7 +365,7 @@
                     }
                 });
 
-                function initialForm() { return { important: false, suffix: String(+new Date()), value: ''}; }
+                function initialForm() { return { important: false, suffix: String(+new Date()), value: '' }; }
 
                 function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
 
@@ -580,6 +580,13 @@
                     , initialState: {
                         form: initialForm()
                         , locale: initialLocale
+                        , locales: {
+                            de: 'Deutsch'
+                            , en: 'English'
+                            , es: 'Español'
+                            , fr: 'Français'
+                            , it: 'Italiano'
+                        }
                         , sort: { done: [], important: [], normal: []}
                         , showDone: false
                         , tasks: {}
