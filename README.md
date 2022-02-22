@@ -371,17 +371,6 @@ Example:
     </div>
 </script>
 
-<style type="text/css">
-    .island {
-        border: 1px solid black;
-        left: 50%;
-        padding: 20px;
-        position: absolute;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-</style>
-
 <script src="risland.iife.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
