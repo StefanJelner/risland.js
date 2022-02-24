@@ -121,6 +121,10 @@
                 width: 100%;
             }
 
+            .island__column--value {
+                text-align: right;
+            }
+
             .island__buttons {
                 list-style-type: none;
                 margin: 0;
@@ -372,7 +376,10 @@
                     var _tetrominoStartY = null;
 
                     // initialize with real values
-                    var _initialSpeed = 500; // 1200;
+                    var _dropSpeed = 50;
+                    var _initialSpeed = 1200;
+                    var _minSpeed = 250;
+                    var _speedSteps = 50;
                     var _tetrominos = {
                         I: [['cyan', 'cyan', 'cyan', 'cyan']]
                         , J: [['blue', false, false], ['blue', 'blue', 'blue']]
@@ -387,7 +394,8 @@
 
                     // drop tetromino
                     function drop() {
-                        console.log('drop');
+                        _clearInterval();
+                        _setInterval(_dropSpeed);
                     }
 
                     // calculate initial values
@@ -618,10 +626,13 @@
                     }
 
                     // the running interval based on the speed
-                    function _setInterval() {
+                    function _setInterval(speedOverride) {
                         if (_speed !== null) {
                             _setInterval2();
-                            _interval = window.setInterval(_setInterval2, _speed);
+                            _interval = window.setInterval(
+                                _setInterval2
+                                , typeof speedOverride !== 'undefined' ? speedOverride : _speed
+                            );
                         }
                     }
 
