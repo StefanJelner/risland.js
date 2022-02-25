@@ -366,7 +366,9 @@
 
                     // initialize with null
                     var _currentTetrominos = null;
-                    var _interval = null;
+                    // we use an array for the intervals to prevent unpredictable collisions, which might create
+                    // zombies.
+                    var _intervals = [];
                     var _lines = null;
                     var _matrix = null;
                     var _positionY = null;
@@ -396,6 +398,16 @@
                     function drop() {
                         _clearInterval();
                         _setInterval(_dropSpeed);
+                    }
+
+                    // GAME OVER!
+                    function gameOver() {
+                        // because the setInterval cycle and the game over collide sometimes (and then it goes on
+                        // forever), we wait here for at least one cycle and then stop the game.
+                        window.setTimeout(function() {
+                            _clearInterval();
+                            _setState({ gameOver: true });
+                        }, _speed);
                     }
 
                     // calculate initial values
@@ -462,21 +474,15 @@
 
                     // stop the running interval
                     function _clearInterval() {
-                        if (_interval !== null) {
-                            window.clearInterval(_interval);
-                            _interval = null;
+                        if (_intervals.length > 0) {
+                            _intervals.forEach(function(interval) { window.clearInterval(interval); });
+                            _intervals = [];
                         }
                     }
 
                     // clones arrays or objects
                     function _clone(arrOrObj) {
                         return JSON.parse(JSON.stringify(arrOrObj));
-                    }
-
-                    // GAME OVER!
-                    function _gameOver() {
-                        _clearInterval();
-                        _setState({ gameOver: true });
                     }
 
                     // calculate an empty matrix based on the number of rows and columns
@@ -547,7 +553,7 @@
                         var lefts = tetromino.map(function(_, i) {
                             var y = positionY + i;
                             if (y < 0) { return 0; }
-                            var xs = _matrix[y].slice(0, positionX + 1).reverse().map(function(column) {
+                            var xs = _matrix[y].slice(0, rights[i] + 1).reverse().map(function(column) {
                                 return column !== false;
                             });
                             var x = xs.indexOf(true);
@@ -571,12 +577,12 @@
 
                         var rights = tetromino.map(function(_, i) {
                             var y = positionY + i;
-                            if (y < 0) { return 0; }
-                            var xs = _matrix[y].slice(rightX + 1).map(function(column) {
+                            if (y < 0) { return _columns; }
+                            var xs = _matrix[y].slice(lefts[i] + 1).map(function(column) {
                                 return column !== false;
                             });
                             var x = xs.indexOf(true);
-                            return x !== -1 ? rightX + 1 + x : _columns;
+                            return x !== -1 ? lefts[i] + 1 + x : _columns;
                         });
 
                         return rights.reduce(function(result, _, i) {
@@ -587,26 +593,25 @@
                     // returns the distance to the Y point the tetromino could not move any more
                     function _minDistanceY(tetromino, positionX, positionY) {
                         var bottoms = tetromino[0].map(function(_, i) {
-                            var ys = tetromino.map(function(_, j) {
-                                return tetromino[tetromino.length - 1 - j][i] !== false;
-                            });
+                            var ys = tetromino.map(function(_, j) { return tetromino[j][i] !== false; }).reverse();
                             var y = ys.indexOf(true);
 
-                            return y !== -1 ? positionY + tetromino.length - y : 0;
+                            return y !== -1 ? positionY + (tetromino.length - 1) - y : -1;
                         });
 
                         var tops = tetromino[0].map(function(_, i) {
-                            var ys = _matrix.map(function(row) {
+                            var bottomGreaterZero = Math.max(0, bottoms[i]);
+                            var ys = _matrix.slice(bottomGreaterZero).map(function(row) {
                                 return row[positionX + i] !== false;
                             });
                             var y = ys.indexOf(true);
 
-                            return y !== -1 ? y : _rows;
+                            return y !== -1 ? bottomGreaterZero + y : _rows;
                         });
 
                         return bottoms.reduce(function(result, _, i) {
-                            return Math.min(result, tops[i] - bottoms[i]);
-                        }, _rows);
+                            return Math.min(result, tops[i] - bottoms[i] - 1);
+                        }, _rows + 1);
                     }
 
                     // move tetromino down step by step in the matrix
@@ -629,10 +634,10 @@
                     function _setInterval(speedOverride) {
                         if (_speed !== null) {
                             _setInterval2();
-                            _interval = window.setInterval(
+                            _intervals.push(window.setInterval(
                                 _setInterval2
                                 , typeof speedOverride !== 'undefined' ? speedOverride : _speed
-                            );
+                            ));
                         }
                     }
 
@@ -642,7 +647,7 @@
                         if (_minDistanceY(_currentTetrominos[0], _positionX, _positionY) <= 0) {
                             // if the collision already happens at the initial position, then the game is over
                             if (_positionY === _tetrominoStartY) {
-                                _gameOver();
+                                gameOver();
                             } else {
                                 _clearInterval();
                                 _mergeMatrix(true);
@@ -664,7 +669,7 @@
 
                     // set the initial position of the tetromino above the matrix
                     function _setTetrominoStart() {
-                        _tetrominoStartY = 0 - _currentTetrominos.length;
+                        _tetrominoStartY = 0 - _currentTetrominos[0].length;
                         _positionX = _random(_getMaxX());
                         _positionY = _tetrominoStartY;
                     }
@@ -680,6 +685,7 @@
                     // return public properties and methods
                     return {
                         drop: drop
+                        , gameOver: gameOver
                         , getEmptyState: getEmptyState
                         , init: init
                         , left: left
@@ -701,6 +707,7 @@
                         case 'ArrowDown': { tetrisInstance.drop(); break; }
                         case 'ArrowLeft': { tetrisInstance.left(); break; }
                         case 'ArrowRight': { tetrisInstance.right(); break; }
+                        case 'Escape': { tetrisInstance.gameOver(); break; }
                         case 'Space': { tetrisInstance.rotate(); break; }
                     }
                 });
