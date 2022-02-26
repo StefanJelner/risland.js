@@ -402,12 +402,8 @@
 
                     // GAME OVER!
                     function gameOver() {
-                        // because the setInterval cycle and the game over collide sometimes (and then it goes on
-                        // forever), we wait here for at least one cycle and then stop the game.
-                        window.setTimeout(function() {
-                            _clearInterval();
-                            _setState({ gameOver: true });
-                        }, _speed);
+                        _clearInterval();
+                        _setState({ gameOver: true });
                     }
 
                     // calculate initial values
@@ -418,7 +414,6 @@
                         ];
                         _lines = 0;
                         _matrix = _getEmptyMatrix();
-
                         return {
                             delete: []
                             , gameOver: false
@@ -481,23 +476,19 @@
                     }
 
                     // clones arrays or objects
-                    function _clone(arrOrObj) {
-                        return JSON.parse(JSON.stringify(arrOrObj));
-                    }
+                    function _clone(arrOrObj) { return JSON.parse(JSON.stringify(arrOrObj)); }
 
                     // calculate an empty matrix based on the number of rows and columns
-                    function _getEmptyMatrix() {
-                        return Array.from({ length: _rows }).map(function() {
-                            return Array.from({ length: _columns }).map(function() {
-                                return false;
-                            });
+                    function _getEmptyMatrix(rowsOverride) {
+                        return Array.from({
+                            length: typeof rowsOverride !== 'undefined' ? rowsOverride : _rows
+                        }).map(function() {
+                            return Array.from({ length: _columns }).map(function() { return false; });
                         });
                     }
 
                     // calculates the maximum X value for the current tetromino
-                    function _getMaxX() {
-                        return _columns - _currentTetrominos[0][0].length;
-                    }
+                    function _getMaxX() { return _columns - _currentTetrominos[0][0].length; }
 
                     // gets a new random tetromino, removes the old one from the list and increases the counter
                     function _getNewTetromino() {
@@ -507,39 +498,28 @@
                         ];
                         _setTetrominoStart();
                         _setState(function(state) {
-                            return {
-                                next: _currentTetrominos[1]
-                                , tetrominos: state.tetrominos + 1
-                            };
+                            return { next: _currentTetrominos[1] , tetrominos: state.tetrominos + 1 };
                         });
                     }
 
                     // caclulate a random tetromino out of the list of possible tetrominos
                     function _getRandomTetromino() {
                         var shapes = Object.keys(_tetrominos);
-
                         return _clone(_tetrominos[shapes[_random(shapes.length)]]);
                     }
 
                     // merges the matrix and the tetromino into each other
                     function _mergeMatrix(permanent) {
                         var newMatrix = _clone(_matrix);
-
                         _currentTetrominos[0].forEach(function(row, i) {
                             var y = _positionY + i;
-
                             if (y >= 0) {
                                 row.forEach(function(column, j) {
                                     if (column !== false) { newMatrix[y][_positionX + j] = column; }
                                 });
                             }
                         });
-
-                        if (permanent === true) {
-                            _matrix = newMatrix;
-                        } else {
-                            _setState({ matrix: newMatrix });
-                        }
+                        if (permanent === true) { _matrix = newMatrix; } else { _setState({ matrix: newMatrix }); }
                     }
 
                     // calculate the min X distances to the left
@@ -549,7 +529,6 @@
                             var x = xs.indexOf(true);
                             return x !== -1 ? positionX + x : _getMaxX();
                         });
-
                         var lefts = tetromino.map(function(_, i) {
                             var y = positionY + i;
                             if (y < 0) { return 0; }
@@ -559,7 +538,6 @@
                             var x = xs.indexOf(true);
                             return x !== -1 ? xs.length - x : -1;
                         });
-
                         return rights.reduce(function(result, _, i) {
                             return Math.min(result, rights[i] - lefts[i]);
                         }, positionX);
@@ -568,23 +546,18 @@
                     // calculate the min X distances to the right
                     function _minDistanceXRight(tetromino, positionX, positionY) {
                         var rightX = positionX + (tetromino[0].length - 1);
-
                         var lefts = tetromino.map(function(row) {
                             var xs = row.map(function(column) { return column !== false; }).reverse();
                             var x = xs.indexOf(true);
                             return x !== -1 ? rightX - x : 0;
                         });
-
                         var rights = tetromino.map(function(_, i) {
                             var y = positionY + i;
                             if (y < 0) { return _columns; }
-                            var xs = _matrix[y].slice(lefts[i] + 1).map(function(column) {
-                                return column !== false;
-                            });
+                            var xs = _matrix[y].slice(lefts[i] + 1).map(function(column) { return column !== false; });
                             var x = xs.indexOf(true);
                             return x !== -1 ? lefts[i] + 1 + x : _columns;
                         });
-
                         return rights.reduce(function(result, _, i) {
                             return Math.min(result, rights[i] - lefts[i] - 1);
                         }, _columns - rightX - 1);
@@ -595,20 +568,16 @@
                         var bottoms = tetromino[0].map(function(_, i) {
                             var ys = tetromino.map(function(_, j) { return tetromino[j][i] !== false; }).reverse();
                             var y = ys.indexOf(true);
-
                             return y !== -1 ? positionY + (tetromino.length - 1) - y : -1;
                         });
-
                         var tops = tetromino[0].map(function(_, i) {
                             var bottomGreaterZero = Math.max(0, bottoms[i]);
                             var ys = _matrix.slice(bottomGreaterZero).map(function(row) {
                                 return row[positionX + i] !== false;
                             });
                             var y = ys.indexOf(true);
-
                             return y !== -1 ? bottomGreaterZero + y : _rows;
                         });
-
                         return bottoms.reduce(function(result, _, i) {
                             return Math.min(result, tops[i] - bottoms[i] - 1);
                         }, _rows + 1);
@@ -621,23 +590,57 @@
                     }
 
                     // picks a random number
-                    function _random(number) {
-                        return Math.floor(Math.random() * number);
-                    }
+                    function _random(number) { return Math.floor(Math.random() * number); }
 
                     // removes the filled lines with a blinking animation and sets the lines counter and score
                     function _removeFilledLines() {
+                        return new Promise(function(resolve) {
+                            var newDelete = _matrix.reduce(function(result, row, i) {
+                                if (row.every(function(column) { return column !== false; }) === true) {
+                                    return result.concat(i);
+                                }
+                                return result;
+                            }, []);
 
+                            if (newDelete.length > 0) {
+                                _setState([
+                                    { delete: newDelete }
+                                    , new Promise(function(resolve2) {
+                                        window.setTimeout(function() {
+                                            // adding empty lines at the top
+                                            _matrix = _getEmptyMatrix(newDelete.length).concat(
+                                                // splicing several indexes from an array is best done from top to
+                                                // bottom, because then the indexes still work. From bottom to top has
+                                                // the disadvantage, that all following indexes have to be reindexed.
+                                                _clone(newDelete).reverse().reduce(function(result, i) {
+                                                    return result.slice(0, i).concat(result.slice(i + 1));
+                                                }, _matrix)
+                                            );
+                                            resolve2([
+                                                { delete: [] , matrix: _matrix }
+                                                , function() {
+                                                    resolve();
+                                                    return null;
+                                                }
+                                            ]);
+                                        }, _speed);
+                                    })
+                                ]);
+                            } else { resolve(); }
+                        });
                     }
 
                     // the running interval based on the speed
                     function _setInterval(speedOverride) {
                         if (_speed !== null) {
-                            _setInterval2();
                             _intervals.push(window.setInterval(
                                 _setInterval2
                                 , typeof speedOverride !== 'undefined' ? speedOverride : _speed
                             ));
+                            // we invoke _setInterval2 here directly, because setInterval first waits for the interval.
+                            // besides this invocation has to come after the setInterval, because then _interval is
+                            // already set. 
+                            _setInterval2();
                         }
                     }
 
@@ -651,10 +654,11 @@
                             } else {
                                 _clearInterval();
                                 _mergeMatrix(true);
-                                _removeFilledLines();
-                                _getNewTetromino();
-                                _setSpeed();
-                                _setInterval();
+                                _removeFilledLines().then(function() {
+                                    _getNewTetromino();
+                                    _setSpeed();
+                                    _setInterval();
+                                });
                             }
                         } else {
                             _moveTetromino();
@@ -756,20 +760,15 @@
                                 // we update the title-attributes and SVG titles manually
                                 var fromTitle = $fromEl.getAttribute('title');
                                 var toTitle = $toEl.getAttribute('title');
-
                                 if (fromTitle !== toTitle) {
                                     $fromEl.setAttribute('title', toTitle);
-
                                     var $svgTitle = $fromEl.querySelector('title');
-
                                     if ($svgTitle !== null) {
                                         $svgTitle.innerHTML = toTitle;
                                     }
                                 }
-
                                 return false;
                             }
-
                             return true;
                         }
                     }
