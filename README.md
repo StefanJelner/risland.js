@@ -1176,6 +1176,10 @@ This is a basic example of a table with information from a CSV file, which can b
 
 This is an example of a simple todo list, with different priorities, manual sorting and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()` and [Fontawesome](https://fontawesome.com/). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom).
 
+### `tetris.html`
+
+This example is a clone of the famous game [Tetris](https://en.wikipedia.org/wiki/Tetris). The 3 main principles behind this game are an interval, a matrix and distance calculations. This example shows how RIsland can be used for the matrix representation (and things like buttons, score and the upcoming Tetromino). You can play it with the buttons, but it is more convenient to use the keyboard. Keys are "Left" and "Right" for moving the Tetromino, "Down" for dropping it, "Space" for rotating it and "Escape" for quitting the game. **Have fun!**
+
 ---
 
 ## <a name="hints"></a> Hints

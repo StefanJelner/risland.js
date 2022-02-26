@@ -260,6 +260,11 @@
                                 <i class="fa-solid fa-eject" title="{{'restart' | t}}"></i>
                             </button>
                         </li>
+                        <li>
+                            <button class="island__button island__gameOver" type="button">
+                                <i class="fa-solid fa-skull" title="Game over"></i>
+                            </button>
+                        </li>
                     </ul>
                 </aside>
             </div>
@@ -366,10 +371,6 @@
 
                     // initialize with null
                     var _currentTetrominos = null;
-                    // we use an array for the intervals to prevent unpredictable collisions, which might create
-                    // zombies.
-                    var _intervals = [];
-                    var _lines = null;
                     var _matrix = null;
                     var _positionY = null;
                     var _positionX = null;
@@ -379,8 +380,16 @@
 
                     // initialize with real values
                     var _dropSpeed = 50;
+                    var _gameOver = false;
                     var _initialSpeed = 1200;
+                    // we use an array for the intervals to prevent unpredictable collisions, which might create
+                    // zombies.
+                    var _intervals = [];
+                    var _level = 1;
+                    var _lines = 0;
+                    var _linesPerLevel = 10;
                     var _minSpeed = 250;
+                    var _scoreForLines = [40, 100, 300, 1200];
                     var _speedSteps = 50;
                     var _tetrominos = {
                         I: [['cyan', 'cyan', 'cyan', 'cyan']]
@@ -396,14 +405,19 @@
 
                     // drop tetromino
                     function drop() {
-                        _clearInterval();
-                        _setInterval(_dropSpeed);
+                        if (_gameOver === false) {
+                            _clearInterval();
+                            _setInterval(_dropSpeed);
+                        }
                     }
 
                     // GAME OVER!
                     function gameOver() {
-                        _clearInterval();
-                        _setState({ gameOver: true });
+                        if (_gameOver === false) {
+                            _clearInterval();
+                            _gameOver = true;
+                            _setState({ gameOver: _gameOver });
+                        }
                     }
 
                     // calculate initial values
@@ -412,12 +426,13 @@
                             _getRandomTetromino()
                             , _getRandomTetromino()
                         ];
+                        _level = 1;
                         _lines = 0;
                         _matrix = _getEmptyMatrix();
                         return {
                             delete: []
                             , gameOver: false
-                            , level: 1
+                            , level: _level
                             , lines: _lines
                             , matrix: _matrix
                             , next: _currentTetrominos[1]
@@ -429,13 +444,14 @@
                     // initialize the system
                     function init(setState) {
                         _setState = setState;
-                        _start();
+                        _start(true);
                     }
 
                     // move tetromino to the left
                     function left() {
                         if (
-                            _positionX > 0
+                            _gameOver === false
+                            && _positionX > 0
                             && _minDistanceXLeft(_currentTetrominos[0], _positionX, _positionY) > 0
                         ) {
                             _positionX--;
@@ -445,14 +461,16 @@
 
                     // restart the whole process (with setting initial values)
                     function restart() {
+                        _clearInterval();
                         _setState(getEmptyState());
-                        _start();
+                        _start(false);
                     }
 
                     // move tetromino to the right
                     function right() {
                         if (
-                            _positionX < _getMaxX()
+                            _gameOver === false
+                            && _positionX < _getMaxX()
                             && _minDistanceXRight(_currentTetrominos[0], _positionX, _positionY) > 0
                         ) {
                             _positionX++;
@@ -462,7 +480,30 @@
 
                     // rotate tetromino
                     function rotate() {
-                        console.log('rotate');
+                        if (_gameOver === false) {
+                            var newTetromino = _currentTetrominos[0][0].map(function(_, i) {
+                                return _currentTetrominos[0].map(function(__, j) {
+                                    return _currentTetrominos[0][j][i];
+                                }).reverse();
+                            });
+                            // it might be possible that the tetromino overlaps on the right side after rotation
+                            var newPositionX = _positionX - Math.max(
+                                0
+                                , (_positionX + newTetromino[0].length) - _columns
+                            );
+                            var newPositionY = _positionY + (_currentTetrominos[0].length - newTetromino.length);
+                            if (
+                                // the new tetromino might already collide with other stones after rotation
+                                _minDistanceXLeft(newTetromino, newPositionX, newPositionY) >= 0
+                                && _minDistanceXRight(newTetromino, newPositionX, newPositionY) >= 0
+                                && _minDistanceY(newTetromino, newPositionX, newPositionY) >= 0
+                            ) {
+                                _currentTetrominos[0] = newTetromino;
+                                _positionX = newPositionX;
+                                _positionY = newPositionY;
+                                _mergeMatrix(false);
+                            }
+                        }
                     }
 
                     // private methods
@@ -616,8 +657,21 @@
                                                     return result.slice(0, i).concat(result.slice(i + 1));
                                                 }, _matrix)
                                             );
+                                            _lines += newDelete.length;
+                                            _level = Math.floor(_lines / _linesPerLevel) + 1;
                                             resolve2([
-                                                { delete: [] , matrix: _matrix }
+                                                function(state) {
+                                                    return {
+                                                        delete: []
+                                                        , level: _level
+                                                        , lines: _lines
+                                                        , matrix: _matrix
+                                                        , score: (
+                                                            state.score
+                                                            + (_scoreForLines[newDelete.length - 1] * _level)
+                                                        )
+                                                    };
+                                                }
                                                 , function() {
                                                     resolve();
                                                     return null;
@@ -665,9 +719,9 @@
                         }
                     }
 
-                    // set the speed based on the amount of filled lines
+                    // set the speed based on the level
                     function _setSpeed() {
-                        _speed = _initialSpeed;
+                        _speed = Math.max(_minSpeed, _initialSpeed - ((_level - 1) * _speedSteps));
                         document.documentElement.style.setProperty('--blinker-speed', _speed + 'ms');
                     }
 
@@ -679,10 +733,11 @@
                     }
 
                     // start the whole process (without setting initial values)
-                    function _start() {
+                    function _start(clearInterval) {
+                        if (clearInterval === true) { _clearInterval(); }
                         _setTetrominoStart();
                         _setSpeed();
-                        _clearInterval();
+                        _gameOver = false;
                         _setInterval();
                     }
 
@@ -726,11 +781,22 @@
                                 setState({ locale: locale });
                             }
                         }
-                        , 'click': ['drop', 'left', 'restart', 'right', 'rotate'].reduce(function(result, key) {
-                            var tmp = {};
-                            tmp['.island__' + key] = tetrisInstance[key];
-                            return Object.assign({}, result, tmp);
-                        }, {})
+                        , 'click': ['drop', 'left', 'restart', 'right', 'rotate', 'gameOver'].reduce(
+                            function(result, key) {
+                                var tmp = {};
+                                tmp['.island__' + key] = tetrisInstance[key];
+                                return Object.assign({}, result, tmp);
+                            }, {}
+                        )
+                        // we have to blur all focussed buttons, because otherwise keypresses, like "Space"
+                        // are interpreted as another button press.
+                        , 'focus': ['drop', 'left', 'restart', 'right', 'rotate', 'gameOver'].reduce(
+                            function(result, key) {
+                                var tmp = {};
+                                tmp['.island__' + key] = function(_, $closest) { $closest.blur(); };
+                                return Object.assign({}, result, tmp);
+                            }, {}
+                        )
                     }
                     , filters: {
                         t: function(key) { return i18next.t(key); }
