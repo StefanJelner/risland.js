@@ -41,7 +41,7 @@ The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a scri
 
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** It is important to understand, that RIsland is no replacement for fully featured libraries, like [Angular](https://github.com/angular/angular), [React](https://github.com/facebook/react) or [Vue](https://github.com/vuejs). Before using this library check whether its features are sufficient for your needs.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** It is important to understand, that RIsland is no replacement for fully featured libraries, like [Angular](https://github.com/angular/angular), [React](https://github.com/facebook/react) or [Vue](https://github.com/vuejs). Before using this library check whether its features are sufficient for your needs.
 
 ---
 
@@ -68,7 +68,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - It is not a fully featured component library. This means sub components or nested islands are not possible. (Technically speaking it might be possible in some way, but the library is not intended to be used that way.) If you need features like this, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - Usually everything is written in one [squirrelly](https://github.com/squirrellyjs/squirrelly) template (although partials are possible, but excessive use is not recommended). If you find yourself writing thousands of lines of template code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** In case an update should be done, RIsland always renders the complete [squirrelly](https://github.com/squirrellyjs/squirrelly) template and then does the DOM morphing. If you have a big template and need to do something fast, like f.ex. a scroll spy (`scroll`) or dragging (`mousemove`), then RIsland might not be fast enough, but you need a library with sub-components in which you can put parts of the code which need to be fast. Consider using a fully featured component library, like f.ex. [React](https://github.com/facebook/react).
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** In case an update should be done, RIsland always renders the complete [squirrelly](https://github.com/squirrellyjs/squirrelly) template and then does the DOM morphing. If you have a big template and need to do something fast, like f.ex. a scroll spy (`scroll`) or dragging (`mousemove`), then RIsland might not be fast enough, but you need a library with sub-components in which you can put parts of the code which need to be fast. Consider using a fully featured component library, like f.ex. [React](https://github.com/facebook/react).
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - This library only takes care of templating, event handling, state management, rendering and throttling. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
@@ -255,7 +255,7 @@ template: document.getElementById('squirrelly') as HTMLScriptElement
 
 Otherwise Typescript cannot determine whether the template is a `string` or a `HTMLScriptElement`.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
 
 Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
@@ -297,9 +297,9 @@ Event delegation can speed up applications significantly and also can save many 
 
 RIsland does not use event delegation to speed things up, that is a nice side effect, but it needs it, so that after every template rerendering and DOM morphing it is unnecessary to remove or add event listeners. The main island element never gets changed. So adding the event listeners to this element and delegating all the events by selectors is a convenient way to add the listeners only once.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Some events do not bubble by default (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`). RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Some events do not bubble by default (`abort`, `blur`, `error`, `focus`, `load`, `loadend`, `loadstart`, `pointerenter`, `pointerleave`, `progress`, `scroll`, `unload`). RIsland takes care of this fact and makes those events bubble, because it heavily depends on event delegation. If this is causing trouble, the `nonBubblingEvents`-array in the config can be changed. See [Options](#options) for details.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Event delegation only handles the events inside the RIsland instance. Any other event outside of the RIsland instance has to be taken care of individually. F.ex: if you want a scroll-spy on the `document`, then this has to be done outside in your own code with `document.addEventListener('scroll', ...)`. If you still need interaction with the RIsland instance and its state, then it can be done in the `load` callback together with the `setState()` method.
 
 It is possible to use combined or complex selectors, like:
 
@@ -362,7 +362,7 @@ In the RIsland config it would look like this:
 
 Problem is, that such selectors are hard to read and can lead to unwanted behaviour. Do not make rocket science when it comes to selectors. Use [BEM](http://getbem.com/introduction/)!
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** When it comes to event delegation then the CSS paradigm [BEM](http://getbem.com/introduction/) shows another advantage: because with the [BEM](http://getbem.com/introduction/) notation every element gets a very precise - often unique - class name, it is much easier to address elements with event delegation. So one advice is, to use [BEM](http://getbem.com/introduction/) in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template (and the partials). All the examples in this readme and all the code examples in the `examples` folder use [BEM](http://getbem.com/introduction/).
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** When it comes to event delegation then the CSS paradigm [BEM](http://getbem.com/introduction/) shows another advantage: because with the [BEM](http://getbem.com/introduction/) notation every element gets a very precise - often unique - class name, it is much easier to address elements with event delegation. So one advice is, to use [BEM](http://getbem.com/introduction/) in the [squirrelly](https://github.com/squirrellyjs/squirrelly) template (and the partials). All the examples in this readme and all the code examples in the `examples` folder use [BEM](http://getbem.com/introduction/).
 
 ---
 
@@ -462,7 +462,7 @@ It is possible to use comma separated event names (also with throttling) and com
 }
 ```
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** RIsland gives a lot of flexibility when it comes to delegating events. But, even if this sounds repetitive: avoid rocket science. As you can already see in the above example, reading such a code is a nightmare. Try to use comma separated event names as rarely as possible and try to use [BEM](http://getbem.com/introduction/) for your CSS selectors.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** RIsland gives a lot of flexibility when it comes to delegating events. But, even if this sounds repetitive: avoid rocket science. As you can already see in the above example, reading such a code is a nightmare. Try to use comma separated event names as rarely as possible and try to use [BEM](http://getbem.com/introduction/) for your CSS selectors.
 
 ---
 
@@ -470,7 +470,7 @@ It is possible to use comma separated event names (also with throttling) and com
 
 "State" means the current state of data at a specific point in time - leading to a predictable template output and DOM representation. An RIsland instance always has an inner encapsulated state, which can be initialized and then changed with `setState()`. Everytime the state gets changed by `setState()`, the lifecycle `shouldUpdate` gets triggered to decide whether something in the state has changed, which makes a rerendering with `render` necessary. If so, the current state will be handed over to the [squirrelly](https://github.com/squirrellyjs/squirrelly) template and the HTML output will then be morphed into the DOM. No direct DOM manipulations take place this way, but the whole applications representational state (in the DOM) depends on its inner data state. This is why this paradigm is called "reactive", because inspite of changing things directly and in an imperative way in the DOM, you change the state and then the RIsland instance reacts on these changes and rerenders - or not.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, your direct changes might be gone. This leads to an unpredictable and inconsistent application. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Never change something in the DOM part which gets managed by RIsland directly, because next time the state changes and things get rerendered, your direct changes might be gone. This leads to an unpredictable and inconsistent application. Always use `setState()` and the [squirrelly](https://github.com/squirrellyjs/squirrelly) template to do what you want. If you find yourself in desperate need for breaking this rule, RIsland might not be the right solution for you.
 
 ---
 
@@ -486,7 +486,7 @@ For a state pattern, this is a very bad situation, because the state - as a tota
 
 RIsland takes care of that problem by always creating deep clones of the state. It is not enough to create a shallow clone, because f.ex. in an array of objects, it is not sufficient to only clone the array, because in the cloned array, the objects are still references to the original objects. The only way is to deeply clone **EVERYTHING**. It is clear that this strategy has some performance drawbacks, but on the other hand it leads to a totally encapsulated inner state of the component without any side effects. Most reactive libraries with state management follow this pattern. So even event and lifecycle callbacks get a current snapshot of the state as an argument, it is a clone. The only way to change the state is by using the `setState()` method, which also gets passed as an argument.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practice to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT** It is important to understand that the states that become passed by argument to the events and lifecycle callbacks are only clones and represent a snapshot at that specific moment in time. That means: it is always best practice to get the freshest and most current state to avoid problems and collisions. Mutating the state directly in any way is useless, because it is only a clone. This is done on purpose and by design, so the only way to change the state is `setState()`. Please read [Common state pitfalls](#state-pitfalls) carefully to save yourself some headaches.
 
 ---
 
@@ -496,9 +496,9 @@ The `setState()` method is the only way to change the inner state of the compone
 
 Whenever `setState()` gets a `null` value, whether directly or as the result of a resolved `Promise`, it will not trigger the `shouldUpdate` lifecycle. If this is done in the `Array` context, only this one `Array` item will prevent the `shouldUpdate` lifecycle from happening; all other items will still be iterated.
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** Sometimes you want to run something after all state changes have taken place. To achieve this, you can use the `Array` option and add a last item as a callback function, which does what you want and returns `null`.
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** Sometimes you want to run something after all state changes have taken place. To achieve this, you can use the `Array` option and add a last item as a callback function, which does what you want and returns `null`.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** You only need to return the `Partial` of the state, which you want to change. It is not necessary to always return the whole state-object, with `Object.assign()` or the spread-operator.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** You only need to return the `Partial` of the state, which you want to change. It is not necessary to always return the whole state-object, with `Object.assign()` or the spread-operator.
 
 Examples:
 
@@ -631,7 +631,7 @@ setState(
 );
 ```
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** RIsland gives the ability to handle very complex state scenarios with one single method. You could possibly use an Array of Promises, which return functions, which return null or more Promises, which return Arrays of Promises, which return simple objects. You can do that! But do yourself a favour and avoid rocket science! If the scenarios get too complex, you might want to rethink your applications structure.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** RIsland gives the ability to handle very complex state scenarios with one single method. You could possibly use an Array of Promises, which return functions, which return null or more Promises, which return Arrays of Promises, which return simple objects. You can do that! But do yourself a favour and avoid rocket science! If the scenarios get too complex, you might want to rethink your applications structure.
 
 ---
 
@@ -683,7 +683,7 @@ initialState: {
 
 This works, because in the callback function the `state2` always contains the most current state of the RIsland instance.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** Always use the freshest and most current state. This can be done easily by using the callback function. In `setState()` the pure object should only be used if the state is not involved at all.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Always use the freshest and most current state. This can be done easily by using the callback function. In `setState()` the pure object should only be used if the state is not involved at all.
 
 ---
 
@@ -735,7 +735,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 The DOM element which should be managed by RIsland. All event listeners will become added to this element and the HTML will be injected into it.
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** You can place a loading notification inside of the DOM element. The moment RIsland is loaded, it will be replaced with the real content.
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** You can place a loading notification inside of the DOM element. The moment RIsland is loaded, it will be replaced with the real content.
 
 ### `delegations`
 
@@ -819,7 +819,7 @@ The first thought would be, that whenever someone clicks the link the `a` tag wi
 }
 ```
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you depend on working exactly with the DOM element which is addressed by the CSS selector use the `$closest` argument.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you depend on working exactly with the DOM element which is addressed by the CSS selector use the `$closest` argument.
 
 #### `state`
 
@@ -887,7 +887,7 @@ This is a current snapshot of the state. As mentioned before, be cautious using 
 
 This is the `setState()` method as an argument. See [`setState()`](setstate).
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The `load` config callback can be used to initialize any mechanism which is not event based (so event delegation is not possible), but might need the possiblity to set the state. F.ex. observables, stores, things which might become invoked asynchronously (timeouts, sockets, broadcast channels aso) or handing over `setState()` to other systems, so they can change the state of the RIsland instance.
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** The `load` config callback can be used to initialize any mechanism which is not event based (so event delegation is not possible), but might need the possiblity to set the state. F.ex. observables, stores, things which might become invoked asynchronously (timeouts, sockets, broadcast channels aso) or handing over `setState()` to other systems, so they can change the state of the RIsland instance.
 
 ### `nativeHelpers`
 
@@ -899,7 +899,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 The `nativeHelpers` config object consists of keys and callback functions which become registered as nativeHelpers in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Native Helpers API](https://squirrelly.js.org/docs/api/native-helper-api) for more information on how to use nativeHelpers in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** As also stated in the Squirrelly documentation: "Native helpers are complicated and kind of messy. If you can implement something with a regular helper, do that instead."
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** As also stated in the Squirrelly documentation: "Native helpers are complicated and kind of messy. If you can implement something with a regular helper, do that instead."
 
 ### `partials`
 
@@ -936,7 +936,7 @@ The `shouldUpdate` config callback is a function which takes two states as the a
 
 In the above example only changes to `foo` or `baz` will lead to an update and rerendering, while changes to `bar` will be ignored.
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you intentionally ignore data changes, you have to know what you are doing, otherwise it could lead to inconsistencies between the state and the intended representation. Only omit some data, if it is clear, that this data is not necessary for the represenation or the represenation already gets updated by something else.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you intentionally ignore data changes, you have to know what you are doing, otherwise it could lead to inconsistencies between the state and the intended representation. Only omit some data, if it is clear, that this data is not necessary for the represenation or the represenation already gets updated by something else.
 
 ### `template`
 
@@ -986,7 +986,7 @@ The `update` config callback works the same way as the `load` config callback. T
 
 ## <a name="advanced-options"></a> Advanced - dangerous - options
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** the following options should only be used, if you really know what you are doing, because they can change the way, how RIsland works internally and affect the result - in the worst case cause exceptions, errors or unwanted behaviour.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** the following options should only be used, if you really know what you are doing, because they can change the way, how RIsland works internally and affect the result - in the worst case cause exceptions, errors or unwanted behaviour.
 
 ### `deepmerge`
 
@@ -998,7 +998,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 These are additional options which influence the way deepmerge works. See [deepmerge](https://github.com/TehShrike/deepmerge).
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `clone` option is forced to be `false`, because RIsland uses its own cloning mechanism and a double cloning would waste performance.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The `clone` option is forced to be `false`, because RIsland uses its own cloning mechanism and a double cloning would waste performance.
 
 ### `morphdom`
 
@@ -1010,7 +1010,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 These are additional options which influence the way [morphdom](https://github.com/patrick-steele-idem/morphdom) works. See [morphdom](https://github.com/patrick-steele-idem/morphdom).
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland.
 
 ### `nonBubblingEvents`
 
@@ -1056,7 +1056,7 @@ Some events do not bubble by default. (`abort`, `blur`, `error`, `focus`, `load`
 </script>
 ```
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** If you want to change the list of non bubbling events, please filter the static property `RIsland.NON_BUBBLING_EVENTS`. If you accidently add events, which already support bubbling, you change the way, event bubbling works, which might lead to unwanted behaviour.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you want to change the list of non bubbling events, please filter the static property `RIsland.NON_BUBBLING_EVENTS`. If you accidently add events, which already support bubbling, you change the way, event bubbling works, which might lead to unwanted behaviour.
 
 ### `squirrelly`
 
@@ -1068,7 +1068,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 These are additional options which influence the way squirrelly works. See [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
-> <img src="assets/warning.png" alt="Important" width="40" height="40" align="left" /> **IMPORTANT!** The `varName` option is forced to be `state`
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The `varName` option is forced to be `state`
  (and `partialState` in partials) to ensure naming consistency.
 
 ---
@@ -1274,9 +1274,9 @@ Since [Fontawesome](https://fontawesome.com/) 5+ the system does not use an icon
 
 What this does: `autoReplaceSvg` set to `nest` tells [Fontawesome](https://fontawesome.com/) to nest the SVGs into the `i`-tags, which is the only way to work with it in [morphdom](https://github.com/patrick-steele-idem/morphdom). (The usual way is to transform the `i`-tag into an HTML-comment and add the SVG, which triggers `onBeforeNodeAdded` and `onBeforeNodeDiscarded`. In `onBeforeNodeDiscarded` it is possible to prevent the SVG from being discarded, but in `onBeforeNodeAdded` the node has no DOM context yet, so it is not possible to check whether it should be added or an SVG is already present. So `nest` with `onBeforeElUpdated` is the only way to go here.) `observeMutations` set to `false` prevents [Fontawesome](https://fontawesome.com/) from observing the whole DOM for mutations. We know things changed in the `load` and `update` config callbacks, so we can refresh the icons there.
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** The default bundles of [Fontawesome](https://fontawesome.com/) 5+ are usually huge. It is possible to create your own custom [Fontawesome](https://fontawesome.com/) bundles now with a few clicks. They call this a "Kit". Give it a try!
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** The default bundles of [Fontawesome](https://fontawesome.com/) 5+ are usually huge. It is possible to create your own custom [Fontawesome](https://fontawesome.com/) bundles now with a few clicks. They call this a "Kit". Give it a try!
 
-> <img src="assets/info.png" alt="Advice" width="40" height="40" align="left" /> **ADVICE!** Have a look at the `todo-list.html` example, because [Fontawesome](https://fontawesome.com/) is used there and additionally the `title`-attributes and SVG `title` tags become updated manually.
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** Have a look at the `todo-list.html` example, because [Fontawesome](https://fontawesome.com/) is used there and additionally the `title`-attributes and SVG `title` tags become updated manually.
 
 ### Deleting an object key with [deepmerge](https://github.com/TehShrike/deepmerge)
 
