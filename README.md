@@ -95,8 +95,20 @@ After all these warnings, i hope the dear reader of this page is not too scared.
 
 The easiest scenario is to copy the file `dist/risland.iife.min.js` into your static project and add a `script` tag to the `head` or `body` of your HTML:
 
-```HTML
+```html
 <script src="risland.iife.min.js"></script>
+```
+
+Alternatively you can use a CDN like [UNPKG](https://unpkg.com) or [jsDelivr](https://www.jsdelivr.com/):
+
+```html
+<script src="https://unpkg.com/risland.js/dist/risland.iife.min.js"></script>
+```
+
+or
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/risland.js/dist/risland.iife.min.js"></script>
 ```
 
 If you want to use RIsland in an ES6- or TypeScript-project, then you can install it with the node package manager:
