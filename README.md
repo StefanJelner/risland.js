@@ -1010,7 +1010,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 These are additional options which influence the way [morphdom](https://github.com/patrick-steele-idem/morphdom) works. See [morphdom](https://github.com/patrick-steele-idem/morphdom).
 
-> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The `childrenOnly` option is forced to be `false`, otherwise it would break RIsland. Any attempt to set this option is just ignored. If you think you need this option, you might do something wrong. Please check your code.
 
 ### `nonBubblingEvents`
 
@@ -1186,7 +1186,7 @@ This is a basic example of a table with information from a CSV file, which can b
 
 ### `todo-list.html`
 
-This is an example of a simple todo list, with different priorities, manual sorting and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()` and [Fontawesome](https://fontawesome.com/). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom).
+This is an example of a simple todo list, with different priorities, manual sorting, drag&drop and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()`, [Fontawesome](https://fontawesome.com/) and [Dragula](https://github.com/bevacqua/dragula). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom) and how to use `setState` in the `load` config callback together with other libraries.
 
 ### `tetris.html`
 

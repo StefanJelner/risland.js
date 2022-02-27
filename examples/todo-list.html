@@ -4,6 +4,7 @@
         <meta charset="utf-8" />
         <title>RIsland.js - Todo list example</title>
         <link rel="stylesheet" href="./styles.css" />
+        <link rel="stylesheet" href="../node_modules/dragula/dist/dragula.min.css" />
     </head>
     <body>
         <style type="text/css">
@@ -115,7 +116,12 @@
                 padding: 2px;
             }
 
+            .island__drag-handle {
+                cursor: move;
+            }
+
             .island__button:disabled {
+                cursor: not-allowed;
                 opacity: 0.4;
             }
 
@@ -153,38 +159,36 @@
                                     <th class="island__column island__column--head"></th>
                                     <th class="island__column island__column--head">{{'task' | t}}</th>
                                     <th class="island__column island__column--head">{{'creationDate' | t}}</th>
-                                    <th class="island__column island__column--head" colspan="4">{{'actions' | t}}</th>
+                                    <th class="island__column island__column--head" colspan="5">{{'actions' | t}}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            {{@include('tbody', {
+                                class: 'important'
+                                , i: 0
+                                , ids: state.sort.important
+                                , form: state.form
+                                , locale: state.locale
+                                , tasks: state.tasks
+                            })/}}
+                            {{@include('tbody', {
+                                class: 'normal'
+                                , i: state.sort.important.length
+                                , ids: state.sort.normal
+                                , form: state.form
+                                , locale: state.locale
+                                , tasks: state.tasks
+                            })/}}
+                            {{@if(state.showDone === true)}}
                                 {{@include('tbody', {
-                                    class: 'important'
-                                    , i: 0
-                                    , ids: state.sort.important
+                                    class: 'done'
+                                    , i: state.sort.important.length + state.sort.normal.length
+                                    , ids: state.sort.done
                                     , form: state.form
                                     , locale: state.locale
                                     , tasks: state.tasks
                                 })/}}
-                                {{@include('tbody', {
-                                    class: 'normal'
-                                    , i: state.sort.important.length
-                                    , ids: state.sort.normal
-                                    , form: state.form
-                                    , locale: state.locale
-                                    , tasks: state.tasks
-                                })/}}
-                                {{@if(state.showDone === true)}}
-                                    {{@include('tbody', {
-                                        class: 'done'
-                                        , i: state.sort.important.length + state.sort.normal.length
-                                        , ids: state.sort.done
-                                        , form: state.form
-                                        , locale: state.locale
-                                        , tasks: state.tasks
-                                    })/}}
-                                {{/if}}
-                                <tr class="island__row island__row--last"><td colspan="8"></td></tr>
-                            </tbody>
+                            {{/if}}
+                            <tr class="island__row island__row--last"><td colspan="9"></td></tr>
                         </table>
                     {{/if}}
                 </div>
@@ -217,53 +221,68 @@
         </script>
 
         <script type="text/html" id="squirrelly-tbody">
-            {{@each(partialState.ids) => id, j}}
-                <tr class="island__row island__row--{{partialState.class}}">
-                    <td class="island__column island__column--body island__column--index">
-                        {{partialState.i + j + 1}}
-                    </td>
-                    <td class="island__column island__column--body island__column--important">
-                        {{@if(partialState.tasks[id].important === true)}}
-                            <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
-                        {{/if}}
-                    </td>
-                    <td class="island__column island__column--body island__column--task">
-                        {{partialState.tasks[id].taskName}}
-                    </td>
-                    <td class="island__column island__column--body">
-                        {{partialState.tasks[id].creationDate | t(partialState.locale)}}
-                    </td>
-                    <td class="island__column island__column--body">
-                        <button
-                            class="island__button island__up"
-                            type="button"
-                            {{@if(j === 0 || partialState.class === 'done')}}disabled="disabled"{{/if}}
-                        ><i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i></button>
-                    </td>
-                    <td class="island__column island__column--body">
-                        <button
-                            class="island__button island__down"
-                            type="button"
-                            {{@if(j >= partialState.ids.length - 1  || partialState.class === 'done')}}
-                                disabled="disabled"
-                            {{/if}}
-                        ><i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i></button>
-                    </td>
-                    <td class="island__column island__column--body">
-                        <button
-                            class="island__button island__done"
-                            type="button"
-                            {{@if(partialState.class === 'done')}}disabled="disabled"{{/if}}
-                        ><i class="fa-solid fa-check" title="{{'done' | t}}"></i></button>
-                    </td>
-                    <td class="island__column island__column--body">
-                        <button
-                            class="island__button island__delete"
-                            type="button"
-                        ><i class="fa-solid fa-trash" title="{{'delete' | t}}"></i></button>
-                    </td>
-                </tr>
-            {{/each}}
+            {{@if(partialState.ids.length > 0)}}
+                <tbody class="island__tbody island__drag-container">
+                    {{@each(partialState.ids) => id, j}}
+                        <tr class="island__row island__row--{{partialState.class}}">
+                            <td class="island__column island__column--body island__column--index">
+                                {{partialState.i + j + 1}}
+                            </td>
+                            <td class="island__column island__column--body island__column--important">
+                                {{@if(partialState.tasks[id].important === true)}}
+                                    <i class="fa-solid fa-circle-exclamation" title="{{'important' | t}}"></i>
+                                {{/if}}
+                            </td>
+                            <td class="island__column island__column--body island__column--task">
+                                {{partialState.tasks[id].taskName}}
+                            </td>
+                            <td class="island__column island__column--body">
+                                {{partialState.tasks[id].creationDate | t(partialState.locale)}}
+                            </td>
+                            <td class="island__column island__column--body">
+                                <button
+                                    class="island__button island__drag-handle"
+                                    type="button"
+                                    {{@if(partialState.ids.length < 2 || partialState.class === 'done')}}
+                                        disabled="disabled"
+                                    {{/if}}
+                                >
+                                    <i class="fa-solid fa-arrows-up-down-left-right" title="{{'drag' | t}}"></i></i>
+                                </button>
+                            </td>
+                            <td class="island__column island__column--body">
+                                <button
+                                    class="island__button island__up"
+                                    type="button"
+                                    {{@if(j === 0 || partialState.class === 'done')}}disabled="disabled"{{/if}}
+                                ><i class="fa-solid fa-arrow-up" title="{{'up' | t}}"></i></button>
+                            </td>
+                            <td class="island__column island__column--body">
+                                <button
+                                    class="island__button island__down"
+                                    type="button"
+                                    {{@if(j >= partialState.ids.length - 1  || partialState.class === 'done')}}
+                                        disabled="disabled"
+                                    {{/if}}
+                                ><i class="fa-solid fa-arrow-down" title="{{'down' | t}}"></i></button>
+                            </td>
+                            <td class="island__column island__column--body">
+                                <button
+                                    class="island__button island__done"
+                                    type="button"
+                                    {{@if(partialState.class === 'done')}}disabled="disabled"{{/if}}
+                                ><i class="fa-solid fa-check" title="{{'done' | t}}"></i></button>
+                            </td>
+                            <td class="island__column island__column--body">
+                                <button
+                                    class="island__button island__delete"
+                                    type="button"
+                                ><i class="fa-solid fa-trash" title="{{'delete' | t}}"></i></button>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            {{/if}}
         </script>
 
         <script src="../dist/risland.iife.min.js"></script>
@@ -279,6 +298,7 @@
         </script>
         <script src="../node_modules/@fortawesome/fontawesome-free/js/solid.min.js"></script>
         <script src="../node_modules/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+        <script src="../node_modules/dragula/dist/dragula.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var $island = document.getElementById('island');
@@ -295,6 +315,7 @@
                                 , delete: 'Löschen'
                                 , done: 'Erledigt'
                                 , down: 'Nach unten'
+                                , drag: 'Verschieben'
                                 , important: 'Wichtig'
                                 , showDone: 'Zeige erledigt'
                                 , task: 'Aufgabe'
@@ -310,6 +331,7 @@
                                 , delete: 'Delete'
                                 , done: 'Done'
                                 , down: 'Down'
+                                , drag: 'Move'
                                 , important: 'Important'
                                 , showDone: 'Show done'
                                 , task: 'Task'
@@ -325,6 +347,7 @@
                                 , delete: 'Borrar'
                                 , done: 'Hecho'
                                 , down: 'Abajo'
+                                , drag: 'Mover'
                                 , important: 'Importante'
                                 , showDone: 'Mostrar hecho'
                                 , task: 'Tarea'
@@ -340,6 +363,7 @@
                                 , delete: 'Supprimer'
                                 , done: 'Fait'
                                 , down: 'Vers le bas'
+                                , drag: 'Déplacer'
                                 , important: 'Important'
                                 , showDone: 'Montrer fait'
                                 , task: 'Tâche'
@@ -355,6 +379,7 @@
                                 , delete: 'Cancellare'
                                 , done: 'Fatto'
                                 , down: 'Giù'
+                                , drag: 'Spostare'
                                 , important: 'Importante'
                                 , showDone: 'Mostra fatto'
                                 , task: 'Compito'
@@ -371,9 +396,10 @@
 
                 function getSortKeyIndex($closest, sort) {
                     var $tr = $closest.closest('.island__row');
+                    var $table = $closest.closest('.island__table');
 
-                    if ($tr !== null) {
-                        var index = Array.from($tr.parentElement.children).indexOf($tr);
+                    if ($tr !== null && $table !== null) {
+                        var index = Array.from($table.querySelectorAll('.island__tbody .island__row')).indexOf($tr);
 
                         if (index !== -1) {
                             if (index >= sort.important.length + sort.normal.length) {
@@ -390,6 +416,40 @@
 
                     return null;
                 }
+
+                function addEntry(setState) {
+                    setState(function(state) {
+                        var taskName = state.form.value;
+                        var important = state.form.important;
+                        var creationDate = new Date();
+                        var id = String(+creationDate);
+
+                        var tasksPartial = {};
+                        tasksPartial[id] = {
+                            creationDate: creationDate
+                            , done: false
+                            , important: important
+                            , taskName: taskName
+                        };
+
+                        return {
+                            // this is a dirty, old trick: if the names of the form elements change,
+                            // they are usually reset to their original state. So it is not necessary
+                            // to do direct DOM manipulations here.
+                            form: initialForm()
+                            , sort: (
+                                important === true
+                                    // important tasks will be placed at the top of the important tasks
+                                    ? { important: [id].concat(state.sort.important) }
+                                    // normal tasks will be placed at the bottom of the normal tasks
+                                    : { normal: state.sort.normal.concat(id) }
+                            )
+                            , tasks: tasksPartial
+                        };
+                    });
+                }
+
+                var dragKeyIndex = null;
 
                 new RIsland({
                     $element: $island
@@ -437,36 +497,8 @@
                             }
                         }
                         , 'click': {
-                            '.island__add': function(_, $closest, __, setState) {
-                                setState(function(state) {
-                                    var taskName = state.form.value;
-                                    var important = state.form.important;
-                                    var creationDate = new Date();
-                                    var id = String(+creationDate);
-
-                                    var tasksPartial = {};
-                                    tasksPartial[id] = {
-                                        creationDate: creationDate
-                                        , done: false
-                                        , important: important
-                                        , taskName: taskName
-                                    };
-
-                                    return {
-                                        // this is a dirty, old trick: if the names of the form elements change,
-                                        // they are usually reset to their original state. So it is not necessary
-                                        // to do direct DOM manipulations here.
-                                        form: initialForm()
-                                        , sort: (
-                                            important === true
-                                                // important tasks will be placed at the top of the important tasks
-                                                ? { important: [id].concat(state.sort.important) }
-                                                // normal tasks will be placed at the bottom of the normal tasks
-                                                : { normal: state.sort.normal.concat(id) }
-                                        )
-                                        , tasks: tasksPartial
-                                    };
-                                });
+                            '.island__add': function(_, __, ___, setState) {
+                                addEntry(setState);
                             }
                             , '.island__delete': function(_, $closest, __, setState) {
                                 setState(function(state) {
@@ -520,7 +552,6 @@
                                     if (sortKeyIndex !== null) {
                                         var nextState = { sort: {} };
                                         var currentSort = state.sort[sortKeyIndex.key];
-                                        var id = currentSort[sortKeyIndex.index];
 
                                         nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index
@@ -549,7 +580,6 @@
                                     if (sortKeyIndex !== null) {
                                         var nextState = { sort: {} };
                                         var currentSort = state.sort[sortKeyIndex.key];
-                                        var id = currentSort[sortKeyIndex.index];
 
                                         nextState.sort[sortKeyIndex.key] = currentSort.slice(
                                             0, sortKeyIndex.index - 1
@@ -569,6 +599,16 @@
                         , 'input': {
                             '.island__task-name': function(_, $closest, __, setState) {
                                 setState({ form: { value: $closest.value.trim() } });
+                            }
+                        }
+                        , 'keydown': {
+                            '.island__task-name': function(event, _, state, setState) {
+                                if (
+                                    event.code === 'Enter'
+                                    && state.form.value !== ''
+                                ) {
+                                    addEntry(setState);
+                                }
                             }
                         }
                     }
@@ -591,7 +631,51 @@
                         , showDone: false
                         , tasks: {}
                     }
-                    , load: refreshIcons
+                    , load: function(_, setState) {
+                        refreshIcons();
+
+                        dragula([$island], {
+                            accepts: function(_, $target, $source) { return $target === $source; }
+                            , direction: 'vertical'
+                            , copy: false
+                            , isContainer: function($el) { return $el.classList.contains('island__drag-container'); }
+                            , moves: function(_, __, $handle) {
+                                return $handle.closest('.island__drag-handle') !== null;
+                            }
+                        }).on('drag', function($el) {
+                            setState(function(state) {
+                                dragKeyIndex = getSortKeyIndex($el, state.sort);
+
+                                return null;
+                            });
+                        }).on('dragend', function($el) {
+                            setState(function(state) {
+                                var sortKeyIndex = getSortKeyIndex($el, state.sort);
+
+                                if (
+                                    dragKeyIndex !== null
+                                    && dragKeyIndex.index !== sortKeyIndex.index
+                                ) {
+                                    var nextState = { sort: {} };
+                                    var currentSort = state.sort[dragKeyIndex.key];
+                                    var tmp = currentSort.slice(0, dragKeyIndex.index).concat(
+                                        currentSort.slice(dragKeyIndex.index + 1)
+                                    );
+
+                                    nextState.sort[sortKeyIndex.key] = tmp.slice(0, sortKeyIndex.index).concat(
+                                        currentSort[dragKeyIndex.index]
+                                        , tmp.slice(sortKeyIndex.index)
+                                    );
+
+                                    dragKeyIndex = null;
+
+                                    return nextState;
+                                }
+                                
+                                return null;
+                            });
+                        });
+                    }
                     , morphdom: {
                         // prevent Fontawesome SVGs from being updated
                         onBeforeElUpdated: function($fromEl, $toEl) {
@@ -605,9 +689,7 @@
 
                                     var $svgTitle = $fromEl.querySelector('title');
 
-                                    if ($svgTitle !== null) {
-                                        $svgTitle.innerHTML = toTitle;
-                                    }
+                                    if ($svgTitle !== null) { $svgTitle.innerHTML = toTitle; }
                                 }
 
                                 return false;
