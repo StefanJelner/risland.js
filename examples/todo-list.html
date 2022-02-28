@@ -8,12 +8,17 @@
     </head>
     <body>
         <style type="text/css">
+            .island {
+                margin: 0 auto;
+                max-width: 800px;
+            }
+
             .island__header {
                 align-items: center;
                 display: flex;
                 margin-bottom: 10px;
                 white-space: nowrap;
-                width: 50vw;
+                width: 100%;
             }
 
             .island__locale {
@@ -26,10 +31,10 @@
 
             .island__wrapper {
                 border: 1px solid #ccc;
-                height: 50vh;
+                height: calc(100vh - 100px);
                 margin-bottom: 10px;
                 overflow: auto;
-                width: 50vw;
+                width: 100%;
             }
 
             .island__table {
@@ -90,7 +95,7 @@
                 align-items: center;
                 display: flex;
                 white-space: nowrap;
-                width: 50vw;
+                width: 100%;
             }
 
             .island__task-name {
@@ -147,7 +152,12 @@
                             </option>
                         {{/foreach}}
                     </select>
-                    <input class="island__show-done" type="checkbox" id="show-done" />
+                    <input
+                        class="island__show-done"
+                        type="checkbox"
+                        id="show-done"
+                        {{@if(state.showDone === true)}}checked="checked"{{/if}}
+                    />
                     <label for="show-done">{{'showDone' | t}}</label>
                 </header>
                 <div class="island__wrapper">
@@ -302,10 +312,206 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var $island = document.getElementById('island');
-                var initialLocale = 'en';
+                var dragKeyIndex = null;
+                var localStorageKey = 'risland-todo-list-example';
+
+                function initialForm() { return { important: false, suffix: String(+new Date()), value: '' }; }
+
+                function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
+
+                function getSortKeyIndex($closest, sort) {
+                    var $tr = $closest.closest('.island__row');
+                    var $table = $closest.closest('.island__table');
+
+                    if ($tr !== null && $table !== null) {
+                        var index = Array.from($table.querySelectorAll('.island__tbody .island__row')).indexOf($tr);
+
+                        if (index !== -1) {
+                            if (index >= sort.important.length + sort.normal.length) {
+                                return { index: index - (sort.important.length + sort.normal.length), key: 'done' };
+                            }
+
+                            if (index >= sort.important.length) {
+                                return { index: index - sort.important.length, key: 'normal' };
+                            }
+
+                            return { index: index, key: 'important' };
+                        }
+                    }
+
+                    return null;
+                }
+
+                function getIdCreationDate(idSuffix) {
+                    var creationDate = new Date();
+
+                    return {
+                        creationDate: creationDate
+                        , id: String(+creationDate) + (typeof idSuffix !== 'undefined' ? idSuffix : '')
+                    };
+                }
+
+                function addEntry(setState) {
+                    setState(function(state) {
+                        var taskName = state.form.value;
+                        var important = state.form.important;
+                        var idCreationDate = getIdCreationDate();
+
+                        var tasksPartial = {};
+                        tasksPartial[idCreationDate.id] = {
+                            creationDate: idCreationDate.creationDate
+                            , done: false
+                            , important: important
+                            , taskName: taskName
+                        };
+
+                        return {
+                            // this is a dirty, old trick: if the names of the form elements change,
+                            // they are usually reset to their original state. So it is not necessary
+                            // to do direct DOM manipulations here.
+                            form: initialForm()
+                            , sort: (
+                                important === true
+                                    // important tasks will be placed at the top of the important tasks
+                                    ? { important: [idCreationDate.id].concat(state.sort.important) }
+                                    // normal tasks will be placed at the bottom of the normal tasks
+                                    : { normal: state.sort.normal.concat(idCreationDate.id) }
+                            )
+                            , tasks: tasksPartial
+                        };
+                    });
+                }
+
+                function setLocalStorage(state) {
+                    window.localStorage.setItem(localStorageKey, JSON.stringify(
+                        ['locale', 'showDone', 'sort', 'tasks'].reduce(function(result, key) {
+                            var tmp = {};
+                            tmp[key] = state[key];
+                            return Object.assign({}, result, tmp);
+                        }, {})
+                    ));
+                }
+
+                var localStorageState = window.localStorage.getItem(localStorageKey);
+                var initialState = {
+                    locale: 'en'
+                    , showDone: false
+                    , sort: { done: [], important: [], normal: [] }
+                    , tasks: {}
+                };
+
+                if (localStorageState !== null) {
+                    var tmpState = JSON.parse(localStorageState);
+                    initialState = Object.assign({}, initialState, tmpState, {
+                        // Date objects are not possible in JSON, so here we have to make the timestamp in the JSON
+                        // a real Date object again.
+                        tasks: Object.keys(tmpState.tasks).reduce(function(result, id) {
+                            var tmp = {};
+                            tmp[id] = Object.assign({}, tmpState.tasks[id], {
+                                creationDate: new Date(tmpState.tasks[id].creationDate)
+                            });
+
+                            return Object.assign({}, result, tmp);
+                        }, {})
+                    });
+                } else {
+                    var initialTasks = [
+                        {
+                            done: false
+                            , important: true
+                            , taskName: 'Visit Grandma'
+                        }
+                        , {
+                            done: false
+                            , important: true
+                            , taskName: 'Run errands (supermarket)'
+                        }
+                        , {
+                            done: false
+                            , important: true
+                            , taskName: 'Call taxes advisor'
+                        }
+                        , {
+                            done: false
+                            , important: true
+                            , taskName: 'Wash car'
+                        }
+                        , {
+                            done: false
+                            , important: true
+                            , taskName: 'Repair roof top'
+                        }
+                        , {
+                            done: false
+                            , important: false
+                            , taskName: 'Meet John'
+                        }
+                        , {
+                            done: false
+                            , important: false
+                            , taskName: 'Repair bicycle'
+                        }
+                        , {
+                            done: false
+                            , important: false
+                            , taskName: 'Wash dog'
+                        }
+                        , {
+                            done: false
+                            , important: false
+                            , taskName: 'Call doctor'
+                        }
+                        , {
+                            done: false
+                            , important: false
+                            , taskName: 'Buy concert tickets'
+                        }
+                        , {
+                            done: true
+                            , important: false
+                            , taskName: 'Repair door'
+                        }
+                        , {
+                            done: true
+                            , important: false
+                            , taskName: 'Call Jane'
+                        }
+                        , {
+                            done: true
+                            , important: false
+                            , taskName: 'Clean backyard'
+                        }
+                        , {
+                            done: true
+                            , important: false
+                            , taskName: 'Toss old newspapers'
+                        }
+                        , {
+                            done: true
+                            , important: false
+                            , taskName: 'Brush teeth, go to work'
+                        }
+                    ];
+
+                    initialState = initialTasks.reduce(function(result, task, i) {
+                        var idCreationDate = getIdCreationDate('-' + i);
+                        var newTask = {};
+                        newTask[idCreationDate.id] = Object.assign({}, task, {
+                            creationDate: idCreationDate.creationDate
+                        });
+                        var sortKey = task.done === true ? 'done': (task.important === true ? 'important' : 'normal');
+                        var newSort = {};
+                        newSort[sortKey] = result.sort[sortKey].concat(idCreationDate.id);
+
+                        return Object.assign({}, result, {
+                            sort: Object.assign({}, result.sort, newSort)
+                            , tasks: Object.assign({}, result.tasks, newTask)
+                        });
+                    }, initialState);
+                }
 
                 i18next.init({
-                    lng: initialLocale
+                    lng: initialState.locale
                     , resources: {
                         de: {
                             translation: {
@@ -389,67 +595,6 @@
                         }
                     }
                 });
-
-                function initialForm() { return { important: false, suffix: String(+new Date()), value: '' }; }
-
-                function refreshIcons() { FontAwesome.dom.i2svg({ node: $island }); }
-
-                function getSortKeyIndex($closest, sort) {
-                    var $tr = $closest.closest('.island__row');
-                    var $table = $closest.closest('.island__table');
-
-                    if ($tr !== null && $table !== null) {
-                        var index = Array.from($table.querySelectorAll('.island__tbody .island__row')).indexOf($tr);
-
-                        if (index !== -1) {
-                            if (index >= sort.important.length + sort.normal.length) {
-                                return { index: index - (sort.important.length + sort.normal.length), key: 'done' };
-                            }
-
-                            if (index >= sort.important.length) {
-                                return { index: index - sort.important.length, key: 'normal' };
-                            }
-
-                            return { index: index, key: 'important' };
-                        }
-                    }
-
-                    return null;
-                }
-
-                function addEntry(setState) {
-                    setState(function(state) {
-                        var taskName = state.form.value;
-                        var important = state.form.important;
-                        var creationDate = new Date();
-                        var id = String(+creationDate);
-
-                        var tasksPartial = {};
-                        tasksPartial[id] = {
-                            creationDate: creationDate
-                            , done: false
-                            , important: important
-                            , taskName: taskName
-                        };
-
-                        return {
-                            // this is a dirty, old trick: if the names of the form elements change,
-                            // they are usually reset to their original state. So it is not necessary
-                            // to do direct DOM manipulations here.
-                            form: initialForm()
-                            , sort: (
-                                important === true
-                                    // important tasks will be placed at the top of the important tasks
-                                    ? { important: [id].concat(state.sort.important) }
-                                    // normal tasks will be placed at the bottom of the normal tasks
-                                    : { normal: state.sort.normal.concat(id) }
-                            )
-                            , tasks: tasksPartial
-                        };
-                    });
-                }
-
-                var dragKeyIndex = null;
 
                 new RIsland({
                     $element: $island
@@ -617,22 +762,23 @@
                             return keyOrDate instanceof Date ? keyOrDate.toLocaleString(locale) : i18next.t(keyOrDate);
                         }
                     }
-                    , initialState: {
-                        form: initialForm()
-                        , locale: initialLocale
-                        , locales: {
-                            de: 'Deutsch'
-                            , en: 'English'
-                            , es: 'Español'
-                            , fr: 'Français'
-                            , it: 'Italiano'
+                    , initialState: Object.assign(
+                        {}
+                        , {
+                            form: initialForm()
+                            , locales: {
+                                de: 'Deutsch'
+                                , en: 'English'
+                                , es: 'Español'
+                                , fr: 'Français'
+                                , it: 'Italiano'
+                            }
                         }
-                        , sort: { done: [], important: [], normal: []}
-                        , showDone: false
-                        , tasks: {}
-                    }
-                    , load: function(_, setState) {
+                        , initialState
+                    )
+                    , load: function(state, setState) {
                         refreshIcons();
+                        setLocalStorage(state);
 
                         dragula([$island], {
                             accepts: function(_, $target, $source) { return $target === $source; }
@@ -700,7 +846,10 @@
                     }
                     , partials: { tbody: document.getElementById('squirrelly-tbody') }
                     , template: document.getElementById('squirrelly')
-                    , update: refreshIcons
+                    , update: function(state) {
+                        refreshIcons();
+                        setLocalStorage(state);
+                    }
                 });
             });
         </script>

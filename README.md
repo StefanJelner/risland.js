@@ -1,5 +1,7 @@
 # <img src="assets/risland.png" alt="RIsland logo" width="147" height="90"> RIsland.js
 
+Reactive JavaScript for everyone!
+
 Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 ---
@@ -697,7 +699,7 @@ The following RIsland lifecycles are in logical order of their occurence:
 
 The constructor lifecycle - the "birth" - does the configuration, precompiling of the [squirrelly](https://github.com/squirrellyjs/squirrelly) template, registering of [squirrelly](https://github.com/squirrellyjs/squirrelly) related `partial`s, `filter`s, `helper`s and `nativeHelper`s and adding DOM event listeners for the event delegation.
 
-### Inital `render`
+### Initial `render`
 
 See the `render` lifecycle.
 
@@ -1150,7 +1152,7 @@ This is the most simple checkbox example, which is also shown in this readme.
 
 ### `checkbox-loading-notification.html`
 
-This is an example of how to place a loading notification in the DOM element which then gets manages by RIsland. For 10 seconds a notification blinks, until finally RIsland is loaded.
+This is an example of how to place a loading notification in the DOM element which then gets managed by RIsland. For 10 seconds a notification blinks, until finally RIsland is loaded.
 
 ### `checkbox-promise.html`
 
@@ -1186,7 +1188,7 @@ This is a basic example of a table with information from a CSV file, which can b
 
 ### `todo-list.html`
 
-This is an example of a simple todo list, with different priorities, manual sorting, drag&drop and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()`, [Fontawesome](https://fontawesome.com/) and [Dragula](https://github.com/bevacqua/dragula). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom) and how to use `setState` in the `load` config callback together with other libraries.
+This is an example of a simple todo list, with different priorities, manual sorting, drag&drop, local storage and 5 languages. It uses [i18next](https://github.com/i18next/i18next), `Date.toLocaleString()`, [Fontawesome](https://fontawesome.com/) and [Dragula](https://github.com/bevacqua/dragula). Besides it shows how to work with custom settings in [deepmerge](https://github.com/TehShrike/deepmerge) and [morphdom](https://github.com/patrick-steele-idem/morphdom) and how to use `setState` in the `load` config callback together with other libraries. Settings and data are persisted in the local storage, so if you reload the browser or revisit the list later, it still has your data.
 
 ### `tetris.html`
 
