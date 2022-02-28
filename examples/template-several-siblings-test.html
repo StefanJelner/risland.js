@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Template with several siblings test</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div id="island"></div>
+
+        <script type="text/html" id="squirrelly">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <svg></svg>
+        </script>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                new RIsland({
+                    $element: document.getElementById('island')
+                    , delegations: {}
+                    , initialState: {}
+                    , load: function() { console.log('load'); }
+                    , template: document.getElementById('squirrelly')
+                    , update: function() { console.log('update'); }
+                });
+            });
+        </script>
+    </body>
+</html>

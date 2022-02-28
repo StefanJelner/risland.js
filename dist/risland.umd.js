@@ -2,7 +2,7 @@
 /**
  * @license
  * author: Stefan Jelner
- * risland.js v0.0.1
+ * risland.js v0.0.4
  * Released under the ISC license.
  * 
  * See https://github.com/StefanJelner/risland.js.git
@@ -2182,11 +2182,11 @@
     RIsland.prototype._render = function () {
       var _this = this;
 
-      if (this._loaded === false || this._config.$element.firstChild === null) {
+      if (this._loaded === false || this._config.$element.children.length !== 1) {
         this._config.$element.innerHTML = '<div></div>';
       }
 
-      morphdom(this._config.$element.firstChild, this._compiledTemplate(this._state, this._config.squirrelly), _assign(_assign({}, this._config.morphdom), {
+      morphdom(this._config.$element.firstChild, this._checkTemplate(this._compiledTemplate(this._state, this._config.squirrelly)), _assign(_assign({}, this._config.morphdom), {
         onBeforeElUpdated: function onBeforeElUpdated($fromEl, $toEl) {
           if ('onBeforeElUpdated' in _this._config.morphdom) {
             if (_this._config.morphdom.onBeforeElUpdated($fromEl, $toEl) === false) {
@@ -2222,6 +2222,29 @@
           return node;
         }
       }));
+    };
+
+    RIsland.prototype._checkTemplate = function (template) {
+      var $tmp = document.createElement('div');
+      $tmp.innerHTML = template.trim();
+
+      if ($tmp.childNodes.length > 1) {
+        var templateError = 'RIsland: the root level of your template MUST NOT contain more than one tag. ' + 'Consider using a single div tag as a wrapper around your template.';
+        console.error(templateError);
+        $tmp.innerHTML = "<p style=\"color:red;\">".concat(templateError, "</p>");
+      }
+
+      if ($tmp.children.length === 0) {
+        if ($tmp.childNodes.length > 0) {
+          var templateError = 'RIsland: the root level of your template MUST NOT contain a single text node. ' + 'Consider using a single div tag as a wrapper around your template.';
+          console.error(templateError);
+          $tmp.innerHTML = "<p style=\"color:red;\">".concat(templateError, "</p>");
+        } else {
+          return '';
+        }
+      }
+
+      return $tmp.children[0];
     };
 
     RIsland.prototype._getTemplate = function (template) {

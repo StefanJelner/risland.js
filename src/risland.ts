@@ -313,14 +313,14 @@ export default class RIsland<IState extends Record<string, any>> {
         // then use firstChild.
         if (
             this._loaded === false
-            || this._config.$element.firstChild === null
+            || this._config.$element.children.length !== 1
         ) {
             this._config.$element.innerHTML = '<div></div>';
         }
 
         morphdom(
             this._config.$element.firstChild
-            , this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig)
+            , this._checkTemplate(this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig))
             , {
                 ...this._config.morphdom
                 , onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => {
@@ -365,6 +365,48 @@ export default class RIsland<IState extends Record<string, any>> {
                 }
             }
         );
+    }
+
+    /**
+     * Checks whether the templates root level consists of a single element. Otherwise shows a nice descriptive
+     * error message in the frontend.
+     * 
+     * @param template the parsed template content
+     * @returns the Element or an empty string
+     */
+    private _checkTemplate(template: string): Element | '' {
+        const $tmp = document.createElement('div');
+        // trimming is important here, because otherwise the whitespace will be parsed as text nodes
+        $tmp.innerHTML = template.trim();
+
+        // if the root level of the template contains more than one Element/text node 
+        if ($tmp.childNodes.length > 1) {
+            // show a nice error message.
+            const templateError = 'RIsland: the root level of your template MUST NOT contain more than one tag. '
+                + 'Consider using a single div tag as a wrapper around your template.';
+            /* eslint-disable no-console */
+            console.error(templateError);
+            /* eslint-enable no-console */
+            $tmp.innerHTML = `<p style="color:red;">${templateError}</p>`;
+        }
+
+        // if the root level of the template contains no Element
+        if ($tmp.children.length === 0) {
+            // if the root level of the template contains a single text node
+            if ($tmp.childNodes.length > 0) {
+                // show a nice error message.
+                const templateError = 'RIsland: the root level of your template MUST NOT contain a single text node. '
+                    + 'Consider using a single div tag as a wrapper around your template.';
+                /* eslint-disable no-console */
+                console.error(templateError);
+                /* eslint-enable no-console */
+                $tmp.innerHTML = `<p style="color:red;">${templateError}</p>`;
+            } else {
+                return '';
+            }
+        }
+
+        return $tmp.children[0];
     }
 
     /**
