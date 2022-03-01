@@ -7,7 +7,8 @@
     "lint": "eslint ./src/risland.ts",
     "start": "npm run build",
     "watch": "chokidar ./src/risland.ts -c \"npm run lint && npm run build\"",
-    "examples": "node ./examples/express.js"
+    "examples": "node ./examples/express.js",
+    "test": "jest --coverage"
   },
   "author": "Stefan Jelner",
   "license": "ISC",
@@ -29,6 +30,7 @@
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.1.3",
     "@rollup/plugin-typescript": "^8.3.0",
+    "@types/jest": "^27.4.1",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",
     "@typescript-eslint/typescript-estree": "^5.10.2",
@@ -39,6 +41,7 @@
     "eslint-plugin-typescript-sort-keys": "^2.1.0",
     "express": "^4.17.2",
     "i18next": "^21.6.11",
+    "jest": "^27.5.1",
     "open": "^8.4.0",
     "press-any-key": "^0.1.1",
     "rollup": "^2.67.0",
@@ -47,6 +50,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rxjs": "^7.5.2",
     "serve-index": "^1.9.1",
+    "ts-jest": "^27.1.3",
     "tslib": "^2.3.1",
     "typescript": "^4.5.5"
   },

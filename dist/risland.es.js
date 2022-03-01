@@ -2180,7 +2180,15 @@ var RIsland = function () {
       this._config.$element.innerHTML = '<div></div>';
     }
 
-    morphdom(this._config.$element.firstChild, this._checkTemplate(this._compiledTemplate(this._state, this._config.squirrelly)), _assign(_assign({}, this._config.morphdom), {
+    var newHTML = this._compiledTemplate(this._state, this._config.squirrelly).trim();
+
+    if (this._loaded === false && this._config.$element.innerHTML === newHTML) {
+      this._throttledLoadOrUpdate();
+
+      return;
+    }
+
+    morphdom(this._config.$element.firstChild, this._checkTemplate(newHTML), _assign(_assign({}, this._config.morphdom), {
       onBeforeElUpdated: function onBeforeElUpdated($fromEl, $toEl) {
         if ('onBeforeElUpdated' in _this._config.morphdom) {
           if (_this._config.morphdom.onBeforeElUpdated($fromEl, $toEl) === false) {
@@ -2220,7 +2228,7 @@ var RIsland = function () {
 
   RIsland.prototype._checkTemplate = function (template) {
     var $tmp = document.createElement('div');
-    $tmp.innerHTML = template.trim();
+    $tmp.innerHTML = template;
 
     if ($tmp.childNodes.length > 1) {
       var templateError = 'RIsland: the root level of your template MUST NOT contain more than one tag. ' + 'Consider using a single div tag as a wrapper around your template.';

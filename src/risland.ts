@@ -318,9 +318,24 @@ export default class RIsland<IState extends Record<string, any>> {
             this._config.$element.innerHTML = '<div></div>';
         }
 
+        // trimming is important here, because otherwise the whitespace will later be parsed as text nodes
+        const newHTML = this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig).trim();
+
+        // There is a rare edgecase (tested in the Jest tests): The system is loading and the template is exactly
+        // the same as the dummy content inside of $element. This will lead to the load config callback never
+        // being fired, because morphdom is actually doing nothing.
+        if (
+            this._loaded === false
+            && this._config.$element.innerHTML === newHTML
+        ) {
+            this._throttledLoadOrUpdate();
+
+            return;
+        }
+
         morphdom(
             this._config.$element.firstChild
-            , this._checkTemplate(this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig))
+            , this._checkTemplate(newHTML)
             , {
                 ...this._config.morphdom
                 , onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => {
@@ -376,8 +391,7 @@ export default class RIsland<IState extends Record<string, any>> {
      */
     private _checkTemplate(template: string): Element | '' {
         const $tmp = document.createElement('div');
-        // trimming is important here, because otherwise the whitespace will be parsed as text nodes
-        $tmp.innerHTML = template.trim();
+        $tmp.innerHTML = template;
 
         // if the root level of the template contains more than one Element/text node 
         if ($tmp.childNodes.length > 1) {

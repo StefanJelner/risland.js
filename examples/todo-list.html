@@ -8,17 +8,28 @@
     </head>
     <body>
         <style type="text/css">
-            .island {
-                margin: 0 auto;
-                max-width: 800px;
+            body {
+                margin: 0;
+                padding: 0;
             }
 
-            .island__header {
+            .island {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                margin: 0 auto;
+                max-width: 800px;
+                overflow: hidden;
+                width: 100%;
+            }
+
+            .island__header,
+            .island__footer {
                 align-items: center;
                 display: flex;
-                margin-bottom: 10px;
+                margin: 10px;
                 white-space: nowrap;
-                width: 100%;
+                width: calc(100% - 20px);
             }
 
             .island__locale {
@@ -31,10 +42,9 @@
 
             .island__wrapper {
                 border: 1px solid #ccc;
-                height: calc(100vh - 100px);
-                margin-bottom: 10px;
+                flex-grow: 1;
+                height: 100%;
                 overflow: auto;
-                width: 100%;
             }
 
             .island__table {
@@ -88,13 +98,6 @@
             }
 
             .island__column--task {
-                width: 100%;
-            }
-
-            .island__footer {
-                align-items: center;
-                display: flex;
-                white-space: nowrap;
                 width: 100%;
             }
 
