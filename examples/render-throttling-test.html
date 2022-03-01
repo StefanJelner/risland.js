@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Render throttling test</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div id="island"></div>
+        <div id="island2"></div>
+
+        <script type="text/html" id="squirrelly">
+            <div class="island">Throttled RIsland rendering: {{state.i}}</div>
+        </script>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var $island2 = document.getElementById('island2');
+                var j = 0;
+
+                window.setInterval(function() {
+                    $island2.innerHTML = '<div class="island">Unthrottled direct rendering: ' + j + '</div>';
+                    j++;
+                }, 1);
+
+                new RIsland({
+                    $element: document.getElementById('island')
+                    , initialState: { i: 0 }
+                    , load: function(_, setState) {
+                        // here we brutally change the value of i every millisecond, to see, how RIsland behaves,
+                        // if something goes faster than the request animation frame and never stops.
+                        window.setInterval(function() {
+                            setState(function(state) { return { i: state.i + 1 }; });
+                        }, 1);
+                    }
+                    , template: document.getElementById('squirrelly')
+                });
+            });
+        </script>
+    </body>
+</html>

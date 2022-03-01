@@ -257,7 +257,7 @@ template: document.getElementById('squirrelly') as HTMLScriptElement
 
 Otherwise Typescript cannot determine whether the template is a `string` or a `HTMLScriptElement`.
 
-> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Every template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland.
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The template **MUST** be nested in a single tag. If the template starts with several siblings, the template won't work. You should at least use a `div` element as a wrapper. This is due to a limitation in the implementation of RIsland. This rule does not apply to partials.
 
 Partials work the same way, the only difference is, that the namespace inside of partials is not `state`, but `partialState`.
 
