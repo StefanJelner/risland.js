@@ -321,9 +321,9 @@ export default class RIsland<IState extends Record<string, any>> {
         // trimming is important here, because otherwise the whitespace will later be parsed as text nodes
         const newHTML = this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig).trim();
 
-        // There is a rare edgecase (tested in the Jest tests): The system is loading and the template is exactly
-        // the same as the dummy content inside of $element. This will lead to the load config callback never
-        // being fired, because morphdom is actually doing nothing.
+        // There is a rare edgecase (tested in the Jest tests): The system is loading the first time and the compiled
+        // template result is exactly the same as the dummy content inside of $element. This will lead to the load
+        // config callback never being fired, because morphdom is actually doing nothing.
         if (
             this._loaded === false
             && this._config.$element.innerHTML === newHTML

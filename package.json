@@ -1,6 +1,6 @@
 {
   "name": "risland.js",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A simple, lightweight approach for providing reactive islands on websites",
   "scripts": {
     "build": "rollup -c",
@@ -65,6 +65,7 @@
     "url": "https://github.com/StefanJelner/risland.js/issues"
   },
   "keywords": [
+    "javascript",
     "reactive",
     "state",
     "event",
@@ -78,6 +79,20 @@
     "configurator",
     "morphdom",
     "squirrelly",
-    "typescript"
+    "es6",
+    "typescript",
+    "shopify",
+    "wordpress",
+    "blog",
+    "angular",
+    "react",
+    "vue",
+    "rxjs",
+    "element",
+    "component",
+    "framework",
+    "diffing",
+    "deep",
+    "webpack"
   ]
 }

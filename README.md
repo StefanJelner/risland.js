@@ -60,7 +60,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
-- Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader).
+- Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader) or - since Webpack 5 - the [Asset Modules](https://webpack.js.org/guides/asset-modules/).
 - Can be combined with other frameworks, like [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, to make more sophisticated scenarios possible. This way several instances of RIsland can also intercommunicate and exchange states.
 
 ---
@@ -265,7 +265,7 @@ Partials work the same way, the only difference is, that the namespace inside of
 
 ## <a name="bundlers-template"></a> Bundlers and template files
 
-Some bundlers are capable of injecting required files as strings during the process of bundling. A very well know example is the usage of [webpack](https://github.com/webpack/webpack) with [raw-loader](https://github.com/webpack-contrib/raw-loader).
+Some bundlers are capable of injecting required files as strings during the process of bundling. A very well know example is the usage of [webpack](https://github.com/webpack/webpack) with [raw-loader](https://github.com/webpack-contrib/raw-loader) or - since Webpack 5 - the [Asset Modules](https://webpack.js.org/guides/asset-modules/).
 
 `webpack.config.js`:
 ```js
@@ -280,10 +280,33 @@ module.exports = {
 };
 ```
 
+or since Webpack 5
+
+`webpack.config.js`:
+```js
+module.exports = {
+    module: {
+        rules: [{
+            test: /\.squirrelly\.html$/
+            , type: 'asset/source'
+            , exclude: /node_modules/
+        }]
+    }
+};
+```
+
 Your Typescript file:
+
 ```ts
 const template: string = require('./template.squirrelly.html').default;
 ```
+
+or
+
+```ts
+import template from './template.squirrelly.html';
+```
+
 
 ---
 

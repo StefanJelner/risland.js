@@ -8,7 +8,7 @@ function getDefaultDocument(additional: string = ''): string {
     return `<head><meta charset="utf-8"/></head><body><div id="island"></div>${additional}</body>`;
 }
 
-describe('Risland', () => {
+describe('RIsland', () => {
     beforeEach(() => {
         // hide all the errors and warnings and save them for testing
         console.warn = jest.fn();
