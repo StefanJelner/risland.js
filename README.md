@@ -1399,6 +1399,46 @@ This leads to the problem, that [deepmerge](https://github.com/TehShrike/deepmer
 
 What happens here is that `foo` gets a custom merge function, which omits all keys with a value of `undefined` on both objects.
 
+### Use [`pairwise()`](https://rxjs.dev/api/operators/pairwise) in RxJS for Diffing
+
+If working with libraries which follow a state pattern it is very often useful to also compare an Observable with its former value. This can be done very easily with the [`pairwise()`](https://rxjs.dev/api/operators/pairwise) operator.
+
+Example:
+
+```ts
+import { BehaviorSubject } from 'rxjs';
+import { pairwise } from 'rxjs/operators';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const initialState = { foo: 1 };
+
+    const foo$ = new BehaviorSubject<number>(initialState.foo);
+    let subscription;
+
+    const interval = window.setInterval(() => {
+        // pick a random number between 0 and 100
+        foo$.next(Math.floor(Math.random() * 100));
+    }, 1000);
+
+    new RIsland<{ foo: number }>({
+        $element: document.getElementById('island'),
+        initialState,
+        load: (_, setState) => {
+            subscription = foo$.pipe(pairwise()).subscribe(([formerFoo, foo]: [number, number]) => {
+                if (foo !== formerFoo) {
+                    setState({ foo });
+                }
+            });
+        },
+        template: '<div>{{state.foo}}</div>',
+        unload: () => {
+            subscription.unsubscribe();
+            window.clearInterval(interval);
+        }
+    });
+});
+```
+
 ---
 
 ## <a name="final-thoughts"></a> Final thoughts
