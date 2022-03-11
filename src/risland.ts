@@ -34,12 +34,12 @@ export default class RIsland<IState extends Record<string, any>> {
         , 'unload'
     ];
 
+    private _empty: string = '<div></div>';
     private _initialConfig: IRIslandConfig<IState> = {
         $element: document.body
-        , deepmerge: {
-            isMergeableObject: isPlainObject
-        }
+        , deepmerge: { isMergeableObject: isPlainObject }
         , delegations: {}
+        , error: () => {}
         , filters: {}
         , helpers: {}
         , initialState: {} as IState
@@ -50,7 +50,7 @@ export default class RIsland<IState extends Record<string, any>> {
         , partials: {}
         , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
         , squirrelly: Sqrl.defaultConfig
-        , template: ''
+        , template: this._empty
         , unload: () => {}
         , update: () => {}
     };
@@ -72,17 +72,29 @@ export default class RIsland<IState extends Record<string, any>> {
             varName: 'state'
         }
     };
+    // Suirrelly configuration for internal use
+    private _internalSqrlConfig: SqrlConfig = { ...Sqrl.defaultConfig, ...this._enforcedConfig.squirrelly };
 
     private _config: IRIslandConfig<IState>;
+    private _compiledConsole: TemplateFunction = Sqrl.compile(
+        '{{state.type}}:\n\n{{@each(state.messages) => message}}- {{message}}\n{{/each}}'
+        , this._internalSqrlConfig
+    );
+    private _compiledError: TemplateFunction = Sqrl.compile(
+        '<ul style="color:red;">{{@each(state.errors) => error}}<li>{{error}}</li>{{/each}}</ul>'
+        , this._internalSqrlConfig
+    );
     private _compiledTemplate: TemplateFunction;
     private _delegationFuncs: Partial<Record<TRIslandDelegationFuncsKey, {
         capture: boolean;
         func: (event: Event) => void;
     }>> = {};
+    private _errors: Array<string> = [];
     private _loaded: boolean = false;
     private _state: IState = {} as IState;
     private _throttledLoadOrUpdate: RIsland<IState>['_loadOrUpdate'] = rafThrottle(this._loadOrUpdate);
     private _throttledRender: RIsland<IState>['_render'] = rafThrottle(this._render);
+    private _warnings: Array<string> = [];
 
     /**
      * Constructor
@@ -109,12 +121,9 @@ export default class RIsland<IState extends Record<string, any>> {
             !isPlainObject(this._config.initialState)
             || this._config.initialState === null
         ) {
-            /* eslint-disable no-console */
-            console.error('RIsland: initialState has to be an object (which is not null).');
-            /* eslint-enable no-console */
+            this._errors = this._errors.concat('ERR001: initialState has to be an object (which is not null).');
 
-            // stop here and do nothing
-            return;
+            this._config.initialState = this._initialConfig.initialState;
         }
 
         // registering filters, helpers and nativeHelpers in squirrelly
@@ -147,15 +156,13 @@ export default class RIsland<IState extends Record<string, any>> {
                 const funcName: TRIslandDelegationFuncsKey = `${eventName}:${index}`;
 
                 if (funcName in this._delegationFuncs) {
-                    /* eslint-disable no-console */
-                    console.warn(
-                        `RIsland: event name "${
+                    this._warnings = this._warnings.concat(
+                        `WARN001: RIsland: event name "${
                             eventName
                         }" exists more than once in "${
                             commaSeparatedEventNames
                         }". This occurence will simply be ignored.`
                     );
-                    /* eslint-enable no-console */
 
                     return;
                 }
@@ -207,13 +214,11 @@ export default class RIsland<IState extends Record<string, any>> {
         });
 
         if (Object.keys(this._config.initialState).length === 0) {
-            /* eslint-disable no-console */
-            console.warn(
-                'RIsland: Initialisation with an empty state is considered an anti-pattern. '
+            this._warnings = this._warnings.concat(
+                'WARN002: Initialisation with an empty state is considered an anti-pattern. '
                 + 'Please try to predefine everything you will later change with setState() with an initial value; '
                 + 'even it is null.'
             );
-            /* eslint-enable no-console */
 
             // because the state is already an empty object, we do not need to use setState() here, but can directly
             // render.
@@ -309,24 +314,62 @@ export default class RIsland<IState extends Record<string, any>> {
      * Renders the template based on the inner state and then morphs the changes into the DOM.
      */
     private _render(): void {
+        const checkedTemplate = this._checkTemplate(
+            // trimming is important here, because otherwise the whitespace will later be parsed as text nodes
+            this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig).trim()
+        );
+
+        // in case of warnings, they are printed to the console
+        if (this._warnings.length > 0) {
+            /* eslint-disable no-console */
+            console.warn(this._compiledConsole(
+                {
+                    messages: this._warnings
+                    , type: 'Warnings'
+                }
+                , this._internalSqrlConfig
+            ));
+            /* eslint-enable no-console */
+            this._warnings = [];
+        }
+
+        // in case of errors, they are printed to the console and to the frontend, so the users know exactly, what
+        // to do.
+        if (this._errors.length > 0) {
+            this._config.$element.innerHTML = this._compiledError(
+                { errors: this._errors }
+                , this._internalSqrlConfig
+            );
+            /* eslint-disable no-console */
+            console.error(this._compiledConsole(
+                {
+                    messages: this._errors
+                    , type: 'Errors'
+                }
+                , this._internalSqrlConfig
+            ));
+            /* eslint-enable no-console */
+            this._errors = [];
+            this._config.error();
+
+            return;
+        }
+
         // morphdom replaces the element itself, this is why we have to add a fake element on the first call and
         // then use firstChild.
         if (
             this._loaded === false
             || this._config.$element.children.length !== 1
         ) {
-            this._config.$element.innerHTML = '<div></div>';
+            this._config.$element.innerHTML = this._empty;
         }
 
-        // trimming is important here, because otherwise the whitespace will later be parsed as text nodes
-        const newHTML = this._compiledTemplate(this._state, this._config.squirrelly as SqrlConfig).trim();
-
         // There is a rare edgecase (tested in the Jest tests): The system is loading the first time and the compiled
-        // template result is exactly the same as the dummy content inside of $element. This will lead to the load
-        // config callback never being fired, because morphdom is actually doing nothing.
+        // template result is exactly the same as the default empty content inside of $element. This will lead to the
+        // load config callback never being fired, because morphdom is actually doing nothing.
         if (
             this._loaded === false
-            && this._config.$element.innerHTML === newHTML
+            && this._config.$element.innerHTML === checkedTemplate
         ) {
             this._throttledLoadOrUpdate();
 
@@ -335,7 +378,7 @@ export default class RIsland<IState extends Record<string, any>> {
 
         morphdom(
             this._config.$element.firstChild
-            , this._checkTemplate(newHTML)
+            , checkedTemplate
             , {
                 ...this._config.morphdom
                 , onBeforeElUpdated: ($fromEl: HTMLElement, $toEl: HTMLElement) => {
@@ -387,40 +430,38 @@ export default class RIsland<IState extends Record<string, any>> {
      * error message in the frontend.
      * 
      * @param template the parsed template content
-     * @returns the Element or an empty string
+     * @returns the original template or the default empty HTML
      */
-    private _checkTemplate(template: string): Element | '' {
+    private _checkTemplate(template: string): string {
         const $tmp = document.createElement('div');
         $tmp.innerHTML = template;
 
         // if the root level of the template contains more than one Element/text node 
         if ($tmp.childNodes.length > 1) {
-            // show a nice error message.
-            const templateError = 'RIsland: the root level of your template MUST NOT contain more than one tag. '
-                + 'Consider using a single div tag as a wrapper around your template.';
-            /* eslint-disable no-console */
-            console.error(templateError);
-            /* eslint-enable no-console */
-            $tmp.innerHTML = `<p style="color:red;">${templateError}</p>`;
+            this._errors = this._errors.concat(
+                'ERR002: the root level of your template MUST NOT contain more than one tag. Consider using a single '
+                + 'div tag as a wrapper around your template.'
+            );
+
+            return this._empty;
         }
 
         // if the root level of the template contains no Element
         if ($tmp.children.length === 0) {
             // if the root level of the template contains a single text node
             if ($tmp.childNodes.length > 0) {
-                // show a nice error message.
-                const templateError = 'RIsland: the root level of your template MUST NOT contain a single text node. '
-                    + 'Consider using a single div tag as a wrapper around your template.';
-                /* eslint-disable no-console */
-                console.error(templateError);
-                /* eslint-enable no-console */
-                $tmp.innerHTML = `<p style="color:red;">${templateError}</p>`;
+                this._errors = this._errors.concat(
+                    'ERR003: the root level of your template MUST NOT contain a single text node. Consider using a '
+                    + 'single div tag as a wrapper around your template.'
+                );
+
+                return this._empty;
             } else {
-                return '';
+                return this._empty;
             }
         }
 
-        return $tmp.children[0];
+        return template;
     }
 
     /**
@@ -439,12 +480,8 @@ export default class RIsland<IState extends Record<string, any>> {
             return template.innerHTML;
         }
 
-        // otherwise show a nice error message.
-        const typeError = 'RIsland: template must be a string or a script tag element.';
-        /* eslint-disable no-console */
-        console.error(typeError);
-        /* eslint-enable no-console */
-        return `<p style="color:red;">${typeError}</p>`;
+        this._errors = this._errors.concat('ERR004: template must be a string or a script tag element.');
+        return '';
     }
 
     /**
@@ -483,13 +520,13 @@ export default class RIsland<IState extends Record<string, any>> {
                 if (!isNaN(ms)) {
                     return { eventName, ms, throttled: true };
                 } else {
-                    /* eslint-disable no-console */
-                    console.warn(`RIsland: event name "${
-                        combinedEventName
-                    }" is malformed. The milliseconds "${
-                        chunks[2]
-                    }" are not a valid number. falling back to request animation frame.`);
-                    /* eslint-enable no-console */
+                    this._warnings = this._warnings.concat(
+                        `WARN003: event name "${
+                            combinedEventName
+                        }" is malformed. The milliseconds "${
+                            chunks[2]
+                        }" are not a valid number. falling back to request animation frame.`
+                    );
 				}
             }
 
@@ -541,6 +578,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
             , setState: RIsland<IState>['_setState']
         ) => void>
     >>;
+    error: () => void;
     filters: Record<string, Parameters<typeof Sqrl['filters']['define']>[1]>;
     helpers: Record<string, Parameters<typeof Sqrl['helpers']['define']>[1]>;
     initialState: IState;

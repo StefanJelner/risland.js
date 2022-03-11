@@ -15,18 +15,56 @@ describe('RIsland', () => {
         console.error = jest.fn();
     });
 
-    it('should show a warning in the console if initialized with an empty initialState', done => {
-        const warning = 'RIsland: Initialisation with an empty state is considered an anti-pattern. '
-            + 'Please try to predefine everything you will later change with setState() with an initial value; '
-            + 'even it is null.';
+    it(
+        'should show an error in the frontend and in the console if initialized with an initialState which is not '
+        + 'an object'
+        , done => {
+            setDocument(getDefaultDocument());
 
+            new RIsland<{}>({
+                $element: document.getElementById('island')
+                , initialState: []
+                , error: () => {
+                    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR001'));
+
+                    done();
+                }
+                , template: '<div></div>'
+            });
+        }
+    );
+
+    it(
+        'should show an error in the frontend and in the console if initialized with an initialState which is null'
+        , done => {
+            setDocument(getDefaultDocument());
+
+            new RIsland<{}>({
+                $element: document.getElementById('island')
+                , initialState: null
+                , error: () => {
+                    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR001'));
+
+                    done();
+                }
+                , template: '<div></div>'
+            });
+        }
+    );
+
+    it('should show a warning in the console if there is a duplicate event name in a comma spearated list', done => {
         setDocument(getDefaultDocument());
 
         new RIsland<{}>({
             $element: document.getElementById('island')
+            , delegations: {
+                'mouseover, mouseout, mouseover': {
+                    '.foo': () => {}
+                }
+            }
             , initialState: {}
             , load: () => {
-                expect(console.warn).toHaveBeenCalledWith(warning);
+                expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN001'));
 
                 done();
             }
@@ -34,17 +72,94 @@ describe('RIsland', () => {
         });
     });
 
-    it('should show an error in the frontend and the console if initialized with the wrong template type', done => {
-        const error = 'RIsland: template must be a string or a script tag element.';
+    it('should show a warning in the console if a throttled event name has malformed milliseconds', done => {
+        setDocument(getDefaultDocument());
 
+        new RIsland<{}>({
+            $element: document.getElementById('island')
+            , delegations: {
+                // we have to use any here, because we provoke a warning. in a Typescript context should should
+                // not be possible at all.
+                ['mousemove.throttled.foo' as any]: {
+                    '.foo': () => {}
+                }
+            }
+            , initialState: {}
+            , load: () => {
+                expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN003'));
+
+                done();
+            }
+            , template: '<div></div>'
+        });
+    });
+
+    it('should show a warning in the console if initialized with an empty initialState', done => {
+        setDocument(getDefaultDocument());
+
+        new RIsland<{}>({
+            $element: document.getElementById('island')
+            , initialState: {}
+            , load: () => {
+                expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN002'));
+
+                done();
+            }
+            , template: '<div></div>'
+        });
+    });
+
+    it(
+        'should show an error in the frontend and the console if initialized with a template containing more than '
+        + 'one element on the root level'
+        , done => {
+            setDocument(getDefaultDocument());
+            const $island = document.getElementById('island');
+
+            new RIsland<{}>({
+                $element: $island
+                , error: () => {
+                    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR002'));
+                    expect($island.innerHTML).toMatch('ERR002');
+
+                    done();
+                }
+                // we have to cast to any here, because we intentionally provide the wrong element type
+                , template: '<div></div><div></div>'
+            });
+        }
+    );
+
+    it(
+        'should show an error in the frontend and the console if initialized with a template only containing a text '
+        + 'node on the root level'
+        , done => {
+            setDocument(getDefaultDocument());
+            const $island = document.getElementById('island');
+
+            new RIsland<{}>({
+                $element: $island
+                , error: () => {
+                    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR003'));
+                    expect($island.innerHTML).toMatch('ERR003');
+
+                    done();
+                }
+                // we have to cast to any here, because we intentionally provide the wrong element type
+                , template: 'Test'
+            });
+        }
+    );
+
+    it('should show an error in the frontend and the console if initialized with the wrong template type', done => {
         setDocument(getDefaultDocument('<template id="squirrelly"></template>'));
         const $island = document.getElementById('island');
 
         new RIsland<{}>({
             $element: $island
-            , load: () => {
-                expect(console.error).toHaveBeenCalledWith(error);
-                expect($island.innerHTML).toBe(`<p style="color:red;">${error}</p>`);
+            , error: () => {
+                expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR004'));
+                expect($island.innerHTML).toMatch('ERR004');
 
                 done();
             }

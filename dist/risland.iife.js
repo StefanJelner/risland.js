@@ -2,7 +2,7 @@
 /**
  * @license
  * author: Stefan Jelner
- * risland.js v0.0.4
+ * risland.js v0.0.5
  * Released under the ISC license.
  * 
  * See https://github.com/StefanJelner/risland.js.git
@@ -2026,12 +2026,14 @@ var RIsland = (function () {
     function RIsland(config) {
       var _this = this;
 
+      this._empty = '<div></div>';
       this._initialConfig = {
         $element: document.body,
         deepmerge: {
           isMergeableObject: isPlainObject
         },
         delegations: {},
+        error: function error() {},
         filters: {},
         helpers: {},
         initialState: {},
@@ -2044,7 +2046,7 @@ var RIsland = (function () {
           return !fastDeepEqual(state, nextState);
         },
         squirrelly: squirrelly_min$1.exports.defaultConfig,
-        template: '',
+        template: this._empty,
         unload: function unload() {},
         update: function update() {}
       };
@@ -2059,16 +2061,21 @@ var RIsland = (function () {
           varName: 'state'
         }
       };
+      this._internalSqrlConfig = _assign(_assign({}, squirrelly_min$1.exports.defaultConfig), this._enforcedConfig.squirrelly);
+      this._compiledConsole = squirrelly_min$1.exports.compile('{{state.type}}:\n\n{{@each(state.messages) => message}}- {{message}}\n{{/each}}', this._internalSqrlConfig);
+      this._compiledError = squirrelly_min$1.exports.compile('<ul style="color:red;">{{@each(state.errors) => error}}<li>{{error}}</li>{{/each}}</ul>', this._internalSqrlConfig);
       this._delegationFuncs = {};
+      this._errors = [];
       this._loaded = false;
       this._state = {};
       this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
       this._throttledRender = rafThrottle_1(this._render);
+      this._warnings = [];
       this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
 
       if (!isPlainObject(this._config.initialState) || this._config.initialState === null) {
-        console.error('RIsland: initialState has to be an object (which is not null).');
-        return;
+        this._errors = this._errors.concat('ERR001: initialState has to be an object (which is not null).');
+        this._config.initialState = this._initialConfig.initialState;
       }
 
       ['filters', 'helpers', 'nativeHelpers'].forEach(function (key) {
@@ -2087,7 +2094,7 @@ var RIsland = (function () {
           var funcName = "".concat(eventName, ":").concat(index);
 
           if (funcName in _this._delegationFuncs) {
-            console.warn("RIsland: event name \"".concat(eventName, "\" exists more than once in \"").concat(commaSeparatedEventNames, "\". This occurence will simply be ignored."));
+            _this._warnings = _this._warnings.concat("WARN001: RIsland: event name \"".concat(eventName, "\" exists more than once in \"").concat(commaSeparatedEventNames, "\". This occurence will simply be ignored."));
             return;
           }
 
@@ -2123,7 +2130,7 @@ var RIsland = (function () {
       });
 
       if (Object.keys(this._config.initialState).length === 0) {
-        console.warn('RIsland: Initialisation with an empty state is considered an anti-pattern. ' + 'Please try to predefine everything you will later change with setState() with an initial value; ' + 'even it is null.');
+        this._warnings = this._warnings.concat('WARN002: Initialisation with an empty state is considered an anti-pattern. ' + 'Please try to predefine everything you will later change with setState() with an initial value; ' + 'even it is null.');
 
         this._throttledRender();
       } else {
@@ -2179,19 +2186,42 @@ var RIsland = (function () {
     RIsland.prototype._render = function () {
       var _this = this;
 
-      if (this._loaded === false || this._config.$element.children.length !== 1) {
-        this._config.$element.innerHTML = '<div></div>';
+      var checkedTemplate = this._checkTemplate(this._compiledTemplate(this._state, this._config.squirrelly).trim());
+
+      if (this._warnings.length > 0) {
+        console.warn(this._compiledConsole({
+          messages: this._warnings,
+          type: 'Warnings'
+        }, this._internalSqrlConfig));
+        this._warnings = [];
       }
 
-      var newHTML = this._compiledTemplate(this._state, this._config.squirrelly).trim();
+      if (this._errors.length > 0) {
+        this._config.$element.innerHTML = this._compiledError({
+          errors: this._errors
+        }, this._internalSqrlConfig);
+        console.error(this._compiledConsole({
+          messages: this._errors,
+          type: 'Errors'
+        }, this._internalSqrlConfig));
+        this._errors = [];
 
-      if (this._loaded === false && this._config.$element.innerHTML === newHTML) {
+        this._config.error();
+
+        return;
+      }
+
+      if (this._loaded === false || this._config.$element.children.length !== 1) {
+        this._config.$element.innerHTML = this._empty;
+      }
+
+      if (this._loaded === false && this._config.$element.innerHTML === checkedTemplate) {
         this._throttledLoadOrUpdate();
 
         return;
       }
 
-      morphdom(this._config.$element.firstChild, this._checkTemplate(newHTML), _assign(_assign({}, this._config.morphdom), {
+      morphdom(this._config.$element.firstChild, checkedTemplate, _assign(_assign({}, this._config.morphdom), {
         onBeforeElUpdated: function onBeforeElUpdated($fromEl, $toEl) {
           if ('onBeforeElUpdated' in _this._config.morphdom) {
             if (_this._config.morphdom.onBeforeElUpdated($fromEl, $toEl) === false) {
@@ -2234,22 +2264,20 @@ var RIsland = (function () {
       $tmp.innerHTML = template;
 
       if ($tmp.childNodes.length > 1) {
-        var templateError = 'RIsland: the root level of your template MUST NOT contain more than one tag. ' + 'Consider using a single div tag as a wrapper around your template.';
-        console.error(templateError);
-        $tmp.innerHTML = "<p style=\"color:red;\">".concat(templateError, "</p>");
+        this._errors = this._errors.concat('ERR002: the root level of your template MUST NOT contain more than one tag. Consider using a single ' + 'div tag as a wrapper around your template.');
+        return this._empty;
       }
 
       if ($tmp.children.length === 0) {
         if ($tmp.childNodes.length > 0) {
-          var templateError = 'RIsland: the root level of your template MUST NOT contain a single text node. ' + 'Consider using a single div tag as a wrapper around your template.';
-          console.error(templateError);
-          $tmp.innerHTML = "<p style=\"color:red;\">".concat(templateError, "</p>");
+          this._errors = this._errors.concat('ERR003: the root level of your template MUST NOT contain a single text node. Consider using a ' + 'single div tag as a wrapper around your template.');
+          return this._empty;
         } else {
-          return '';
+          return this._empty;
         }
       }
 
-      return $tmp.children[0];
+      return template;
     };
 
     RIsland.prototype._getTemplate = function (template) {
@@ -2261,9 +2289,8 @@ var RIsland = (function () {
         return template.innerHTML;
       }
 
-      var typeError = 'RIsland: template must be a string or a script tag element.';
-      console.error(typeError);
-      return "<p style=\"color:red;\">".concat(typeError, "</p>");
+      this._errors = this._errors.concat('ERR004: template must be a string or a script tag element.');
+      return '';
     };
 
     RIsland.prototype._getThrottling = function (combinedEventName) {
@@ -2281,7 +2308,7 @@ var RIsland = (function () {
               throttled: true
             };
           } else {
-            console.warn("RIsland: event name \"".concat(combinedEventName, "\" is malformed. The milliseconds \"").concat(chunks[2], "\" are not a valid number. falling back to request animation frame."));
+            this._warnings = this._warnings.concat("WARN003: event name \"".concat(combinedEventName, "\" is malformed. The milliseconds \"").concat(chunks[2], "\" are not a valid number. falling back to request animation frame."));
           }
         }
 

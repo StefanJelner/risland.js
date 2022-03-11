@@ -726,9 +726,9 @@ The constructor lifecycle - the "birth" - does the configuration, precompiling o
 
 See the `render` lifecycle.
 
-### `load`
+### `load` or `error`
 
-This is the lifecycle which runs when the initial content - based on the initial state - has been rendered and is present in the DOM. It invokes the `load` config callback if present.
+This is the lifecycle which runs when the initial content - based on the initial state - has been rendered and is present in the DOM. It invokes the `load` config callback if present. (In case of an error it invokes the `error` config callback if present.)
 
 ### `setState()` and `shouldUpdate`
 
@@ -738,9 +738,9 @@ This lifecyle takes state changes applied by `setState()` and compares them (dee
 
 This lifecycle uses the current state to render template output and morph the HTML result into the DOM. It is throttled by request animation frame to not run unnecessary rendering cycles even the browser does not show it.
 
-### `update`
+### `update` or `error`
 
-This is the lifecycle which runs when the updated content - based on state changes - has been rendered and is present in the DOM. It invokes the `update` config callback if present.
+This is the lifecycle which runs when the updated content - based on state changes - has been rendered and is present in the DOM. It invokes the `update` config callback if present. (In case of an error it invokes the `error` config callback if present.)
 
 ### `unload`
 
@@ -802,57 +802,67 @@ The delegations config object consists of (comma separated) event names (plus th
 
 Here is a list of the arguments of the callback function:
 
-#### `event`
+1. `event`
 
-This is the original event, which was triggered. It is possible to use `preventDefault()` or `stopPropagation()` if necessary.
+    This is the original event, which was triggered. It is possible to use `preventDefault()` or `stopPropagation()` if necessary.
 
-#### `$closest`
+2. `$closest`
 
-This is the closest ancestor of the event target. See [`Element.closest()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest). Imagine the following structure:
+    This is the closest ancestor of the event target. See [`Element.closest()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest). Imagine the following structure:
 
-```html
-<a class="foo" href="http://www.foo.com">
-    <span class="foo__bar">Baz</span>
-</a>
-```
+    ```html
+    <a class="foo" href="http://www.foo.com">
+        <span class="foo__bar">Baz</span>
+    </a>
+    ```
 
-and following RIsland config:
+    and following RIsland config:
 
-```js
-{
-    delegations: {
-        'click': {
-            '.foo': function(event, $closest, state, setState) {
-                event.target.classList.add('quox');
+    ```js
+    {
+        delegations: {
+            'click': {
+                '.foo': function(event, $closest, state, setState) {
+                    event.target.classList.add('quox');
+                }
             }
         }
     }
-}
-```
+    ```
 
-The first thought would be, that whenever someone clicks the link the `a` tag will have the class `quox` added, but this assumption is wrong. The `event.target` could be the nested `span` tag and therefore the class could possibly added to the `span` tag. `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
+    The first thought would be, that whenever someone clicks the link the `a` tag will have the class `quox` added, but this assumption is wrong. The `event.target` could be the nested `span` tag and therefore the class could possibly added to the `span` tag. `$closest` contains exactly the DOM element which is addressed by the CSS selector. In the example `.foo` leads to `$closest` always being the link. So the code should be:
 
-```js
-{
-    delegations: {
-        'click': {
-            '.foo': function(event, $closest, state, setState) {
-                $closest.classList.add('quox');
+    ```js
+    {
+        delegations: {
+            'click': {
+                '.foo': function(event, $closest, state, setState) {
+                    $closest.classList.add('quox');
+                }
             }
         }
     }
+    ```
+
+    > <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you depend on working exactly with the DOM element which is addressed by the CSS selector use the `$closest` argument.
+
+3. `state`
+
+    This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
+
+4. `setState`
+
+    This is the `setState()` method as an argument. See [`setState()`](setstate).
+
+### `error`
+
+```ts
+interface IRIslandConfig<IState extends Record<string, any>> {
+    error: () => void;
 }
 ```
 
-> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you depend on working exactly with the DOM element which is addressed by the CSS selector use the `$closest` argument.
-
-#### `state`
-
-This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
-
-#### `setState`
-
-This is the `setState()` method as an argument. See [`setState()`](setstate).
+The `error` config callback is a function, which becomes invoked when the initial state or a state change and template rendering has been done, but an error has occured. The function has no arguments, because an error message is shown in the frontend anyway.
 
 ### `filters`
 
@@ -904,13 +914,13 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 The `load` config callback is a function, which becomes invoked when the initial state and template rendering has been done and all elements are present in the DOM - the `load` lifecycle is reached, so that the RIsland instance is ready for changes. The function can have two arguments:
 
-#### `state`
+1. `state`
 
-This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
+    This is a current snapshot of the state. As mentioned before, be cautious using it. It is more recommended to use `setState()` with the callback function. Besides trying to mutate it directly does not work, because it is a clone. See [State](#state).
 
-#### `setState`
+2. `setState`
 
-This is the `setState()` method as an argument. See [`setState()`](setstate).
+    This is the `setState()` method as an argument. See [`setState()`](setstate).
 
 > <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** The `load` config callback can be used to initialize any mechanism which is not event based (so event delegation is not possible), but might need the possiblity to set the state. F.ex. observables, stores, things which might become invoked asynchronously (timeouts, sockets, broadcast channels aso) or handing over `setState()` to other systems, so they can change the state of the RIsland instance.
 
@@ -983,9 +993,9 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 The `unload` config callback is a function, which becomes invoked when the `unload` method has been called - the `unload` lifecycle is reached, so that the event handlers become removed and the HTML becomes deleted from the element which was managed by RIsland. The function can have one (final) argument:
 
-#### `state`
+1. `state`
 
-This is a final snapshot of the state. See [State](#state).
+    This is a final snapshot of the state. See [State](#state).
 
 ### `update`
 
