@@ -597,7 +597,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
 export type TRIslandSetState<IState extends Record<string, any>> = (
     Partial<IState>
     | null
-    | Promise<Partial<IState> | null>
+    | Promise<TRIslandSetState<IState>>
     | ((state: IState) => TRIslandSetState<IState>)
     | Array<TRIslandSetState<IState>>
 );
