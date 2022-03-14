@@ -1249,7 +1249,7 @@ This is an example of how to use partials in RIsland. It shows a checkbox and wh
 
 ### `comma-separated-events.html`
 
-This is an example which shows the usage of comma separated event names in the delegations. The output is shown on the console, so you need the Developer Tools of the browser to be open.
+This is an example which shows the usage of comma separated event names in the delegations. The output is shown in the console, so you need the Developer Tools of the browser to be open.
 
 ### `mousemove-throttled.html`
 
@@ -1439,9 +1439,9 @@ This leads to the problem, that [deepmerge](https://github.com/TehShrike/deepmer
 
 What happens here is that `foo` gets a custom merge function, which omits all keys with a value of `undefined` on both objects.
 
-### Use [`pairwise()`](https://rxjs.dev/api/operators/pairwise) in RxJS for Diffing
+### Use [`pairwise()`](https://rxjs.dev/api/operators/pairwise), [`distinctUntilChanged()`](https://rxjs.dev/api/operators/distinctUntilChanged) or [`bufferCount()`](https://rxjs.dev/api/operators/bufferCount) in RxJS for Diffing
 
-If working with libraries which follow a state pattern it is very often useful to also compare an Observable with its former value. This can be done very easily with the [`pairwise()`](https://rxjs.dev/api/operators/pairwise) operator.
+If working with libraries which follow a state pattern it is very often useful to also compare an Observable with its former value. This can be done very easily with the [`pairwise()`](https://rxjs.dev/api/operators/pairwise) operator. (You can also use the [`distinctUntilChanged()`](https://rxjs.dev/api/operators/distinctUntilChanged) operator, optionally with a `comparator` or the [`bufferCount()`](https://rxjs.dev/api/operators/bufferCount) operator with a `bufferSize` of `2`.)
 
 Example:
 
