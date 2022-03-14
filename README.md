@@ -62,6 +62,8 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader) or - since Webpack 5 - the [Asset Modules](https://webpack.js.org/guides/asset-modules/).
 - Can be combined with other frameworks, like [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, to make more sophisticated scenarios possible. This way several instances of RIsland can also intercommunicate and exchange states.
+- Completely unit tested with Jest to provide reliable code and future changes without unwanted side effects.
+- XSS attacks are prevented by [squirrelly](https://github.com/squirrellyjs/squirrelly). See [The safe flag](https://squirrelly.js.org/docs/syntax/filters/#the-safe-flag).
 
 ---
 
@@ -87,13 +89,13 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - [throttle-debounce](https://github.com/niksy/throttle-debounce) - throttles method invocations by a given amount of milliseconds
 - [raf-throttle](https://github.com/wuct/raf-throttle) - throttles method invocations by request animation frame
 
-Feel free to check the package.json, if you want to take a further look into the used technologies.
+Feel free to check the `package.json`, if you want to take a further look into the used technologies.
 
 ---
 
 ## <a name="installation"></a> Installation
 
-After all these warnings, i hope the dear reader of this page is not too scared. It is time to get our hands dirty and dive into the code.
+It is time to get our hands dirty and dive into the code.
 
 The easiest scenario is to copy the file `dist/risland.iife.min.js` into your static project and add a `script` tag to the `head` or `body` of your HTML:
 
@@ -946,6 +948,44 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 
 The `partials` config object consists of keys and - like the `template` config - `string`s or `script` tag DOM elements (use `type="text/html"` to activate syntax highlighting in editors). The data will be registered in [squirrelly](https://github.com/squirrellyjs/squirrelly). See [Partials and Template Inheritance](https://squirrelly.js.org/docs/syntax/partials-layouts/) for more information on how to use partials in [squirrelly](https://github.com/squirrellyjs/squirrelly).
 
+Example:
+
+```html
+<div id="island"></div>
+
+<script type="text/html" id="squirrelly">
+    <div class="island">
+        <input class="island__checkbox" type="checkbox" />
+        {{@include('checked', { checked: state.checked })/}}
+    </div>
+</script>
+
+<script type="text/html" id="squirrelly-checked">
+    <p>{{@if(partialState.checked)}}is checked{{#else}}is not checked{{/if}}</p>
+</script>
+
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new RIsland({
+            $element: document.getElementById('island'),
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, $closest, state, setState) {
+                        setState({ checked: $closest.checked });
+                    }
+                }
+            },
+            initialState: { checked: false },
+            partials: { checked: document.getElementById('squirrelly-checked') },
+            template: document.getElementById('squirrelly')
+        });
+    });
+</script>
+```
+
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** The namespace inside a partial is not `state`, but `partialState`. The different naming is necessary to avoid the assumption the namespace in the partial provides the full state. Always keep in mind that the `partialState` provided to the partial is only what has been provided to the native `@include` helper.
+
 ### `shouldUpdate`
 
 ```ts
@@ -1209,7 +1249,7 @@ This is an example of how to use partials in RIsland. It shows a checkbox and wh
 
 ### `comma-separated-events.html`
 
-This is an example which shows the usage of comma separated event names in the delegations.
+This is an example which shows the usage of comma separated event names in the delegations. The output is shown on the console, so you need the Developer Tools of the browser to be open.
 
 ### `mousemove-throttled.html`
 
