@@ -1,8 +1,12 @@
-# <img src="assets/risland.png" alt="RIsland logo" width="147" height="90"> RIsland.js
+# ![RIsland logo](assets/risland.png) RIsland.js
 
 Reactive JavaScript for everyone!
 
 Feel free to pronounce it "Are-Island" or "Reyeland"!
+
+[![RIsland.js on npmjs.com](https://img.shields.io/npm/v/risland.js?logo=npm&logoColor=white)](https://www.npmjs.com/package/risland.js)
+[![RIsland.js on GitHub](https://img.shields.io/github/package-json/v/StefanJelner/risland.js?logo=github&logoColor=white)](https://github.com/StefanJelner/risland.js)
+[![RIsland.js on Facebook](https://img.shields.io/badge/facebook-RIsland.js-blue?logo=facebook&logoColor=white)](https://www.facebook.com/RIslandjs-101398299167542/)
 
 ---
 
