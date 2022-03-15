@@ -1,6 +1,6 @@
 {
   "name": "risland.js",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A simple, lightweight approach for providing reactive islands on websites",
   "scripts": {
     "build": "rollup -c",
