@@ -388,7 +388,7 @@ Problem is, that such selectors are hard to read and can lead to unwanted behavi
 
 Events, like `resize`, `scroll` or `mousemove` can fire very fast and therefore cause a lot of unnecessary method invocations, because RIsland only renders each animation frame. The solution is to throttle events. This can be done in the `delegations`-object by adding the keyword `throttled` to an event. Additionally the amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
 
-Some events, like the keyup in a form input might need a debouncing, because something should only be done, after the user ended typing for a given amount of time. For such cases the keyword `debounced`can be used. The amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
+Some events, like the `keyup` in a form input might need a debouncing, because something should only be done, after the user ended typing for a given amount of time. For such cases the keyword `debounced`can be used. The amount of milliseconds can be provided. If no milliseconds are provided, the event gets debounced by request animation frame.
 
 Example:
 
@@ -1505,7 +1505,8 @@ document.addEventListener('DOMContentLoaded', () => {
 - [clone-deep](https://github.com/jonschlinkert/clone-deep) - a library which clones data (because in JavaScript arrays and objects are passed by reference, which can lead to unpredictable und ugly side effects, especially when a safely encapsulated state management should be provided.)
 - [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) - claims to be the fastest library for comparing two given sets of data
 - [throttle-debounce](https://github.com/niksy/throttle-debounce) - throttles method invocations by a given amount of milliseconds
-- [raf-funcs](https://github.com/jeromedecoster/raf-funcs) - throttles/debounces method invocations by request animation frame
+- [raf-throttle](https://github.com/wuct/raf-throttle) - throttles method invocations by request animation frame
+- [debounce-animation-frame](https://github.com/onestopjs/debounce-animation-frame) - debounces method invocations by request animation frame
 
 Feel free to check the `package.json`, if you want to take a further look into the used technologies.
 
