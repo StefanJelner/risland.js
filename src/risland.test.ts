@@ -95,6 +95,28 @@ describe('RIsland', () => {
         });
     });
 
+    it('should show a warning in the console if a debounced event name has malformed milliseconds', done => {
+        setDocument(getDefaultDocument());
+
+        new RIsland<{}>({
+            $element: document.getElementById('island')
+            , delegations: {
+                // we have to use any here, because we provoke a warning. in a Typescript context should should
+                // not be possible at all.
+                ['mousemove.debounced.foo' as any]: {
+                    '.foo': () => {}
+                }
+            }
+            , initialState: {}
+            , load: () => {
+                expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN003'));
+
+                done();
+            }
+            , template: '<div></div>'
+        });
+    });
+
     it('should show a warning in the console if initialized with an empty initialState', done => {
         setDocument(getDefaultDocument());
 
@@ -412,6 +434,74 @@ describe('RIsland', () => {
                 $element: $island
                 , delegations: {
                     'click.throttled.1000': {
+                        'button': (_, __, ___, setState) => {
+                            setState({ foo: 2 });
+                        }
+                    }
+                }
+                , initialState: { foo: 1 }
+                , load: () => {
+                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
+                }
+                , template: document.getElementById('squirrelly') as HTMLScriptElement
+                , update: state => {
+                    expect(state.foo).toBe(2);
+                    expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                    done();
+                }
+            });
+        }
+    );
+
+    it(
+        'should have the right state and show the right content after debounced (RAF) event delegation'
+        , done => {
+            setDocument(getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`
+            ));
+            const $island = document.getElementById('island');
+
+            new RIsland<{ foo: number; }>({
+                $element: $island
+                , delegations: {
+                    'click.debounced': {
+                        'button': (_, __, ___, setState) => {
+                            setState({ foo: 2 });
+                        }
+                    }
+                }
+                , initialState: { foo: 1 }
+                , load: () => {
+                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
+                }
+                , template: document.getElementById('squirrelly') as HTMLScriptElement
+                , update: state => {
+                    expect(state.foo).toBe(2);
+                    expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                    done();
+                }
+            });
+        }
+    );
+
+    it(
+        'should have the right state and show the right content after debounced (1 sec) event delegation'
+        , done => {
+            setDocument(getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`
+            ));
+            const $island = document.getElementById('island');
+
+            new RIsland<{ foo: number; }>({
+                $element: $island
+                , delegations: {
+                    'click.debounced.1000': {
                         'button': (_, __, ___, setState) => {
                             setState({ foo: 2 });
                         }

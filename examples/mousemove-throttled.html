@@ -10,9 +10,11 @@
 
         <script type="text/html" id="squirrelly">
             <div class="island">
-                unthrottled: {{state.unthrottled}}<br />
-                raf: {{state.throttledRaf}}<br />
-                1 second: {{state.throttled1s}}
+                normal: {{state.normal}}<br />
+                throttledRaf: {{state.throttledRaf}}<br />
+                debouncedRaf: {{state.debouncedRaf}}<br />
+                throttled 1 second: {{state.throttled1s}}<br />
+                debounced 1 second: {{state.debounced1s}}
             </div>
         </script>
 
@@ -35,12 +37,22 @@
                     , delegations: {
                         'mousemove': {
                             '.island': function(_, __, ___, setState) {
-                                setState(function(state) { return { unthrottled: state.unthrottled + 1 }; });
+                                setState(function(state) { return { normal: state.normal + 1 }; });
+                            }
+                        }
+                        , 'mousemove.debounced': {
+                            '.island': function(_, __, ___, setState) {
+                                setState(function(state) { return { debouncedRaf: state.debouncedRaf + 1 }; });
                             }
                         }
                         , 'mousemove.throttled': {
                             '.island': function(_, __, ___, setState) {
                                 setState(function(state) { return { throttledRaf: state.throttledRaf + 1 }; });
+                            }
+                        }
+                        , 'mousemove.debounced.1000': {
+                            '.island': function(_, __, ___, setState) {
+                                setState(function(state) { return { debounced1s: state.debounced1s + 1 }; });
                             }
                         }
                         , 'mousemove.throttled.1000': {
@@ -50,9 +62,11 @@
                         }
                     }
                     , initialState: {
-                        throttled1s: 0
-                        , throttledRaf: 0
-                        , unthrottled: 0
+                        debounced1s: 0,
+                        debouncedRaf: 0,
+                        normal: 0,
+                        throttled1s: 0,
+                        throttledRaf: 0
                     }
                     , load: function() { console.log('load'); }
                     , template: document.getElementById('squirrelly')

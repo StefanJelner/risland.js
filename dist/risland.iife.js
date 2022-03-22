@@ -2,7 +2,7 @@
 /**
  * @license
  * author: Stefan Jelner
- * risland.js v0.0.5
+ * risland.js v0.0.7
  * Released under the ISC license.
  * 
  * See https://github.com/StefanJelner/risland.js.git
@@ -406,6 +406,50 @@ var RIsland = (function () {
 
 
   var cloneDeep_1 = cloneDeep;
+
+  var dist = {};
+
+  var debounceAnimationFrame$1 = {};
+
+  Object.defineProperty(debounceAnimationFrame$1, "__esModule", {
+    value: true
+  });
+
+  var debounceAnimationFrame = function debounceAnimationFrame(fn) {
+    var timeout;
+
+    var debouncedFn = function debouncedFn() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      cancelAnimationFrame(timeout);
+      return new Promise(function (resolve) {
+        timeout = requestAnimationFrame(function () {
+          var result = fn.apply(void 0, args);
+          resolve(result);
+        });
+      });
+    };
+
+    return debouncedFn;
+  };
+
+  debounceAnimationFrame$1["default"] = debounceAnimationFrame;
+
+  var __importDefault = commonjsGlobal && commonjsGlobal.__importDefault || function (mod) {
+    return mod && mod.__esModule ? mod : {
+      "default": mod
+    };
+  };
+
+  Object.defineProperty(dist, "__esModule", {
+    value: true
+  });
+
+  var debounceAnimationFrame_1 = __importDefault(debounceAnimationFrame$1);
+
+  var _default = dist["default"] = debounceAnimationFrame_1["default"];
 
   var isMergeableObject = function isMergeableObject(value) {
     return isNonNullObject(value) && !isSpecial(value);
@@ -2019,7 +2063,7 @@ var RIsland = (function () {
     return callback === undefined ? throttle(delay, atBegin, false) : throttle(delay, callback, atBegin !== false);
   }
 
-  cjs.debounce = debounce;
+  var debounce_1 = cjs.debounce = debounce;
   var throttle_1 = cjs.throttle = throttle;
 
   var RIsland = function () {
@@ -2120,6 +2164,14 @@ var RIsland = (function () {
               _this._delegationFuncs[funcName].func = throttle_1(throttling.ms, _this._delegationFuncs[funcName].func);
             } else {
               _this._delegationFuncs[funcName].func = rafThrottle_1(_this._delegationFuncs[funcName].func);
+            }
+          }
+
+          if (throttling.debounced === true) {
+            if ('ms' in throttling) {
+              _this._delegationFuncs[funcName].func = debounce_1(throttling.ms, _this._delegationFuncs[funcName].func);
+            } else {
+              _this._delegationFuncs[funcName].func = _default(_this._delegationFuncs[funcName].func);
             }
           }
 
@@ -2294,34 +2346,33 @@ var RIsland = (function () {
     };
 
     RIsland.prototype._getThrottling = function (combinedEventName) {
+      var _a, _b;
+
       var chunks = combinedEventName.split(/\./g);
       var eventName = chunks[0];
+      var dflt = {
+        debounced: false,
+        eventName: eventName,
+        throttled: false
+      };
 
-      if (chunks.length > 1 && chunks[1] === 'throttled') {
+      if (chunks.length > 1 && ['throttled', 'debounced'].indexOf(chunks[1]) !== -1) {
         if (chunks.length === 3) {
           var ms = parseInt(chunks[2], 10);
 
           if (!isNaN(ms)) {
-            return {
-              eventName: eventName,
-              ms: ms,
-              throttled: true
-            };
+            return _assign(_assign({}, dflt), (_a = {
+              ms: ms
+            }, _a[chunks[1]] = true, _a));
           } else {
             this._warnings = this._warnings.concat("WARN003: event name \"".concat(combinedEventName, "\" is malformed. The milliseconds \"").concat(chunks[2], "\" are not a valid number. falling back to request animation frame."));
           }
         }
 
-        return {
-          eventName: eventName,
-          throttled: true
-        };
+        return _assign(_assign({}, dflt), (_b = {}, _b[chunks[1]] = true, _b));
       }
 
-      return {
-        eventName: eventName,
-        throttled: false
-      };
+      return dflt;
     };
 
     RIsland.prototype._loadOrUpdate = function () {

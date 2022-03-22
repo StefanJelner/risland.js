@@ -1,4 +1,5 @@
 import cloneDeep from 'clone-deep';
+import debounceAnimationFrame from 'debounce-animation-frame';
 import deepmerge from 'deepmerge';
 import equal from 'fast-deep-equal';
 import { isPlainObject } from 'is-plain-object';
@@ -7,7 +8,7 @@ import rafThrottle from 'raf-throttle';
 import * as Sqrl from 'squirrelly';
 import { TemplateFunction } from 'squirrelly/dist/types/compile';
 import { SqrlConfig } from 'squirrelly/dist/types/config';
-import { throttle } from 'throttle-debounce';
+import { debounce, throttle } from 'throttle-debounce';
 
 /**
  * # RIsland
@@ -202,6 +203,21 @@ export default class RIsland<IState extends Record<string, any>> {
                     } else {
                         // throttling by request animation frame.
                         this._delegationFuncs[funcName].func = rafThrottle(this._delegationFuncs[funcName].func);
+                    }
+                }
+
+                if (throttling.debounced === true) {
+                    if ('ms' in throttling) {
+                        // conventional debouncing.
+                        this._delegationFuncs[funcName].func = debounce(
+                            throttling.ms
+                            , this._delegationFuncs[funcName].func
+                        );
+                    } else {
+                        // debouncing by request animation frame.
+                        this._delegationFuncs[funcName].func = debounceAnimationFrame(
+                            this._delegationFuncs[funcName].func
+                        );
                     }
                 }
 
@@ -485,40 +501,45 @@ export default class RIsland<IState extends Record<string, any>> {
     }
 
     /**
-     * Tries to determine, whether a given eventName contains throttling information. The syntax is:
+     * Tries to determine, whether a given eventName contains throttling/debouncing information. The syntax is:
      * 
      * eventName[.throttled[.ms]]
+     * eventName[.debounced[.ms]]
      * 
      * The eventName is a valid event name like "click" or "mouseover".
-     * "throttled" is the optional literal keyword.
-     * ms are the optional milliseconds of throttling.
+     * "throttled" or "debounced" is the optional literal keyword.
+     * ms are the optional milliseconds of throttling/debouncing.
      * 
      * Examples:
      * 
      * mousemove
      * mousemove.throttled
      * mousemove.throttled.250
+     * keyup.debounced
+     * keyup.debounced.1000
      * 
-     * If no ms value is given the throttling will be done with the request animation frame.
+     * If no ms value is given the throttling/debouncing will be done with the request animation frame.
      * 
-     * @param eventName event name with optional throttling information
-     * @returns parsed throttling object
+     * @param eventName event name with optional throttling/debouncing information
+     * @returns parsed throttling/debouncing object
      */
     private _getThrottling(combinedEventName: string): IRIslandThrottling {
         const chunks = combinedEventName.split(/\./g) as (
             [TRIslandEventNames]
-            | [TRIslandEventNames, 'throttled']
-            | [TRIslandEventNames, 'throttled', `${number}`]
+            | [TRIslandEventNames, 'throttled' | 'debounced']
+            | [TRIslandEventNames, 'throttled' | 'debounced', `${number}`]
         );
         const eventName = chunks[0];
+        // default: not throttled/debounced.
+        const dflt = { debounced: false, eventName, throttled: false };
 
-        if (chunks.length > 1 && chunks[1] === 'throttled') {
-            // if it is throttled with milliseconds.
+        if (chunks.length > 1 && ['throttled', 'debounced'].indexOf(chunks[1]) !== -1) {
+            // if it is throttled/debounced with milliseconds.
             if (chunks.length === 3) {
                 const ms = parseInt(chunks[2], 10);
 
                 if (!isNaN(ms)) {
-                    return { eventName, ms, throttled: true };
+                    return { ...dflt, ms, [chunks[1]]: true };
                 } else {
                     this._warnings = this._warnings.concat(
                         `WARN003: event name "${
@@ -530,12 +551,12 @@ export default class RIsland<IState extends Record<string, any>> {
 				}
             }
 
-            // if it is only throttled.
-            return { eventName, throttled: true };
+            // if it is only throttled/debounced.
+            return { ...dflt, [chunks[1]]: true };
         }
 
-        // if it is not throttled.
-        return { eventName, throttled: false };
+        // return default.
+        return dflt;
     }
 
     /**
@@ -557,6 +578,8 @@ export type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' |
 
 export type TRIslandEventNamesThrottled = (
     TRIslandEventNames
+    | `${TRIslandEventNames}.debounced`
+    | `${TRIslandEventNames}.debounced.${number}`
     | `${TRIslandEventNames}.throttled`
     | `${TRIslandEventNames}.throttled.${number}`
 );
@@ -603,6 +626,7 @@ export type TRIslandSetState<IState extends Record<string, any>> = (
 );
 
 export interface IRIslandThrottling {
+    debounced: boolean;
     eventName: TRIslandEventNames;
     ms?: number;
     throttled: boolean;

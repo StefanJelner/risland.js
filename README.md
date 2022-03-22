@@ -15,13 +15,12 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Introduction](#introduction)
 - [Pros](#pros)
 - [Cons](#cons)
-- [Technologies](#technologies)
 - [Installation](#installation)
 - [Basic usage](#basic-usage)
 - [`script` tag `type="text/html"`](#script-tag)
 - [Bundlers and template files](#bundlers-template)
 - [Event delegation](#event-delegation)
-- [Event throttling](#event-throttling)
+- [Event throttling/debouncing](#event-throttling-debouncing)
 - [Complex Event Delegation](#complex-event-delegation)
 - [State](#state)
 - [Why cloning?](#why-cloning)
@@ -34,6 +33,8 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Methods](#methods)
 - [Examples](#examples)
 - [Hints](#hints)
+- [Technologies](#technologies)
+- [Alternatives](#alternatives)
 - [Final thoughts](#final-thoughts)
 - [License](#license)
 
@@ -57,12 +58,12 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - The IIFE bundle can be used out of the box. No building necessary. Put it in a script-tag and start writing code.
 - Simple, yet powerful. (See [Examples](#examples))
 - Easy to learn. RIsland is no rocket science!
-- No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling)
+- No featuritis! It does, what it does! (templating, event handling, state management, rendering and throttling/debouncing)
 - Reactive pattern (with a safely encapsulated, immutable state pattern well known from other libraries).
 - Clearer separation of concerns (logic, data, representation, events, HTML, CSS, JS)
 - Uses event delegation for making event handling much simpler and faster. (It is not necessary to add event listeners again and again.)
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
-- Gives the option to use event throttling (milliseconds or request animation frame) to optimize the application.
+- Gives the option to use event throttling/debouncing (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader) or - since Webpack 5 - the [Asset Modules](https://webpack.js.org/guides/asset-modules/).
 - Can be combined with other frameworks, like [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, to make more sophisticated scenarios possible. This way several instances of RIsland can also intercommunicate and exchange states.
@@ -79,21 +80,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 > <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** In case an update should be done, RIsland always renders the complete [squirrelly](https://github.com/squirrellyjs/squirrelly) template and then does the DOM morphing. If you have a big template and need to do something fast, like f.ex. a scroll spy (`scroll`) or dragging (`mousemove`), then RIsland might not be fast enough, but you need a library with sub-components in which you can put parts of the code which need to be fast. Consider using a fully featured component library, like f.ex. [React](https://github.com/facebook/react).
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
-- This library only takes care of templating, event handling, state management, rendering and throttling. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
-
----
-
-## <a name="technologies"></a> Technologies
-
-- [morphdom](https://github.com/patrick-steele-idem/morphdom) - is a very nice library which can morph one DOM state into the other.
-- [squirrelly](https://github.com/squirrellyjs/squirrelly) - is a tiny and fast templating engine.
-- [deepmerge](https://github.com/TehShrike/deepmerge) - a library which can merge two or more objects deeply.
-- [clone-deep](https://github.com/jonschlinkert/clone-deep) - a library which clones data (because in JavaScript arrays and objects are passed by reference, which can lead to unpredictable und ugly side effects, especially when a safely encapsulated state management should be provided.)
-- [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) - claims to be the fastest library for comparing two given sets of data
-- [throttle-debounce](https://github.com/niksy/throttle-debounce) - throttles method invocations by a given amount of milliseconds
-- [raf-throttle](https://github.com/wuct/raf-throttle) - throttles method invocations by request animation frame
-
-Feel free to check the `package.json`, if you want to take a further look into the used technologies.
+- This library only takes care of templating, event handling, state management, rendering and throttling/debouncing. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
 
 ---
 
@@ -397,9 +384,11 @@ Problem is, that such selectors are hard to read and can lead to unwanted behavi
 
 ---
 
-## <a name="event-throttling"></a> Event throttling
+## <a name="event-throttling-debouncing"></a> Event throttling/debouncing
 
 Events, like `resize`, `scroll` or `mousemove` can fire very fast and therefore cause a lot of unnecessary method invocations, because RIsland only renders each animation frame. The solution is to throttle events. This can be done in the `delegations`-object by adding the keyword `throttled` to an event. Additionally the amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
+
+Some events, like the keyup in a form input might need a debouncing, because something should only be done, after the user ended typing for a given amount of time. For such cases the keyword `debounced`can be used. The amount of milliseconds can be provided. If no milliseconds are provided, the event gets throttled by request animation frame.
 
 Example:
 
@@ -408,9 +397,11 @@ Example:
 
 <script type="text/html" id="squirrelly">
     <div class="island">
-        unthrottled: {{state.unthrottled}}<br />
-        raf: {{state.throttledRaf}}<br />
-        1 second: {{state.throttled1s}}
+        normal: {{state.normal}}<br />
+        throttledRaf: {{state.throttledRaf}}<br />
+        debouncedRaf: {{state.debouncedRaf}}<br />
+        throttled 1 second: {{state.throttled1s}}<br />
+        debounced 1 second: {{state.debounced1s}}
     </div>
 </script>
 
@@ -423,7 +414,14 @@ Example:
                 'mousemove': {
                     '.island': function(event, $closest, state, setState) {
                         setState(function(state2) {
-                            return { unthrottled: state2.unthrottled + 1 };
+                            return { normal: state2.normal + 1 };
+                        });
+                    }
+                },
+                'mousemove.debounced': {
+                    '.island': function(event, $closest, state, setState) {
+                        setState(function(state2) {
+                            return { debouncedRaf: state2.debouncedRaf + 1 };
                         });
                     }
                 },
@@ -431,6 +429,13 @@ Example:
                     '.island': function(event, $closest, state, setState) {
                         setState(function(state2) {
                             return { throttledRaf: state2.throttledRaf + 1 };
+                        });
+                    }
+                },
+                'mousemove.debounced.1000': {
+                    '.island': function(event, $closest, state, setState) {
+                        setState(function(state2) {
+                            return { debounced1s: state2.debounced1s + 1 };
                         });
                     }
                 },
@@ -443,9 +448,11 @@ Example:
                 }
             },
             initialState: {
+                debounced1s: 0,
+                debouncedRaf: 0,
+                normal: 0,
                 throttled1s: 0,
-                throttledRaf: 0,
-                unthrottled: 0
+                throttledRaf: 0
             },
             template: document.getElementById('squirrelly')
         });
@@ -456,30 +463,33 @@ Example:
 The syntax for the event names is:
 
 ```
+eventName[.debounced[.ms]]
 eventName[.throttled[.ms]]
 ```
 
 Examples:
 
 ```
+keyup
+keyup.debounced
+keyup.debounced.1000
 mousemove
 mousemove.throttled
 mousemove.throttled.1000
 scroll.throttled.250
 resize.throttled
-focus
 ```
 
 ---
 
 ## <a name="complex-event-delegation"></a> Complex Event Delegation
 
-It is possible to use comma separated event names (also with throttling) and combined CSS selectors, like:
+It is possible to use comma separated event names (also with throttling/debouncing) and combined CSS selectors, like:
 
 ```js
 {
     delegations: {
-        'mouseover, mouseout, mousemove.throttled.1000': {
+        'mouseover, mouseout, mousemove.throttled.1000, keyup.debounced.1000': {
             '.foo, .bar, input[type="checkbox"], div.baz > div.quox:first-child': function(
                 event,
                 $closest,
@@ -777,6 +787,8 @@ type TRIslandEventNames = keyof GlobalEventHandlersEventMap | 'loadend' | 'unloa
 
 export type TRIslandEventNamesThrottled = (
     TRIslandEventNames
+    | `${TRIslandEventNames}.debounced`
+    | `${TRIslandEventNames}.debounced.${number}`
     | `${TRIslandEventNames}.throttled`
     | `${TRIslandEventNames}.throttled.${number}`
 );
@@ -804,7 +816,7 @@ interface IRIslandConfig<IState extends Record<string, any>> {
 }
 ```
 
-The delegations config object consists of (comma separated) event names (plus throttling options) and sub objects, which consist of (combined) CSS selectors and a callback function. Whenever an event occurs, which matches one of the configured event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation), [Event throttling](#event-throttling) and [Complex Event Delegation](#complex-event-delegation).
+The delegations config object consists of (comma separated) event names (plus throttling/debouncing options) and sub objects, which consist of (combined) CSS selectors and a callback function. Whenever an event occurs, which matches one of the configured event names, RIsland checks if the target (or a close ancestor) of that event matches one of the CSS selectors and if so, the callback becomes invoked. See [Event delegation](#event-delegation), [Event throttling/debouncing](#event-throttling-debouncing) and [Complex Event Delegation](#complex-event-delegation).
 
 Here is a list of the arguments of the callback function:
 
@@ -1257,7 +1269,7 @@ This is an example which shows the usage of comma separated event names in the d
 
 ### `mousemove-throttled.html`
 
-This is an example which shows the event throttling options. Constantly move the mouse over the text box to see the throttling. Interestingly enough it seems that the `mousemove` event already gets throttled by request animation frame (at least in Chrome and Firefox).
+This is an example which shows the event throttling/debouncing options. Constantly move the mouse over the text box to see the throttling/debouncing. Interestingly enough it seems that the `mousemove` event already gets throttled by request animation frame (at least in Chrome and Firefox).
 
 ### `table-sort-filter.html`
 
@@ -1485,6 +1497,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ---
 
+## <a name="technologies"></a> Technologies
+
+- [morphdom](https://github.com/patrick-steele-idem/morphdom) - is a very nice library which can morph one DOM state into the other.
+- [squirrelly](https://github.com/squirrellyjs/squirrelly) - is a tiny and fast templating engine.
+- [deepmerge](https://github.com/TehShrike/deepmerge) - a library which can merge two or more objects deeply.
+- [clone-deep](https://github.com/jonschlinkert/clone-deep) - a library which clones data (because in JavaScript arrays and objects are passed by reference, which can lead to unpredictable und ugly side effects, especially when a safely encapsulated state management should be provided.)
+- [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) - claims to be the fastest library for comparing two given sets of data
+- [throttle-debounce](https://github.com/niksy/throttle-debounce) - throttles method invocations by a given amount of milliseconds
+- [raf-funcs](https://github.com/jeromedecoster/raf-funcs) - throttles/debounces method invocations by request animation frame
+
+Feel free to check the `package.json`, if you want to take a further look into the used technologies.
+
+---
+
+## <a name="alternatives"></a> Alternatives
+
+RIsland.js is not a new, groundbreaking, unique invention, but it came out of a daily need. Because others had the same daily needs, there are other libraries out there who have a similar approach. If RIsland.js is not exactly what you need or what you were looking for, check out some of these libraries:
+
+- [Reef](https://github.com/cferdinandi/reef)
+- [Sinuous](https://github.com/luwes/sinuous)
+- [S.js](https://github.com/adamhaile/S)
+
+---
+
 ## <a name="final-thoughts"></a> Final thoughts
 
 First of all a big thanks to the people who have written the fantastic libraries RIsland is heavily relying on. Without their work RIsland wouldn't even exist!
@@ -1497,4 +1533,4 @@ And finally: Thanks to everyone who had the patience to read this document. Hope
 
 ## <a name="license"></a> License
 
-This software is offered and distributed under the ISC license. See `LICENSE.txt` and [Wikipedia](https://en.wikipedia.org/wiki/ISC_license) for more information.
+This software is brought to you with **love** from Dortmund and offered and distributed under the ISC license. See `LICENSE.txt` and [Wikipedia](https://en.wikipedia.org/wiki/ISC_license) for more information.
