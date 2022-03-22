@@ -2,7 +2,7 @@
 /**
  * @license
  * author: Stefan Jelner
- * risland.js v0.0.7
+ * risland.js v0.0.8
  * Released under the ISC license.
  * 
  * See https://github.com/StefanJelner/risland.js.git
