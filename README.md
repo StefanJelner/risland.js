@@ -1534,4 +1534,4 @@ And finally: Thanks to everyone who had the patience to read this document. Hope
 
 ## <a name="license"></a> License
 
-This software is brought to you with **love** from Dortmund and offered and distributed under the ISC license. See `LICENSE.txt` and [Wikipedia](https://en.wikipedia.org/wiki/ISC_license) for more information.
+This software is brought to you with :heart: **love** :heart: from Dortmund and offered and distributed under the ISC license. See `LICENSE.txt` and [Wikipedia](https://en.wikipedia.org/wiki/ISC_license) for more information.

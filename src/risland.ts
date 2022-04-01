@@ -49,7 +49,7 @@ export default class RIsland<IState extends Record<string, any>> {
         , nativeHelpers: {}
         , nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS
         , partials: {}
-        , shouldUpdate: (state: IState, nextState: IState) => !equal(state, nextState)
+        , shouldUpdate: (state: Readonly<IState>, nextState: Readonly<IState>) => !equal(state, nextState)
         , squirrelly: Sqrl.defaultConfig
         , template: this._empty
         , unload: () => {}
@@ -597,7 +597,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
         , Record<string, (
             event: Event
             , $closest: Element
-            , state: IState
+            , state: Readonly<IState>
             , setState: RIsland<IState>['_setState']
         ) => void>
     >>;
@@ -605,16 +605,16 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     filters: Record<string, Parameters<typeof Sqrl['filters']['define']>[1]>;
     helpers: Record<string, Parameters<typeof Sqrl['helpers']['define']>[1]>;
     initialState: IState;
-    load: (state: IState, setState: RIsland<IState>['_setState']) => void;
+    load: (state: Readonly<IState>, setState: RIsland<IState>['_setState']) => void;
     morphdom: Parameters<typeof morphdom>[2];
     nativeHelpers: Record<string, Parameters<typeof Sqrl['nativeHelpers']['define']>[1]>;
     nonBubblingEvents: Array<TRIslandEventNames>;
     partials: Record<string, string | HTMLScriptElement>;
-    shouldUpdate: (state: IState, nextState: IState) => boolean;
+    shouldUpdate: (state: Readonly<IState>, nextState: Readonly<IState>) => boolean;
     squirrelly: Partial<SqrlConfig>;
     template: string | HTMLScriptElement;
-    unload: (state: IState) => void;
-    update: (state: IState, setState: RIsland<IState>['_setState']) => void;
+    unload: (state: Readonly<IState>) => void;
+    update: (state: Readonly<IState>, setState: RIsland<IState>['_setState']) => void;
 }
 
 export type TRIslandSetState<IState extends Record<string, any>> = (
