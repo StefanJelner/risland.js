@@ -26,6 +26,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 - [Why cloning?](#why-cloning)
 - [`setState()`](#setstate)
 - [Common state and `setState()` pitfalls](#state-pitfalls)
+- [Usage as a Web Component](#web-component)
 - [Lifecycles](#lifecycles)
 - [Options](#options)
 - [Advanced - dangerous - options](#advanced-options)
@@ -44,7 +45,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
-The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
+The most simple RIsland scenario is to load the IIFE bundle (&lt;33KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
 
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
@@ -54,7 +55,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 
 ## <a name="pros"></a> Pros
 
-- Small in filesize. (&lt;30KB minified IIFE bundle)
+- Small in filesize. (&lt;33KB minified IIFE bundle)
 - The IIFE bundle can be used out of the box. No building necessary. Put it in a script-tag and start writing code.
 - Simple, yet powerful. (See [Examples](#examples))
 - Easy to learn. RIsland is no rocket science!
@@ -65,6 +66,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be placed in `script` tags with `type="text/html"`. (Unlike in template strings, HTML syntax highlighting still works in editors.) Besides [squirrelly](https://github.com/squirrellyjs/squirrelly) partials can be provided for modularization and reusability.
 - Gives the option to use event throttling/debouncing (milliseconds or request animation frame) to optimize the application.
 - Every aspect is configurable (even the underlying libraries, like [deepmerge](https://github.com/TehShrike/deepmerge), [squirrelly](https://github.com/squirrellyjs/squirrelly) and [morphdom](https://github.com/patrick-steele-idem/morphdom)).
+- Can be used as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components).
 - Can be used in more sophisticated stacks (ES6 or [TypeScript](https://github.com/microsoft/TypeScript)) together with bundlers and the [squirrelly](https://github.com/squirrellyjs/squirrelly) templates can be included with f.ex. webpacks [raw-loader](https://github.com/webpack-contrib/raw-loader) or - since Webpack 5 - the [Asset Modules](https://webpack.js.org/guides/asset-modules/).
 - Can be combined with other frameworks, like [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, to make more sophisticated scenarios possible. This way several instances of RIsland can also intercommunicate and exchange states.
 - Completely unit tested with Jest to provide reliable code and future changes without unwanted side effects.
@@ -728,6 +730,10 @@ This works, because in the callback function the `state2` always contains the mo
 
 ---
 
+## <a name="web-component"></a> Usage as a Web Component
+
+---
+
 ## <a name="lifecycles"></a> Lifecycles
 
 "Lifecycle" means a specific action taking place in the RIsland instance. Like in a natural organism some lifecycles happen only once, like birth (constructor) and death (`unload`) and some happen cyclic, like sleeping, food intake and digestion (`shouldUpdate`, `render` and `update` triggered by a state change).
@@ -1186,7 +1192,7 @@ The only static property which RIsland offers is `NON_BUBBLING_EVENTS`. It is a 
 public unload(): void;
 ```
 
-The only method which an RIsland instance offers is `unload`. Everything else is done through the configuration object in the constructor. `unload` removes all event listeners from the element which gets managed by RIsland, empties its HTML and calls the configured `unload` callback - if present - with the final state.
+One of the two methods which an RIsland instance offers is `unload`. Everything else is done through the configuration object in the constructor. `unload` removes all event listeners from the element which gets managed by RIsland, empties its HTML and calls the configured `unload` callback - if present - with the final state.
 
 ```html
 <div id="island"></div>
@@ -1219,6 +1225,16 @@ The only method which an RIsland instance offers is `unload`. Everything else is
         });
     });
 </script>
+```
+
+### `createWebComponent`
+
+```ts
+public static createWebComponent<IState>(
+    tagName: `${string}-${string}`,
+    attributes: Array<keyof IState & string>,
+    config: Partial<Omit<IRIslandConfig<IState>, '$element'>>
+): void
 ```
 
 ---

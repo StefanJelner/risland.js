@@ -1,3 +1,4 @@
+import '@webcomponents/custom-elements/src/native-shim';
 import cloneDeep from 'clone-deep';
 import debounceAnimationFrame from 'debounce-animation-frame';
 import deepmerge from 'deepmerge';
@@ -18,6 +19,108 @@ import { debounce, throttle } from 'throttle-debounce';
  * See the README.md file for further documentation.
  */
 export default class RIsland<IState extends Record<string, any>> {
+    /**
+     * Helps to create a web component containing an RIsland instance.
+     * 
+     * @param tagName the name of the custom tag (separated with at least one dash)
+     * @param attributes a list of attribute names which should be observed for changes
+     * @param config the configuration (without $element)
+     */
+    public static createWebComponent<IState>(
+        tagName: `${string}-${string}`
+        , attributes: Array<keyof IState & string>
+        , config: Partial<Omit<IRIslandConfig<IState>, '$element'>>
+    ): void {
+        window.customElements.define(
+            tagName
+            , class extends HTMLElement {
+                /**
+                 * List of attributes which have to be observed.
+                 */
+                public static get observedAttributes() { return attributes; }
+
+                private _$island: HTMLDivElement;
+                private _island: RIsland<IState>;
+                private _setState: RIsland<IState>['_setState'];
+
+                /**
+                 * Constructor
+                 */
+                constructor() {
+                    // super() is mandatory
+                    super();
+
+                    // creating shadow DOM and attaching our island to it
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    this._$island = document.createElement('div');
+                    shadow.appendChild(this._$island);
+                }
+
+                /**
+                 * Becomes called after the element has been connected and instantiates RIsland on the newly created
+                 * element.
+                 */
+                public connectedCallback(): void {
+                    // attaching RIsland instance to the island
+                    this._island = new RIsland<IState>({
+                        ...config
+                        , ...{
+                            $element: this._$island
+                            , initialState: deepmerge<IRIslandConfig<IState>['initialState']>(
+                                config.initialState
+                                , attributes.reduce((result, key) => {
+                                    const value = this.getAttribute(key);
+
+                                    if (value !== null && value !== '') {
+                                        return { ...result, [key]: this._parse(value) };
+                                    }
+
+                                    return result;
+                                }, {})
+                                , { clone: false, isMergeableObject: isPlainObject }
+                            )
+                            // we have to provide a load wrapper here to use setState later
+                            , load: (state: Readonly<IState>, setState: RIsland<IState>['_setState']) => {
+                                this._setState = setState;
+
+                                // if a load is provided in the config, call it here
+                                if ('load' in config) { config.load(state, setState); }
+                            }
+                        }
+                    });
+                }
+
+                /**
+                 * Becomes called after the element has been disconnected and unloads RIsland.
+                 */
+                public disconnectedCallback(): void { this._island.unload(); }
+
+                /**
+                 * Becomes called whenever an observed attribute is changed and sets the new state.
+                 */
+                public attributeChangedCallback(name: keyof IState, _, value: string): void {
+                    if ('_setState' in this && typeof this._setState === 'function') {
+                        this._setState({ [name]: this._parse(value) } as Partial<IState>);
+                    }
+                }
+
+                /**
+                 * Takes care of attribute values which might contain stringified JSON.
+                 * 
+                 * @param value a literal value or stringified JSON
+                 * @returns the literal value or parsed JSON
+                 */
+                private _parse(value: string): unknown {
+                    let parsed = value;
+
+                    try { parsed = JSON.parse(value); } catch(ex) {} // eslint-disable-line no-empty
+
+                    return parsed;
+                }
+            } as any
+        );
+    }
+
     // List of non-bubbling events, which need to have capture set to true.
     // See https://en.wikipedia.org/wiki/DOM_events#Events
     public static NON_BUBBLING_EVENTS: Array<TRIslandEventNames> = [
@@ -100,7 +203,7 @@ export default class RIsland<IState extends Record<string, any>> {
     /**
      * Constructor
      * 
-     * @param config the configuration 
+     * @param config the configuration
      */
     constructor(config: Partial<IRIslandConfig<IState>>) {
         this._config = deepmerge.all<IRIslandConfig<IState>>(

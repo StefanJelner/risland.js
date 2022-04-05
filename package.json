@@ -13,6 +13,7 @@
   "author": "Stefan Jelner",
   "license": "ISC",
   "dependencies": {
+    "@webcomponents/custom-elements": "^1.5.0",
     "clone-deep": "^4.0.1",
     "debounce-animation-frame": "^1.0.2",
     "deepmerge": "^4.2.2",

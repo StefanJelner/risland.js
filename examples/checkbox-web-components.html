@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>RIsland.js - Checkbox with a seconds counter example as a web component</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <checkbox-counter counter="100" foo='{"bar": ["baz100", "qux"]}'></checkbox-counter>
+
+        <script src="../dist/risland.iife.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                RIsland.createWebComponent('checkbox-counter', ['counter', 'foo'], {
+                    delegations: {
+                        'click': {
+                            '.island__checkbox': function(_, $closest, __, setState) {
+                                setState({ checked: $closest.checked });
+                            }
+                        }
+                    }
+                    , initialState: {
+                        checked: false
+                        , counter: null
+                        , foo: null
+                    }
+                    , load: function(state, setState) {
+                        var initial = +new Date();
+
+                        window.setInterval(function () {
+                            var $checkboxCounter = document.querySelector('checkbox-counter');
+
+                            if ($checkboxCounter !== null) {
+                                var counter = state.counter + Math.floor((+new Date() - initial) / 1000);
+
+                                $checkboxCounter.setAttribute('counter', counter);
+                                $checkboxCounter.setAttribute('foo', JSON.stringify({ bar: ['baz' + counter, 'qux'] }));
+                            }
+                        }, 1000);
+                    }
+                    , template: `<div class="island">
+                        <input class="island__checkbox" type="checkbox" />
+                        {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
+                        <p>{{state.counter}} second{{@if(state.counter !== 1)}}s{{/if}}</p>
+                        <p>{{state.foo.bar[0]}} {{state.foo.bar[1]}}</p>
+                    </div>`
+                });
+            });
+        </script>
+    </body>
+</html>
