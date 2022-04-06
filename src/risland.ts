@@ -113,6 +113,13 @@ export default class RIsland<IState extends Record<string, any>> {
                 private _parse(value: string): unknown {
                     let parsed = value;
 
+                    // if it is an integer
+                    if (/^[-+]?\d+(e[-+]?\d+)?$/i.test(parsed)) { return parseInt(parsed, 10); }
+
+                    // if it is a float
+                    if (/^[-+]?\d*\.\d+(e[-+]?\d+)?$/i.test(parsed)) { return parseFloat(parsed); }
+
+                    // finally try to parse JSON, if it is stringified JSON
                     try { parsed = JSON.parse(value); } catch(ex) {} // eslint-disable-line no-empty
 
                     return parsed;
@@ -152,7 +159,11 @@ export default class RIsland<IState extends Record<string, any>> {
         , nativeHelpers: {}
         , nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS
         , partials: {}
-        , shouldUpdate: (state: Readonly<IState>, nextState: Readonly<IState>) => !equal(state, nextState)
+        , shouldUpdate: (
+            state: Readonly<IState>
+            , nextState: Readonly<IState>
+            , deepEqual: typeof equal
+        ) => !deepEqual(state, nextState)
         , squirrelly: Sqrl.defaultConfig
         , template: this._empty
         , unload: () => {}
@@ -408,7 +419,7 @@ export default class RIsland<IState extends Record<string, any>> {
 
         const shouldUpdate = (
             this._config.shouldUpdate === this._initialConfig.shouldUpdate
-                ? this._config.shouldUpdate(this._state, tmpMergedState)
+                ? this._config.shouldUpdate(this._state, tmpMergedState, equal)
                 // we have to work with two clones here, otherwise it would be possible to brutally mutate the states.
                 : this._config.shouldUpdate(
                     cloneDeep(this._state)
@@ -419,6 +430,7 @@ export default class RIsland<IState extends Record<string, any>> {
                             ? tmpMergedState
                             : cloneDeep(tmpMergedState)
                     )
+                    , equal
                 )
         );
 
@@ -713,7 +725,7 @@ export interface IRIslandConfig<IState extends Record<string, any>> {
     nativeHelpers: Record<string, Parameters<typeof Sqrl['nativeHelpers']['define']>[1]>;
     nonBubblingEvents: Array<TRIslandEventNames>;
     partials: Record<string, string | HTMLScriptElement>;
-    shouldUpdate: (state: Readonly<IState>, nextState: Readonly<IState>) => boolean;
+    shouldUpdate: (state: Readonly<IState>, nextState: Readonly<IState>, deepEqual: typeof equal) => boolean;
     squirrelly: Partial<SqrlConfig>;
     template: string | HTMLScriptElement;
     unload: (state: Readonly<IState>) => void;

@@ -6,12 +6,12 @@
         <link rel="stylesheet" href="./styles.css" />
     </head>
     <body>
-        <checkbox-counter counter="100" foo='{"bar": ["baz100", "qux"]}'></checkbox-counter>
+        <checkbox-counter counter="100" foo='{"bar": ["baz100", "qux"]}' bar="9.23"></checkbox-counter>
 
         <script src="../dist/risland.iife.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                RIsland.createWebComponent('checkbox-counter', ['counter', 'foo'], {
+                RIsland.createWebComponent('checkbox-counter', ['counter', 'foo', 'bar'], {
                     delegations: {
                         'click': {
                             '.island__checkbox': function(_, $closest, __, setState) {
@@ -31,10 +31,13 @@
                             var $checkboxCounter = document.querySelector('checkbox-counter');
 
                             if ($checkboxCounter !== null) {
-                                var counter = state.counter + Math.floor((+new Date() - initial) / 1000);
+                                var counter = Math.floor((+new Date() - initial) / 1000);
 
-                                $checkboxCounter.setAttribute('counter', counter);
-                                $checkboxCounter.setAttribute('foo', JSON.stringify({ bar: ['baz' + counter, 'qux'] }));
+                                $checkboxCounter.setAttribute('counter', state.counter + counter);
+                                $checkboxCounter.setAttribute('foo', JSON.stringify({
+                                    bar: ['baz' + (state.counter + counter), 'qux']
+                                }));
+                                $checkboxCounter.setAttribute('bar', state.bar + (counter / 100));
                             }
                         }, 1000);
                     }
@@ -43,6 +46,7 @@
                         {{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}
                         <p>{{state.counter}} second{{@if(state.counter !== 1)}}s{{/if}}</p>
                         <p>{{state.foo.bar[0]}} {{state.foo.bar[1]}}</p>
+                        <p>{{state.bar}}</p>
                     </div>`
                 });
             });

@@ -45,7 +45,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
-The most simple RIsland scenario is to load the IIFE bundle (&lt;33KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
+The most simple RIsland scenario is to load the IIFE bundle (&lt;34KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
 
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
@@ -55,7 +55,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 
 ## <a name="pros"></a> Pros
 
-- Small in filesize. (&lt;33KB minified IIFE bundle)
+- Small in filesize. (&lt;34KB minified IIFE bundle)
 - The IIFE bundle can be used out of the box. No building necessary. Put it in a script-tag and start writing code.
 - Simple, yet powerful. (See [Examples](#examples))
 - Easy to learn. RIsland is no rocket science!
@@ -1012,11 +1012,11 @@ Example:
 
 ```ts
 interface IRIslandConfig<IState extends Record<string, any>> {
-    shouldUpdate: (state: IState, nextState: IState) => boolean;
+    shouldUpdate: (state: IState, nextState: IState, deepEqual: typeof equal) => boolean;
 }
 ```
 
-The `shouldUpdate` config callback is a function which takes two states as the arguments, the current state and the incoming state changes, and compares them, to finally decide, whether an update and rerendering should be done. By default this callback does a deep comparison of all data. If it is necessary to omit some parts of the data from the comparison, you can provide your own custom function.
+The `shouldUpdate` config callback is a function which takes two states as the first two arguments, the current state and the incoming state changes, and compares them, to finally decide, whether an update and rerendering should be done. By default this callback does a deep comparison of all data. If it is necessary to omit some parts of the data from the comparison, you can provide your own custom function.
 
 ```js
 {
@@ -1032,6 +1032,8 @@ The `shouldUpdate` config callback is a function which takes two states as the a
 ```
 
 In the above example only changes to `foo` or `baz` will lead to an update and rerendering, while changes to `bar` will be ignored.
+
+> <img src="assets/info.png" alt="Advice" width="50" height="60" align="left" /> **ADVICE!** The third parameter of the `shouldUpdate` config callback is a deep equal function, which can be used to do a deep comparison of two values. The provided method is from the third party library [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal). So if f.ex. you want to deeply compare two objects, but want to omit only one key, then omit the one key in both objects and then use this method.
 
 > <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** If you intentionally ignore data changes, you have to know what you are doing, otherwise it could lead to inconsistencies between the state and the intended representation. Only omit some data, if it is clear, that this data is not necessary for the represenation or the represenation already gets updated by something else.
 

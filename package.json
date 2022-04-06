@@ -1,6 +1,6 @@
 {
   "name": "risland.js",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A simple, lightweight approach for providing reactive islands on websites",
   "scripts": {
     "build": "rollup -c",
@@ -95,6 +95,11 @@
     "framework",
     "diffing",
     "deep",
-    "webpack"
+    "webpack",
+    "webcomponents",
+    "web",
+    "components",
+    "custom",
+    "elements"
   ]
 }

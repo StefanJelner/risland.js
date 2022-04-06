@@ -2,7 +2,7 @@
 /**
  * @license
  * author: Stefan Jelner
- * risland.js v0.0.10
+ * risland.js v0.0.11
  * Released under the ISC license.
  * 
  * See https://github.com/StefanJelner/risland.js.git
@@ -2174,8 +2174,8 @@ var RIsland = (function () {
         nativeHelpers: {},
         nonBubblingEvents: RIsland.NON_BUBBLING_EVENTS,
         partials: {},
-        shouldUpdate: function shouldUpdate(state, nextState) {
-          return !fastDeepEqual(state, nextState);
+        shouldUpdate: function shouldUpdate(state, nextState, deepEqual) {
+          return !deepEqual(state, nextState);
         },
         squirrelly: squirrelly_min$1.exports.defaultConfig,
         template: this._empty,
@@ -2346,6 +2346,14 @@ var RIsland = (function () {
         class_1.prototype._parse = function (value) {
           var parsed = value;
 
+          if (/^[-+]?\d+(e[-+]?\d+)?$/i.test(parsed)) {
+            return parseInt(parsed, 10);
+          }
+
+          if (/^[-+]?\d*\.\d+(e[-+]?\d+)?$/i.test(parsed)) {
+            return parseFloat(parsed);
+          }
+
           try {
             parsed = JSON.parse(value);
           } catch (ex) {}
@@ -2394,7 +2402,7 @@ var RIsland = (function () {
       }
 
       var tmpMergedState = 'customMerge' in this._config.deepmerge ? cjs$1(cloneDeep_1(this._state), tmpState, this._config.deepmerge) : cjs$1(this._state, tmpState, this._config.deepmerge);
-      var shouldUpdate = this._config.shouldUpdate === this._initialConfig.shouldUpdate ? this._config.shouldUpdate(this._state, tmpMergedState) : this._config.shouldUpdate(cloneDeep_1(this._state), 'customMerge' in this._config.deepmerge ? tmpMergedState : cloneDeep_1(tmpMergedState));
+      var shouldUpdate = this._config.shouldUpdate === this._initialConfig.shouldUpdate ? this._config.shouldUpdate(this._state, tmpMergedState, fastDeepEqual) : this._config.shouldUpdate(cloneDeep_1(this._state), 'customMerge' in this._config.deepmerge ? tmpMergedState : cloneDeep_1(tmpMergedState), fastDeepEqual);
       this._state = tmpMergedState;
 
       if (shouldUpdate === true) {
