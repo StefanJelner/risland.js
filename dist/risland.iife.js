@@ -146,355 +146,6 @@ var RIsland = (function () {
   	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
   }
 
-  var toString = Object.prototype.toString;
-
-  var kindOf = function kindOf(val) {
-    if (val === void 0) return 'undefined';
-    if (val === null) return 'null';
-
-    var type = _typeof(val);
-
-    if (type === 'boolean') return 'boolean';
-    if (type === 'string') return 'string';
-    if (type === 'number') return 'number';
-    if (type === 'symbol') return 'symbol';
-
-    if (type === 'function') {
-      return isGeneratorFn(val) ? 'generatorfunction' : 'function';
-    }
-
-    if (isArray(val)) return 'array';
-    if (isBuffer(val)) return 'buffer';
-    if (isArguments(val)) return 'arguments';
-    if (isDate(val)) return 'date';
-    if (isError(val)) return 'error';
-    if (isRegexp(val)) return 'regexp';
-
-    switch (ctorName(val)) {
-      case 'Symbol':
-        return 'symbol';
-
-      case 'Promise':
-        return 'promise';
-      // Set, Map, WeakSet, WeakMap
-
-      case 'WeakMap':
-        return 'weakmap';
-
-      case 'WeakSet':
-        return 'weakset';
-
-      case 'Map':
-        return 'map';
-
-      case 'Set':
-        return 'set';
-      // 8-bit typed arrays
-
-      case 'Int8Array':
-        return 'int8array';
-
-      case 'Uint8Array':
-        return 'uint8array';
-
-      case 'Uint8ClampedArray':
-        return 'uint8clampedarray';
-      // 16-bit typed arrays
-
-      case 'Int16Array':
-        return 'int16array';
-
-      case 'Uint16Array':
-        return 'uint16array';
-      // 32-bit typed arrays
-
-      case 'Int32Array':
-        return 'int32array';
-
-      case 'Uint32Array':
-        return 'uint32array';
-
-      case 'Float32Array':
-        return 'float32array';
-
-      case 'Float64Array':
-        return 'float64array';
-    }
-
-    if (isGeneratorObj(val)) {
-      return 'generator';
-    } // Non-plain objects
-
-
-    type = toString.call(val);
-
-    switch (type) {
-      case '[object Object]':
-        return 'object';
-      // iterators
-
-      case '[object Map Iterator]':
-        return 'mapiterator';
-
-      case '[object Set Iterator]':
-        return 'setiterator';
-
-      case '[object String Iterator]':
-        return 'stringiterator';
-
-      case '[object Array Iterator]':
-        return 'arrayiterator';
-    } // other
-
-
-    return type.slice(8, -1).toLowerCase().replace(/\s/g, '');
-  };
-
-  function ctorName(val) {
-    return typeof val.constructor === 'function' ? val.constructor.name : null;
-  }
-
-  function isArray(val) {
-    if (Array.isArray) return Array.isArray(val);
-    return val instanceof Array;
-  }
-
-  function isError(val) {
-    return val instanceof Error || typeof val.message === 'string' && val.constructor && typeof val.constructor.stackTraceLimit === 'number';
-  }
-
-  function isDate(val) {
-    if (val instanceof Date) return true;
-    return typeof val.toDateString === 'function' && typeof val.getDate === 'function' && typeof val.setDate === 'function';
-  }
-
-  function isRegexp(val) {
-    if (val instanceof RegExp) return true;
-    return typeof val.flags === 'string' && typeof val.ignoreCase === 'boolean' && typeof val.multiline === 'boolean' && typeof val.global === 'boolean';
-  }
-
-  function isGeneratorFn(name, val) {
-    return ctorName(name) === 'GeneratorFunction';
-  }
-
-  function isGeneratorObj(val) {
-    return typeof val["throw"] === 'function' && typeof val["return"] === 'function' && typeof val.next === 'function';
-  }
-
-  function isArguments(val) {
-    try {
-      if (typeof val.length === 'number' && typeof val.callee === 'function') {
-        return true;
-      }
-    } catch (err) {
-      if (err.message.indexOf('callee') !== -1) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-  /**
-   * If you need to support Safari 5-7 (8-10 yr-old browser),
-   * take a look at https://github.com/feross/is-buffer
-   */
-
-
-  function isBuffer(val) {
-    if (val.constructor && typeof val.constructor.isBuffer === 'function') {
-      return val.constructor.isBuffer(val);
-    }
-
-    return false;
-  }
-
-  /*!
-   * shallow-clone <https://github.com/jonschlinkert/shallow-clone>
-   *
-   * Copyright (c) 2015-present, Jon Schlinkert.
-   * Released under the MIT License.
-   */
-
-  var valueOf = Symbol.prototype.valueOf;
-  var typeOf$1 = kindOf;
-
-  function clone$1(val, deep) {
-    switch (typeOf$1(val)) {
-      case 'array':
-        return val.slice();
-
-      case 'object':
-        return Object.assign({}, val);
-
-      case 'date':
-        return new val.constructor(Number(val));
-
-      case 'map':
-        return new Map(val);
-
-      case 'set':
-        return new Set(val);
-
-      case 'buffer':
-        return cloneBuffer(val);
-
-      case 'symbol':
-        return cloneSymbol(val);
-
-      case 'arraybuffer':
-        return cloneArrayBuffer(val);
-
-      case 'float32array':
-      case 'float64array':
-      case 'int16array':
-      case 'int32array':
-      case 'int8array':
-      case 'uint16array':
-      case 'uint32array':
-      case 'uint8clampedarray':
-      case 'uint8array':
-        return cloneTypedArray(val);
-
-      case 'regexp':
-        return cloneRegExp(val);
-
-      case 'error':
-        return Object.create(val);
-
-      default:
-        {
-          return val;
-        }
-    }
-  }
-
-  function cloneRegExp(val) {
-    var flags = val.flags !== void 0 ? val.flags : /\w+$/.exec(val) || void 0;
-    var re = new val.constructor(val.source, flags);
-    re.lastIndex = val.lastIndex;
-    return re;
-  }
-
-  function cloneArrayBuffer(val) {
-    var res = new val.constructor(val.byteLength);
-    new Uint8Array(res).set(new Uint8Array(val));
-    return res;
-  }
-
-  function cloneTypedArray(val, deep) {
-    return new val.constructor(val.buffer, val.byteOffset, val.length);
-  }
-
-  function cloneBuffer(val) {
-    var len = val.length;
-    var buf = Buffer.allocUnsafe ? Buffer.allocUnsafe(len) : Buffer.from(len);
-    val.copy(buf);
-    return buf;
-  }
-
-  function cloneSymbol(val) {
-    return valueOf ? Object(valueOf.call(val)) : {};
-  }
-  /**
-   * Expose `clone`
-   */
-
-
-  var shallowClone = clone$1;
-
-  var isobject = function isObject(val) {
-    return val != null && _typeof(val) === 'object' && Array.isArray(val) === false;
-  };
-
-  /*!
-   * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
-   *
-   * Copyright (c) 2014-2017, Jon Schlinkert.
-   * Released under the MIT License.
-   */
-
-  var isObject$1 = isobject;
-
-  function isObjectObject(o) {
-    return isObject$1(o) === true && Object.prototype.toString.call(o) === '[object Object]';
-  }
-
-  var isPlainObject$2 = function isPlainObject(o) {
-    var ctor, prot;
-    if (isObjectObject(o) === false) return false; // If has modified constructor
-
-    ctor = o.constructor;
-    if (typeof ctor !== 'function') return false; // If has modified prototype
-
-    prot = ctor.prototype;
-    if (isObjectObject(prot) === false) return false; // If constructor does not have an Object-specific method
-
-    if (prot.hasOwnProperty('isPrototypeOf') === false) {
-      return false;
-    } // Most likely a plain Object
-
-
-    return true;
-  };
-
-  /**
-   * Module dependenices
-   */
-
-
-  var clone = shallowClone;
-  var typeOf = kindOf;
-  var isPlainObject$1 = isPlainObject$2;
-
-  function cloneDeep(val, instanceClone) {
-    switch (typeOf(val)) {
-      case 'object':
-        return cloneObjectDeep(val, instanceClone);
-
-      case 'array':
-        return cloneArrayDeep(val, instanceClone);
-
-      default:
-        {
-          return clone(val);
-        }
-    }
-  }
-
-  function cloneObjectDeep(val, instanceClone) {
-    if (typeof instanceClone === 'function') {
-      return instanceClone(val);
-    }
-
-    if (instanceClone || isPlainObject$1(val)) {
-      var res = new val.constructor();
-
-      for (var key in val) {
-        res[key] = cloneDeep(val[key], instanceClone);
-      }
-
-      return res;
-    }
-
-    return val;
-  }
-
-  function cloneArrayDeep(val, instanceClone) {
-    var res = new val.constructor(val.length);
-
-    for (var i = 0; i < val.length; i++) {
-      res[i] = cloneDeep(val[i], instanceClone);
-    }
-
-    return res;
-  }
-  /**
-   * Expose `cloneDeep`
-   */
-
-
-  var cloneDeep_1 = cloneDeep;
-
   var dist = {};
 
   var debounceAnimationFrame$1 = {};
@@ -736,6 +387,88 @@ var RIsland = (function () {
 
     // Most likely a plain Object
     return true;
+  }
+
+  function klona(x) {
+  	if (typeof x !== 'object') return x;
+
+  	var k, tmp, str=Object.prototype.toString.call(x);
+
+  	if (str === '[object Object]') {
+  		if (x.constructor !== Object && typeof x.constructor === 'function') {
+  			tmp = new x.constructor();
+  			for (k in x) {
+  				if (x.hasOwnProperty(k) && tmp[k] !== x[k]) {
+  					tmp[k] = klona(x[k]);
+  				}
+  			}
+  		} else {
+  			tmp = {}; // null
+  			for (k in x) {
+  				if (k === '__proto__') {
+  					Object.defineProperty(tmp, k, {
+  						value: klona(x[k]),
+  						configurable: true,
+  						enumerable: true,
+  						writable: true,
+  					});
+  				} else {
+  					tmp[k] = klona(x[k]);
+  				}
+  			}
+  		}
+  		return tmp;
+  	}
+
+  	if (str === '[object Array]') {
+  		k = x.length;
+  		for (tmp=Array(k); k--;) {
+  			tmp[k] = klona(x[k]);
+  		}
+  		return tmp;
+  	}
+
+  	if (str === '[object Set]') {
+  		tmp = new Set;
+  		x.forEach(function (val) {
+  			tmp.add(klona(val));
+  		});
+  		return tmp;
+  	}
+
+  	if (str === '[object Map]') {
+  		tmp = new Map;
+  		x.forEach(function (val, key) {
+  			tmp.set(klona(key), klona(val));
+  		});
+  		return tmp;
+  	}
+
+  	if (str === '[object Date]') {
+  		return new Date(+x);
+  	}
+
+  	if (str === '[object RegExp]') {
+  		tmp = new RegExp(x.source, x.flags);
+  		tmp.lastIndex = x.lastIndex;
+  		return tmp;
+  	}
+
+  	if (str === '[object DataView]') {
+  		return new x.constructor( klona(x.buffer) );
+  	}
+
+  	if (str === '[object ArrayBuffer]') {
+  		return x.slice(0);
+  	}
+
+  	// ArrayBuffer.isView(x)
+  	// ~> `new` bcuz `Buffer.slice` => ref
+  	if (str.slice(-6) === 'Array]') {
+  		return new x.constructor(x);
+  	}
+
+  	return x;
   }
 
   var DOCUMENT_FRAGMENT_NODE = 11;
@@ -2203,7 +1936,7 @@ var RIsland = (function () {
       this._throttledLoadOrUpdate = rafThrottle_1(this._loadOrUpdate);
       this._throttledRender = rafThrottle_1(this._render);
       this._warnings = [];
-      this._config = cjs$1.all([this._initialConfig, cloneDeep_1(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
+      this._config = cjs$1.all([this._initialConfig, klona(config), this._enforcedConfig], _assign(_assign({}, this._initialConfig.deepmerge), this._enforcedConfig.deepmerge));
 
       if (!isPlainObject(this._config.initialState) || this._config.initialState === null) {
         this._errors = this._errors.concat('ERR001: initialState has to be an object (which is not null).');
@@ -2240,7 +1973,7 @@ var RIsland = (function () {
                   var $closest = event.target.closest(selector);
 
                   if ($closest !== null) {
-                    _this._config.delegations[commaSeparatedEventNames][selector](event, $closest, cloneDeep_1(_this._state), _this._setState.bind(_this));
+                    _this._config.delegations[commaSeparatedEventNames][selector](event, $closest, klona(_this._state), _this._setState.bind(_this));
                   }
                 });
               }
@@ -2375,13 +2108,13 @@ var RIsland = (function () {
       });
       this._config.$element.innerHTML = '';
 
-      this._config.unload(cloneDeep_1(this._state));
+      this._config.unload(klona(this._state));
     };
 
     RIsland.prototype._setState = function (nextState) {
       var _this = this;
 
-      var tmpState = typeof nextState === 'function' ? nextState(cloneDeep_1(this._state)) : nextState;
+      var tmpState = typeof nextState === 'function' ? nextState(klona(this._state)) : nextState;
 
       if (tmpState === null) {
         return;
@@ -2401,8 +2134,8 @@ var RIsland = (function () {
         return;
       }
 
-      var tmpMergedState = 'customMerge' in this._config.deepmerge ? cjs$1(cloneDeep_1(this._state), tmpState, this._config.deepmerge) : cjs$1(this._state, tmpState, this._config.deepmerge);
-      var shouldUpdate = this._config.shouldUpdate === this._initialConfig.shouldUpdate ? this._config.shouldUpdate(this._state, tmpMergedState, fastDeepEqual) : this._config.shouldUpdate(cloneDeep_1(this._state), 'customMerge' in this._config.deepmerge ? tmpMergedState : cloneDeep_1(tmpMergedState), fastDeepEqual);
+      var tmpMergedState = 'customMerge' in this._config.deepmerge ? cjs$1(klona(this._state), tmpState, this._config.deepmerge) : cjs$1(this._state, tmpState, this._config.deepmerge);
+      var shouldUpdate = this._config.shouldUpdate === this._initialConfig.shouldUpdate ? this._config.shouldUpdate(this._state, tmpMergedState, fastDeepEqual) : this._config.shouldUpdate(klona(this._state), 'customMerge' in this._config.deepmerge ? tmpMergedState : klona(tmpMergedState), fastDeepEqual);
       this._state = tmpMergedState;
 
       if (shouldUpdate === true) {
@@ -2551,7 +2284,7 @@ var RIsland = (function () {
     };
 
     RIsland.prototype._loadOrUpdate = function () {
-      var state = cloneDeep_1(this._state);
+      var state = klona(this._state);
 
       if (this._loaded === false) {
         this._loaded = true;

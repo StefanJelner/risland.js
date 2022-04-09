@@ -45,7 +45,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
-The most simple RIsland scenario is to load the IIFE bundle (&lt;34KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
+The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
 
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
@@ -55,7 +55,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 
 ## <a name="pros"></a> Pros
 
-- Small in filesize. (&lt;34KB minified IIFE bundle)
+- Small in filesize. (&lt;30KB minified IIFE bundle)
 - The IIFE bundle can be used out of the box. No building necessary. Put it in a script-tag and start writing code.
 - Simple, yet powerful. (See [Examples](#examples))
 - Easy to learn. RIsland is no rocket science!
@@ -1520,7 +1520,7 @@ document.addEventListener('DOMContentLoaded', () => {
 - [morphdom](https://github.com/patrick-steele-idem/morphdom) - is a very nice library which can morph one DOM state into the other.
 - [squirrelly](https://github.com/squirrellyjs/squirrelly) - is a tiny and fast templating engine.
 - [deepmerge](https://github.com/TehShrike/deepmerge) - a library which can merge two or more objects deeply.
-- [clone-deep](https://github.com/jonschlinkert/clone-deep) - a library which clones data (because in JavaScript arrays and objects are passed by reference, which can lead to unpredictable und ugly side effects, especially when a safely encapsulated state management should be provided.)
+- [klona](https://github.com/lukeed/klona) - a library which clones data (because in JavaScript arrays and objects are passed by reference, which can lead to unpredictable und ugly side effects, especially when a safely encapsulated state management should be provided.)
 - [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) - claims to be the fastest library for comparing two given sets of data
 - [throttle-debounce](https://github.com/niksy/throttle-debounce) - throttles method invocations by a given amount of milliseconds
 - [raf-throttle](https://github.com/wuct/raf-throttle) - throttles method invocations by request animation frame

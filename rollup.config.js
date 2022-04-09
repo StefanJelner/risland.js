@@ -6,6 +6,7 @@ import filesize from 'rollup-plugin-filesize';
 import progress from 'rollup-plugin-progress';
 import node from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const banner = `
 /**
@@ -36,7 +37,7 @@ export default {
             , file: pkg.browser.replace('.js', '.min.js')
             , format: 'iife'
             , name: 'RIsland'
-            , plugins: [terser()]
+            , plugins: [terser({ compress: { passes: 2 }})]
         }
         // ES
         , {
@@ -53,7 +54,8 @@ export default {
         }
     ]
     , plugins: [
-        progress()
+        visualizer()
+        , progress()
         , typescript()
         , node({
             browser: true

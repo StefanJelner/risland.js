@@ -1,9 +1,11 @@
 import '@webcomponents/custom-elements/src/native-shim';
-import cloneDeep from 'clone-deep';
 import debounceAnimationFrame from 'debounce-animation-frame';
 import deepmerge from 'deepmerge';
 import equal from 'fast-deep-equal';
 import { isPlainObject } from 'is-plain-object';
+// we do not use klona/lite, because this klona is still the fastest, only 100 Byte bigger in size, but provides many
+// more types, which can be cloned.
+import { klona } from 'klona';
 import morphdom from 'morphdom';
 import rafThrottle from 'raf-throttle';
 import * as Sqrl from 'squirrelly';
@@ -174,7 +176,7 @@ export default class RIsland<IState extends Record<string, any>> {
     // to. These settings cannot be overridden by the user.
     private _enforcedConfig: Partial<IRIslandConfig<IState>> = {
         deepmerge: {
-            // we use cloneDeep for this task.
+            // we use klona for this task.
             clone: false
         }
         , morphdom: {
@@ -221,7 +223,7 @@ export default class RIsland<IState extends Record<string, any>> {
             [
                 this._initialConfig
                 // clone the config, otherwise it could be mutated later.
-                , cloneDeep(config)
+                , klona(config)
                 // finally add the enforced config values.
                 , this._enforcedConfig
             ]
@@ -297,7 +299,7 @@ export default class RIsland<IState extends Record<string, any>> {
                                         this._config.delegations[commaSeparatedEventNames][selector](
                                             event
                                             , $closest
-                                            , cloneDeep(this._state)
+                                            , klona(this._state)
                                             , this._setState.bind(this)
                                         );
                                     }
@@ -375,7 +377,7 @@ export default class RIsland<IState extends Record<string, any>> {
         // delete all the content in the island container.
         this._config.$element.innerHTML = '';
 
-        this._config.unload(cloneDeep(this._state));
+        this._config.unload(klona(this._state));
     }
 
     /**
@@ -386,7 +388,7 @@ export default class RIsland<IState extends Record<string, any>> {
     private _setState(nextState: TRIslandSetState<IState>): void {
         const tmpState = typeof nextState === 'function'
             // we have to work with a clone here, otherwise it would be possible to brutally mutate the state.
-            ? nextState(cloneDeep(this._state))
+            ? nextState(klona(this._state))
             : nextState
         ;
 
@@ -413,7 +415,7 @@ export default class RIsland<IState extends Record<string, any>> {
             'customMerge' in this._config.deepmerge
                 // if a custom merging algorithm is provided, it is possible to manipulate the state directly
                 // this is why a clone is used here.
-                ? deepmerge(cloneDeep(this._state), tmpState as Partial<IState>, this._config.deepmerge)
+                ? deepmerge(klona(this._state), tmpState as Partial<IState>, this._config.deepmerge)
                 : deepmerge(this._state, tmpState as Partial<IState>, this._config.deepmerge)
         );
 
@@ -422,13 +424,13 @@ export default class RIsland<IState extends Record<string, any>> {
                 ? this._config.shouldUpdate(this._state, tmpMergedState, equal)
                 // we have to work with two clones here, otherwise it would be possible to brutally mutate the states.
                 : this._config.shouldUpdate(
-                    cloneDeep(this._state)
+                    klona(this._state)
                     , (
                         'customMerge' in this._config.deepmerge
                             // if a custom merging algorithm is provided, tmpMergedState already contains a clone of
                             // the state we prevent a redundant cloning here.
                             ? tmpMergedState
-                            : cloneDeep(tmpMergedState)
+                            : klona(tmpMergedState)
                     )
                     , equal
                 )
@@ -678,7 +680,7 @@ export default class RIsland<IState extends Record<string, any>> {
      * Invokes the load or update callbacks.
      */
     private _loadOrUpdate(): void {
-        const state = cloneDeep(this._state);
+        const state = klona(this._state);
 
         if (this._loaded === false) {
             this._loaded = true;
