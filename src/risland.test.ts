@@ -5,8 +5,12 @@ function setDocument(html: string): void {
     document.getElementsByTagName('html')[0].innerHTML = html;
 }
 
+function getDefaultHeaderFooter(body: string = ''): string {
+    return `<head><meta charset="utf-8"/></head><body>${body}</body>`;
+}
+
 function getDefaultDocument(additional: string = ''): string {
-    return `<head><meta charset="utf-8"/></head><body><div id="island"></div>${additional}</body>`;
+    return getDefaultHeaderFooter(`<div id="island"></div>${additional}`);
 }
 
 describe('RIsland', () => {
@@ -927,6 +931,214 @@ describe('RIsland', () => {
                     </div>`
                     // removes all whitespaces from the template, so it is testable in a better way
                     .replace(/\s+/g, '')
+            });
+        }
+    );
+
+    it(
+        'should have the right state and show the right content if used as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar></foo-bar>'));
+
+            RIsland.createWebComponent<{ baz: number; }>('foo-bar', [], {
+                initialState: { baz: 1 }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar');
+
+                    expect(state.baz).toBe(1);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1</div></div>');
+
+                    done();
+                }
+                , template: '<div>{{state.baz}}</div>'
+            });
+        }
+    );
+
+    it(
+        'should have the right state, show the right content and handle attributes with the integer type if used '
+        + 'as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar2 qux="100"></foo-bar2>'));
+
+            RIsland.createWebComponent<{ baz: number; qux: number | null; }>('foo-bar2', ['qux'], {
+                initialState: {
+                    baz: 1
+                    , qux: null
+                }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar2');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.qux).toBe(100);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 100</div></div>');
+
+                    $island.setAttribute('qux', '101');
+                }
+                , template: '<div>{{state.baz}} {{state.qux}}</div>'
+                , update: state => {
+                    const $island = document.querySelector('foo-bar2');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.qux).toBe(101);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 101</div></div>');
+
+                    done();
+                }
+            });
+        }
+    );
+
+    it(
+        'should have the right state, show the right content and handle attributes with the float type if used '
+        + 'as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar3 fred="9.5"></foo-bar3>'));
+
+            RIsland.createWebComponent<{ baz: number; fred: number | null; }>('foo-bar3', ['fred'], {
+                initialState: {
+                    baz: 1
+                    , fred: null
+                }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar3');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.fred).toBe(9.5);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 9.5</div></div>');
+
+                    $island.setAttribute('fred', '10.5');
+                }
+                , template: '<div>{{state.baz}} {{state.fred}}</div>'
+                , update: state => {
+                    const $island = document.querySelector('foo-bar3');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.fred).toBe(10.5);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 10.5</div></div>');
+
+                    done();
+                }
+            });
+        }
+    );
+
+    it(
+        'should have the right state, show the right content and handle attributes with the stringified JSON type '
+        + 'if used as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar4 corge=\'{"grault": ["garply", "waldo"]}\'></foo-bar4>'));
+
+            RIsland.createWebComponent<{
+                baz: number;
+                corge: { grault: [string, string]; } | null;
+            }>('foo-bar4', ['corge'], {
+                initialState: {
+                    baz: 1
+                    , corge: null
+                }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar4');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.corge).toStrictEqual({ grault: ['garply', 'waldo'] });
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 garply waldo</div></div>');
+
+                    $island.setAttribute('corge', JSON.stringify({ grault: ['xyzzy', 'thud']}));
+                }
+                , template: '<div>{{state.baz}} {{state.corge.grault[0]}} {{state.corge.grault[1]}}</div>'
+                , update: state => {
+                    const $island = document.querySelector('foo-bar4');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.corge).toStrictEqual({ grault: ['xyzzy', 'thud'] });
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 xyzzy thud</div></div>');
+
+                    done();
+                }
+            });
+        }
+    );
+
+    it(
+        'should have the right state, show the right content and handle attributes which are not set if used '
+        + 'as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar5></foo-bar5>'));
+
+            RIsland.createWebComponent<{ baz: number; qux: number | null; }>('foo-bar5', ['qux'], {
+                initialState: {
+                    baz: 1
+                    , qux: null
+                }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar5');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.qux).toBe(null);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 null</div></div>');
+
+                    done();
+                }
+                , template: '<div>{{state.baz}} {{state.qux}}</div>'
+            });
+        }
+    );
+
+    it(
+        'should have the right state, show the right content and unload in an expected way when removed from the DOM '
+        + 'if used as a web component'
+        , done => {
+            setDocument(getDefaultHeaderFooter('<foo-bar6 qux="100"></foo-bar6>'));
+
+            RIsland.createWebComponent<{ baz: number; qux: number; }>('foo-bar6', ['qux'], {
+                initialState: {
+                    baz: 1
+                    , qux: null
+                }
+                , load: state => {
+                    const $island = document.querySelector('foo-bar6');
+
+                    expect(state.baz).toBe(1);
+                    expect(state.qux).toBe(100);
+                    expect($island !== null).toBe(true);
+                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                    // with a div tag.
+                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 100</div></div>');
+
+                    $island.remove();
+                }
+                , template: '<div>{{state.baz}} {{state.qux}}</div>'
+                , unload: state => {
+                    expect(state.baz).toBe(1);
+                    expect(state.qux).toBe(100);
+
+                    done();
+                }
             });
         }
     );

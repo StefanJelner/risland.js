@@ -45,7 +45,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 The purpose of RIsland is to fill the gap between cumbersome DOM-manipulation (querying, innerHTML, node-creation, classList) and event-handling in a rather procedural and imperative way, like for example in classical [jQuery](https://github.com/jquery/jquery)-applications or - on the other side - having to use huge libraries - which are great, but too huge and sophisticated for the purpose (in the end 5% of the features are used).
 
-The most simple RIsland scenario is to load the IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
+The most simple RIsland scenario is to load the minified IIFE bundle (&lt;30KB) in a script tag into your page, add a DOM ready event and you can start to code. (It is also possible to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) and together with ES6, [Babel](https://github.com/babel/babel) and [TypeScript](https://github.com/microsoft/TypeScript) and then use Bundlers, like [webpack](https://github.com/webpack/webpack).)
 
 RIsland is perfect for writing small widgets or configurators in static pages, like shops (f.ex. [Shopify](https://www.shopify.com/)), [Wordpress](https://wordpress.com) sites, blogs and many more. You can use it for a product configurator, a complex form, dynamic tables or small games to keep users entertained. Feel free to check the examples, which try to exhaust the possibilities, showing simple stuff, but also trying to push it to the limits by providing small browser games.
 
@@ -83,6 +83,7 @@ RIsland is perfect for writing small widgets or configurators in static pages, l
 - If you want to do complex and sophisticated stuff and you find yourself writing thousands of lines of code, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - If you find yourself using several instances of RIsland on one page, which intercommunicate with [RxJS](https://github.com/ReactiveX/rxjs) or [Redux](https://github.com/reduxjs/redux) stores, you might want to use other libraries, like f.ex. [React](https://github.com/facebook/react).
 - This library only takes care of templating, event handling, state management, rendering and throttling/debouncing. If you need something like routing, error and HTTP interceptors, dependency injection, - or to summarize: a fully featured SPA (single page appliaction) - you might want to use other libraries, like f.ex. [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) (with [Inversify](https://github.com/inversify/InversifyJS)).
+- If you want to do more sophisticated things with the [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components), like f.ex. using the attribute-feature more extensively, you might want to use other libraries, like f.ex. [Lit](https://lit.dev/) or [Stencil](https://stenciljs.com/).
 
 ---
 
