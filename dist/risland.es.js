@@ -2024,14 +2024,6 @@ var RIsland = function () {
         return _this;
       }
 
-      Object.defineProperty(class_1, "observedAttributes", {
-        get: function get() {
-          return attributes;
-        },
-        enumerable: false,
-        configurable: true
-      });
-
       class_1.prototype.connectedCallback = function () {
         var _this = this;
 
@@ -2050,27 +2042,12 @@ var RIsland = function () {
           }, {}), {
             clone: false,
             isMergeableObject: isPlainObject
-          }),
-          load: function load(state, setState) {
-            _this._setState = setState;
-
-            if ('load' in config) {
-              config.load(state, setState);
-            }
-          }
+          })
         }));
       };
 
       class_1.prototype.disconnectedCallback = function () {
         this._island.unload();
-      };
-
-      class_1.prototype.attributeChangedCallback = function (name, _, value) {
-        var _a;
-
-        if ('_setState' in this && typeof this._setState === 'function') {
-          this._setState((_a = {}, _a[name] = this._parse(value), _a));
-        }
       };
 
       class_1.prototype._parse = function (value) {

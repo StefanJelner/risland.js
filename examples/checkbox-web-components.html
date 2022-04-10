@@ -33,11 +33,11 @@
                             if ($checkboxCounter !== null) {
                                 var counter = Math.floor((+new Date() - initial) / 1000);
 
-                                $checkboxCounter.setAttribute('counter', state.counter + counter);
-                                $checkboxCounter.setAttribute('foo', JSON.stringify({
-                                    bar: ['baz' + (state.counter + counter), 'qux']
-                                }));
-                                $checkboxCounter.setAttribute('bar', state.bar + (counter / 100));
+                                setState({
+                                    bar: state.bar + (counter / 100)
+                                    , counter: state.counter + counter
+                                    , foo: {bar:  ['baz' + (state.counter + counter), 'qux']}
+                                });
                             }
                         }, 1000);
                     }

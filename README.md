@@ -6,6 +6,7 @@ Feel free to pronounce it "Are-Island" or "Reyeland"!
 
 [![RIsland.js on npmjs.com](https://img.shields.io/npm/v/risland.js?logo=npm&logoColor=white)](https://www.npmjs.com/package/risland.js)
 [![RIsland.js on GitHub](https://img.shields.io/github/package-json/v/StefanJelner/risland.js?logo=github&logoColor=white)](https://github.com/StefanJelner/risland.js)
+[![RIsland.js on jsDelivr](https://data.jsdelivr.com/v1/package/npm/risland.js/badge?style=rounded)](https://www.jsdelivr.com/package/npm/risland.js)
 [![RIsland.js on Facebook](https://img.shields.io/badge/facebook-RIsland.js-blue?logo=facebook&logoColor=white)](https://www.facebook.com/RIslandjs-101398299167542/)
 
 ---
@@ -203,7 +204,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-This already looks more like a dynamic application.
+Or as a web component (See [Usage as a Web Component](#web-component) for detailed explanations):
+
+```html
+<my-app counter="100"></my-app>
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        RIsland.createWebComponent('my-app', ['counter'], {
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, $closest, state, setState) {
+                        setState({ checked: $closest.checked });
+                    }
+                }
+            },
+            initialState: {
+                checked: false,
+                counter: null
+            },
+            template: '<div class="island">' +
+                '<input class="island__checkbox" type="checkbox" />' +
+                '{{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}<br />' +
+                'counter: {{state.counter}}' +
+            '</div>'
+        });
+    });
+</script>
+```
+
+These already look more like dynamic applications.
 
 There are several things which are quite obvious:
 
@@ -733,6 +763,48 @@ This works, because in the callback function the `state2` always contains the mo
 
 ## <a name="web-component"></a> Usage as a Web Component
 
+RIsland can also be used to create a simple [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) by using the static method `createWebComponent()`. It is crucial to understand, due to the fact that RIsland is not designed to have something like attributes or properties with a binding, that using an attributes only sets a value of the `initialState`. The attributes cannot be used to change that value later or change the state in any way. RIsland is meant to have this inner state which is usually not accessible to the "outside world". If you need bindings, mutatable attributes, properties, events aso. consider using a fully featured library, like [Angular](https://github.com/angular/angular), [Vue](https://github.com/vuejs), [React](https://github.com/facebook/react) or more sophisticated [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) libraries, like [Lit](https://lit.dev/) or [Stencil](https://stenciljs.com/).
+
+The `createWebComponent()` method accepts the tag name of the new [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) (which MUST contain at least one dash), an array of attributes, which should be merged into the `initialState`, and an RIsland config (without the `$element` config).
+
+Attribute values are usually strings, but RIsland takes care of a correct type casting. So if the attribute contains a **stringified** integer, float or complex JSON, then RIsland does a type casting back to real integer, float or the content of the JSON.
+
+Example:
+
+```html
+<foo-bar qux="100" corge='{"grault": ["garply", "waldo"]}' fred="9.5"></foo-bar>
+<script src="risland.iife.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        RIsland.createWebComponent('foo-bar', ['qux', 'corge', 'fred'], {
+            delegations: {
+                'click': {
+                    '.island__checkbox': function(event, $closest, state, setState) {
+                        setState({ checked: $closest.checked });
+                    }
+                }
+            },
+            initialState: {
+                checked: false,
+                baz: 1,
+                qux: null,
+                corge: null,
+                fred: null
+            }
+            template: '<div class="island">' +
+                '<input class="island__checkbox" type="checkbox" />' +
+                '{{@if(state.checked)}}is checked{{#else}}is not checked{{/if}}<br />' +
+                '{{state.baz}} {{state.qux}} {{state.corge.grault[0]}} {{state.corge.grault[1]}} {{state.fred}}'
+            '</div>'
+        });
+    });
+</script>
+```
+
+This gives the ability to make initial state values setable by predefined attributes.
+
+> <img src="assets/warning.png" alt="Important" width="50" height="60" align="left" /> **IMPORTANT!** Usually an RIsland instance is exclusively added to one DOM element. With a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) it is possible to add several RIsland instances to several occurences of a custom element. So if you are planning on using a data exchange mechanism in the `load` config callback, the same mechanism has to take care of a way to distinguish between different instances. This can be done by passing a unique id as one of the attributes. RIsland itself does not take care of this.
+
 ---
 
 ## <a name="lifecycles"></a> Lifecycles
@@ -1239,6 +1311,22 @@ public static createWebComponent<IState>(
     config: Partial<Omit<IRIslandConfig<IState>, '$element'>>
 ): void
 ```
+
+Static method to create a simple [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components).
+
+This method has 3 arguments:
+
+1. `tagName`
+
+    The tag name of the [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components). It MUST contain at least one dash.
+
+2. `attributes`
+
+    An array of attribute names. These attributes can be set on the [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components), will be casted to the right type and then merged into the `initialState`.
+
+3. `config`
+
+    The usual RIsland config, but without the `$element` key.
 
 ---
 

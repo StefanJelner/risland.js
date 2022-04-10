@@ -25,7 +25,7 @@ export default class RIsland<IState extends Record<string, any>> {
      * Helps to create a web component containing an RIsland instance.
      * 
      * @param tagName the name of the custom tag (separated with at least one dash)
-     * @param attributes a list of attribute names which should be observed for changes
+     * @param attributes a list of attribute names which should be type casted and merged into the initial state
      * @param config the configuration (without $element)
      */
     public static createWebComponent<IState>(
@@ -36,14 +36,8 @@ export default class RIsland<IState extends Record<string, any>> {
         window.customElements.define(
             tagName
             , class extends HTMLElement {
-                /**
-                 * List of attributes which have to be observed.
-                 */
-                public static get observedAttributes() { return attributes; }
-
                 private _$island: HTMLDivElement;
                 private _island: RIsland<IState>;
-                private _setState: RIsland<IState>['_setState'];
 
                 /**
                  * Constructor
@@ -70,6 +64,7 @@ export default class RIsland<IState extends Record<string, any>> {
                             $element: this._$island
                             , initialState: deepmerge<IRIslandConfig<IState>['initialState']>(
                                 config.initialState
+                                // type casting and merging attribute values
                                 , attributes.reduce((result, key) => {
                                     const value = this.getAttribute(key);
 
@@ -81,13 +76,6 @@ export default class RIsland<IState extends Record<string, any>> {
                                 }, {})
                                 , { clone: false, isMergeableObject: isPlainObject }
                             )
-                            // we have to provide a load wrapper here to use setState later
-                            , load: (state: Readonly<IState>, setState: RIsland<IState>['_setState']) => {
-                                this._setState = setState;
-
-                                // if a load is provided in the config, call it here
-                                if ('load' in config) { config.load(state, setState); }
-                            }
                         }
                     });
                 }
@@ -98,19 +86,11 @@ export default class RIsland<IState extends Record<string, any>> {
                 public disconnectedCallback(): void { this._island.unload(); }
 
                 /**
-                 * Becomes called whenever an observed attribute is changed and sets the new state.
-                 */
-                public attributeChangedCallback(name: keyof IState, _, value: string): void {
-                    if ('_setState' in this && typeof this._setState === 'function') {
-                        this._setState({ [name]: this._parse(value) } as Partial<IState>);
-                    }
-                }
-
-                /**
-                 * Takes care of attribute values which might contain stringified JSON.
+                 * Takes care of attribute values which might contain an integer or float (as a string) or
+                 * stringified JSON.
                  * 
-                 * @param value a literal value or stringified JSON
-                 * @returns the literal value or parsed JSON
+                 * @param value a literal value, an integer or float (as a string) or stringified JSON
+                 * @returns the literal value, an integer, a float or parsed JSON
                  */
                 private _parse(value: string): unknown {
                     let parsed = value;
