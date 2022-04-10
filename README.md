@@ -215,7 +215,10 @@ Or as a web component (See [Usage as a Web Component](#web-component) for detail
             delegations: {
                 'click': {
                     '.island__checkbox': function(event, $closest, state, setState) {
-                        setState({ checked: $closest.checked });
+                        setState(function(state) { return {
+                            checked: $closest.checked,
+                            counter: state.counter + 1
+                        }; });
                     }
                 }
             },
