@@ -1366,6 +1366,10 @@ This is an example of two RIsland instances communicating through a Subject (RxJ
 
 This is an example of the `unload` method as shown in this readme.
 
+### `checkbox-web-components.html`
+
+This example shows how to use RIsland as a web component by using the static `createWebComponent()` method as shown in this readme.
+
 ### `squirrelly-partials-test.html`
 
 This is an example of how to use partials in RIsland. It shows a checkbox and whenever the checkbox changes, a log entry is generated.
