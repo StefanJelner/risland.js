@@ -1366,9 +1366,9 @@ This is an example of two RIsland instances communicating through a Subject (RxJ
 
 This is an example of the `unload` method as shown in this readme.
 
-### `checkbox-web-components.html`
+### `checkbox-web-component.html`
 
-This example shows how to use RIsland as a web component by using the static `createWebComponent()` method as shown in this readme.
+This example shows how to use RIsland as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components) by using the static `createWebComponent()` method as shown in this readme.
 
 ### `squirrelly-partials-test.html`
 
