@@ -36,7 +36,7 @@ var RIsland = (function () {
     }, _typeof(obj);
   }
 
-  /*! *****************************************************************************
+  /******************************************************************************
   Copyright (c) Microsoft Corporation.
 
   Permission to use, copy, modify, and/or distribute this software for any
@@ -1734,10 +1734,10 @@ var RIsland = (function () {
 
   var squirrelly_min = /*@__PURE__*/getDefaultExportFromCjs(squirrelly_min$1.exports);
 
-  var Sqrl = /*#__PURE__*/Object.freeze(/*#__PURE__*/_mergeNamespaces({
+  var Sqrl = /*#__PURE__*/_mergeNamespaces({
     __proto__: null,
     'default': squirrelly_min
-  }, [squirrelly_min$1.exports]));
+  }, [squirrelly_min$1.exports]);
 
   var cjs = {};
 
@@ -1750,25 +1750,39 @@ var RIsland = (function () {
    * Throttle execution of a function. Especially useful for rate limiting
    * execution of handlers on events like resize and scroll.
    *
-   * @param  {number}    delay -          A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher) are most useful.
-   * @param  {boolean}   [noTrailing] -   Optional, defaults to false. If noTrailing is true, callback will only execute every `delay` milliseconds while the
-   *                                    throttled-function is being called. If noTrailing is false or unspecified, callback will be executed one final time
-   *                                    after the last throttled-function call. (After the throttled-function has not been called for `delay` milliseconds,
-   *                                    the internal counter is reset).
-   * @param  {Function}  callback -       A function to be executed after delay milliseconds. The `this` context and all arguments are passed through, as-is,
-   *                                    to `callback` when the throttled-function is executed.
-   * @param  {boolean}   [debounceMode] - If `debounceMode` is true (at begin), schedule `clear` to execute after `delay` ms. If `debounceMode` is false (at end),
-   *                                    schedule `callback` to execute after `delay` ms.
+   * @param {number} delay -                  A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher)
+   *                                            are most useful.
+   * @param {Function} callback -               A function to be executed after delay milliseconds. The `this` context and all arguments are passed through,
+   *                                            as-is, to `callback` when the throttled-function is executed.
+   * @param {object} [options] -              An object to configure options.
+   * @param {boolean} [options.noTrailing] -   Optional, defaults to false. If noTrailing is true, callback will only execute every `delay` milliseconds
+   *                                            while the throttled-function is being called. If noTrailing is false or unspecified, callback will be executed
+   *                                            one final time after the last throttled-function call. (After the throttled-function has not been called for
+   *                                            `delay` milliseconds, the internal counter is reset).
+   * @param {boolean} [options.noLeading] -   Optional, defaults to false. If noLeading is false, the first throttled-function call will execute callback
+   *                                            immediately. If noLeading is true, the first the callback execution will be skipped. It should be noted that
+   *                                            callback will never executed if both noLeading = true and noTrailing = true.
+   * @param {boolean} [options.debounceMode] - If `debounceMode` is true (at begin), schedule `clear` to execute after `delay` ms. If `debounceMode` is
+   *                                            false (at end), schedule `callback` to execute after `delay` ms.
    *
-   * @returns {Function}  A new, throttled, function.
+   * @returns {Function} A new, throttled, function.
    */
 
-  function throttle(delay, noTrailing, callback, debounceMode) {
+  function throttle(delay, callback, options) {
+    var _ref = options || {},
+        _ref$noTrailing = _ref.noTrailing,
+        noTrailing = _ref$noTrailing === void 0 ? false : _ref$noTrailing,
+        _ref$noLeading = _ref.noLeading,
+        noLeading = _ref$noLeading === void 0 ? false : _ref$noLeading,
+        _ref$debounceMode = _ref.debounceMode,
+        debounceMode = _ref$debounceMode === void 0 ? undefined : _ref$debounceMode;
     /*
      * After wrapper has stopped being called, this timeout ensures that
      * `callback` is executed at the proper times in `throttle` and `end`
      * debounce modes.
      */
+
+
     var timeoutID;
     var cancelled = false; // Keep track of the last time `callback` was executed.
 
@@ -1781,16 +1795,13 @@ var RIsland = (function () {
     } // Function to cancel next exec
 
 
-    function cancel() {
+    function cancel(options) {
+      var _ref2 = options || {},
+          _ref2$upcomingOnly = _ref2.upcomingOnly,
+          upcomingOnly = _ref2$upcomingOnly === void 0 ? false : _ref2$upcomingOnly;
+
       clearExistingTimeout();
-      cancelled = true;
-    } // `noTrailing` defaults to falsy.
-
-
-    if (typeof noTrailing !== 'boolean') {
-      debounceMode = callback;
-      callback = noTrailing;
-      noTrailing = undefined;
+      cancelled = !upcomingOnly;
     }
     /*
      * The `wrapper` function encapsulates all of the throttling / debouncing
@@ -1826,10 +1837,11 @@ var RIsland = (function () {
         timeoutID = undefined;
       }
 
-      if (debounceMode && !timeoutID) {
+      if (!noLeading && debounceMode && !timeoutID) {
         /*
          * Since `wrapper` is being called for the first time and
-         * `debounceMode` is true (at begin), execute `callback`.
+         * `debounceMode` is true (at begin), execute `callback`
+         * and noLeading != true.
          */
         exec();
       }
@@ -1837,11 +1849,24 @@ var RIsland = (function () {
       clearExistingTimeout();
 
       if (debounceMode === undefined && elapsed > delay) {
-        /*
-         * In throttle mode, if `delay` time has been exceeded, execute
-         * `callback`.
-         */
-        exec();
+        if (noLeading) {
+          /*
+           * In throttle mode with noLeading, if `delay` time has
+           * been exceeded, update `lastExec` and schedule `callback`
+           * to execute after `delay` ms.
+           */
+          lastExec = Date.now();
+
+          if (!noTrailing) {
+            timeoutID = setTimeout(debounceMode ? clear : exec, delay);
+          }
+        } else {
+          /*
+           * In throttle mode without noLeading, if `delay` time has been exceeded, execute
+           * `callback`.
+           */
+          exec();
+        }
       } else if (noTrailing !== true) {
         /*
          * In trailing throttle mode, since `delay` time has not been
@@ -1869,19 +1894,26 @@ var RIsland = (function () {
    * guarantees that a function is only executed a single time, either at the
    * very beginning of a series of calls, or at the very end.
    *
-   * @param  {number}   delay -         A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher) are most useful.
-   * @param  {boolean}  [atBegin] -     Optional, defaults to false. If atBegin is false or unspecified, callback will only be executed `delay` milliseconds
-   *                                  after the last debounced-function call. If atBegin is true, callback will be executed only at the first debounced-function call.
-   *                                  (After the throttled-function has not been called for `delay` milliseconds, the internal counter is reset).
-   * @param  {Function} callback -      A function to be executed after delay milliseconds. The `this` context and all arguments are passed through, as-is,
-   *                                  to `callback` when the debounced-function is executed.
+   * @param {number} delay -               A zero-or-greater delay in milliseconds. For event callbacks, values around 100 or 250 (or even higher) are most useful.
+   * @param {Function} callback -          A function to be executed after delay milliseconds. The `this` context and all arguments are passed through, as-is,
+   *                                        to `callback` when the debounced-function is executed.
+   * @param {object} [options] -           An object to configure options.
+   * @param {boolean} [options.atBegin] -  Optional, defaults to false. If atBegin is false or unspecified, callback will only be executed `delay` milliseconds
+   *                                        after the last debounced-function call. If atBegin is true, callback will be executed only at the first debounced-function call.
+   *                                        (After the throttled-function has not been called for `delay` milliseconds, the internal counter is reset).
    *
    * @returns {Function} A new, debounced function.
    */
 
 
-  function debounce(delay, atBegin, callback) {
-    return callback === undefined ? throttle(delay, atBegin, false) : throttle(delay, callback, atBegin !== false);
+  function debounce(delay, callback, options) {
+    var _ref = options || {},
+        _ref$atBegin = _ref.atBegin,
+        atBegin = _ref$atBegin === void 0 ? false : _ref$atBegin;
+
+    return throttle(delay, callback, {
+      debounceMode: atBegin !== false
+    });
   }
 
   var debounce_1 = cjs.debounce = debounce;
