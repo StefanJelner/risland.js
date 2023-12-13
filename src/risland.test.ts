@@ -21,736 +21,697 @@ describe('RIsland', () => {
     });
 
     it(
-        'should show an error in the frontend and in the console if initialized with an initialState which is not '
-        + 'an object'
-        , done => {
+        'should show an error in the frontend and in the console if initialized with an initialState which is not ' +
+            'an object',
+        (done) => {
             setDocument(getDefaultDocument());
 
             new RIsland<{}>({
-                $element: document.getElementById('island')
-                , initialState: []
-                , error: () => {
+                $element: document.getElementById('island') as Element,
+                initialState: [],
+                error: () => {
                     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR001'));
 
                     done();
-                }
-                , template: '<div></div>'
+                },
+                template: '<div></div>',
             });
-        }
+        },
     );
 
-    it(
-        'should show an error in the frontend and in the console if initialized with an initialState which is null'
-        , done => {
-            setDocument(getDefaultDocument());
-
-            new RIsland<{}>({
-                $element: document.getElementById('island')
-                , initialState: null
-                , error: () => {
-                    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR001'));
-
-                    done();
-                }
-                , template: '<div></div>'
-            });
-        }
-    );
-
-    it('should show a warning in the console if there is a duplicate event name in a comma spearated list', done => {
+    it('should show an error in the frontend and in the console if initialized with an initialState which is null', (done) => {
         setDocument(getDefaultDocument());
 
         new RIsland<{}>({
-            $element: document.getElementById('island')
-            , delegations: {
+            $element: document.getElementById('island') as Element,
+            initialState: null as any,
+            error: () => {
+                expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR001'));
+
+                done();
+            },
+            template: '<div></div>',
+        });
+    });
+
+    it('should show a warning in the console if there is a duplicate event name in a comma spearated list', (done) => {
+        setDocument(getDefaultDocument());
+
+        new RIsland<{}>({
+            $element: document.getElementById('island') as Element,
+            delegations: {
                 'mouseover, mouseout, mouseover': {
-                    '.foo': () => {}
-                }
-            }
-            , initialState: {}
-            , load: () => {
+                    '.foo': () => {},
+                },
+            },
+            initialState: {},
+            load: () => {
                 expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN001'));
 
                 done();
-            }
-            , template: '<div></div>'
+            },
+            template: '<div></div>',
         });
     });
 
-    it('should show a warning in the console if a throttled event name has malformed milliseconds', done => {
+    it('should show a warning in the console if a throttled event name has malformed milliseconds', (done) => {
         setDocument(getDefaultDocument());
 
         new RIsland<{}>({
-            $element: document.getElementById('island')
-            , delegations: {
+            $element: document.getElementById('island') as Element,
+            delegations: {
                 // we have to use any here, because we provoke a warning. in a Typescript context should should
                 // not be possible at all.
                 ['mousemove.throttled.foo' as any]: {
-                    '.foo': () => {}
-                }
-            }
-            , initialState: {}
-            , load: () => {
+                    '.foo': () => {},
+                },
+            },
+            initialState: {},
+            load: () => {
                 expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN003'));
 
                 done();
-            }
-            , template: '<div></div>'
+            },
+            template: '<div></div>',
         });
     });
 
-    it('should show a warning in the console if a debounced event name has malformed milliseconds', done => {
+    it('should show a warning in the console if a debounced event name has malformed milliseconds', (done) => {
         setDocument(getDefaultDocument());
 
         new RIsland<{}>({
-            $element: document.getElementById('island')
-            , delegations: {
+            $element: document.getElementById('island') as Element,
+            delegations: {
                 // we have to use any here, because we provoke a warning. in a Typescript context should should
                 // not be possible at all.
                 ['mousemove.debounced.foo' as any]: {
-                    '.foo': () => {}
-                }
-            }
-            , initialState: {}
-            , load: () => {
+                    '.foo': () => {},
+                },
+            },
+            initialState: {},
+            load: () => {
                 expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN003'));
 
                 done();
-            }
-            , template: '<div></div>'
+            },
+            template: '<div></div>',
         });
     });
 
-    it('should show a warning in the console if initialized with an empty initialState', done => {
+    it('should show a warning in the console if initialized with an empty initialState', (done) => {
         setDocument(getDefaultDocument());
 
         new RIsland<{}>({
-            $element: document.getElementById('island')
-            , initialState: {}
-            , load: () => {
+            $element: document.getElementById('island') as Element,
+            initialState: {},
+            load: () => {
                 expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('WARN002'));
 
                 done();
-            }
-            , template: '<div></div>'
+            },
+            template: '<div></div>',
         });
     });
 
     it(
-        'should show an error in the frontend and the console if initialized with a template containing more than '
-        + 'one element on the root level'
-        , done => {
+        'should show an error in the frontend and the console if initialized with a template containing more than ' +
+            'one element on the root level',
+        (done) => {
             setDocument(getDefaultDocument());
-            const $island = document.getElementById('island');
+            const $island = document.getElementById('island') as Element;
 
             new RIsland<{}>({
-                $element: $island
-                , error: () => {
+                $element: $island,
+                error: () => {
                     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR002'));
                     expect($island.innerHTML).toMatch('ERR002');
 
                     done();
-                }
+                },
                 // we have to cast to any here, because we intentionally provide the wrong element type
-                , template: '<div></div><div></div>'
+                template: '<div></div><div></div>',
             });
-        }
+        },
     );
 
     it(
-        'should show an error in the frontend and the console if initialized with a template only containing a text '
-        + 'node on the root level'
-        , done => {
+        'should show an error in the frontend and the console if initialized with a template only containing a text ' +
+            'node on the root level',
+        (done) => {
             setDocument(getDefaultDocument());
-            const $island = document.getElementById('island');
+            const $island = document.getElementById('island') as Element;
 
             new RIsland<{}>({
-                $element: $island
-                , error: () => {
+                $element: $island,
+                error: () => {
                     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR003'));
                     expect($island.innerHTML).toMatch('ERR003');
 
                     done();
-                }
+                },
                 // we have to cast to any here, because we intentionally provide the wrong element type
-                , template: 'Test'
+                template: 'Test',
             });
-        }
+        },
     );
 
-    it('should show an error in the frontend and the console if initialized with the wrong template type', done => {
+    it('should show an error in the frontend and the console if initialized with the wrong template type', (done) => {
         setDocument(getDefaultDocument('<template id="squirrelly"></template>'));
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
         new RIsland<{}>({
-            $element: $island
-            , error: () => {
+            $element: $island,
+            error: () => {
                 expect(console.error).toHaveBeenCalledWith(expect.stringContaining('ERR004'));
                 expect($island.innerHTML).toMatch('ERR004');
 
                 done();
-            }
+            },
             // we have to cast to any here, because we intentionally provide the wrong element type
-            , template: document.getElementById('squirrelly') as any
+            template: document.getElementById('squirrelly') as any,
         });
     });
 
-    it(
-        'should have the right state and show the right content if initialized with a script tag and an initial state'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
+    it('should have the right state and show the right content if initialized with a script tag and an initial state', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
 
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: state => {
-                    expect(state.foo).toBe(1);
-                    expect($island.innerHTML).toBe('<div>1</div>');
-
-                    done();
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content if setState() is called with a plain object'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
-                    setState({ foo: 2 });
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: (state) => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<div>2</div>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content if setState() is called with a function'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
-                    setState(state => ({ foo: state.foo + 1 }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: (state) => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<div>2</div>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content if setState() is called with a Promise'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
-                    setState(new Promise(resolve => resolve({ foo: 2 })));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: (state) => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<div>2</div>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content if setState() is called with an Array'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
-                    setState([
-                        { foo: 2 }
-                        , { foo: 3 }
-                        , { foo: 4 }
-                    ]);
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: (state) => {
-                    expect(state.foo).toBe(4);
-                    expect($island.innerHTML).toBe('<div>4</div>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content if setState() is called with null'
-        , done => {
-            setDocument(getDefaultDocument(
-                '<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'
-            ));
-            const $island = document.getElementById('island');
-            let updated = false;
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
-                    setState(null);
-
-                    window.setTimeout(() => {
-                        setState(state => {
-                            expect(state.foo).toBe(1);
-                            expect($island.innerHTML).toBe('<div>1</div>');
-                            expect(updated).toBe(false);
-
-                            done();
-
-                            return null;
-                        });
-                    }, 1000);
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: () => {
-                    updated = true;
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content after non-throttled event delegation'
-        , done => {
-            setDocument(getDefaultDocument(
-                `<script type="text/html" id="squirrelly">
-                    <button type="button">{{state.foo}}</button>
-                </script>`
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click': {
-                        'button': (_, __, ___, setState) => {
-                            setState({ foo: 2 });
-                        }
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: () => {
-                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: state => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<button type="button">2</button>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content after throttled (RAF) event delegation'
-        , done => {
-            setDocument(getDefaultDocument(
-                `<script type="text/html" id="squirrelly">
-                    <button type="button">{{state.foo}}</button>
-                </script>`
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click.throttled': {
-                        'button': (_, __, ___, setState) => {
-                            setState({ foo: 2 });
-                        }
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: () => {
-                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: state => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<button type="button">2</button>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content after throttled (1 sec) event delegation'
-        , done => {
-            setDocument(getDefaultDocument(
-                `<script type="text/html" id="squirrelly">
-                    <button type="button">{{state.foo}}</button>
-                </script>`
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click.throttled.1000': {
-                        'button': (_, __, ___, setState) => {
-                            setState({ foo: 2 });
-                        }
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: () => {
-                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: state => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<button type="button">2</button>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content after debounced (RAF) event delegation'
-        , done => {
-            setDocument(getDefaultDocument(
-                `<script type="text/html" id="squirrelly">
-                    <button type="button">{{state.foo}}</button>
-                </script>`
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click.debounced': {
-                        'button': (_, __, ___, setState) => {
-                            setState({ foo: 2 });
-                        }
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: () => {
-                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: state => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<button type="button">2</button>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it(
-        'should have the right state and show the right content after debounced (1 sec) event delegation'
-        , done => {
-            setDocument(getDefaultDocument(
-                `<script type="text/html" id="squirrelly">
-                    <button type="button">{{state.foo}}</button>
-                </script>`
-            ));
-            const $island = document.getElementById('island');
-
-            new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click.debounced.1000': {
-                        'button': (_, __, ___, setState) => {
-                            setState({ foo: 2 });
-                        }
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: () => {
-                    $island.firstChild.dispatchEvent(new Event('click', { bubbles: true }));
-                }
-                , template: document.getElementById('squirrelly') as HTMLScriptElement
-                , update: state => {
-                    expect(state.foo).toBe(2);
-                    expect($island.innerHTML).toBe('<button type="button">2</button>');
-
-                    done();
-                }
-            });
-        }
-    );
-
-    it('should show the right content if partials are used', done => {
-        setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
-
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , load: () => {
-                expect($island.innerHTML).toBe('<div><div>1</div></div>');
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (state) => {
+                expect(state.foo).toBe(1);
+                expect($island.innerHTML).toBe('<div>1</div>');
 
                 done();
-            }
-            , partials: { bar: '<div>{{partialState.foo}}</div>' }
-            , template: '<div>{{@include(\'bar\', { foo: state.foo })/}}</div>'
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
         });
     });
 
-    it('should show the right content if filters are used', done => {
-        setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+    it('should have the right state and show the right content if setState() is called with a plain object', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , filters: { incr: num => num + 1 }
-            , initialState: { foo: 1 }
-            , load: () => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
+                setState({ foo: 2 });
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
                 expect($island.innerHTML).toBe('<div>2</div>');
 
                 done();
-            }
-            , template: '<div>{{state.foo | incr}}</div>'
+            },
         });
     });
 
-    it('should show the right content if helpers are used', done => {
-        setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+    it('should have the right state and show the right content if setState() is called with a function', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , helpers: {
-                repeat: content => Array.from({ length: content.params[0] }).map(() => content.exec()).join('')
-            }
-            , initialState: { foo: 1 }
-            , load: () => {
-                expect($island.innerHTML).toBe('<div>111</div>');
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
+                setState((state) => ({ foo: state.foo + 1 }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<div>2</div>');
 
                 done();
-            }
-            , template: '<div>{{@repeat(3)}}{{state.foo}}{{/repeat}}</div>'
+            },
         });
     });
 
-    it('should show the right content if nativeHelpers are used', done => {
-        setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+    it('should have the right state and show the right content if setState() is called with a Promise', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , load: () => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
+                setState(new Promise((resolve) => resolve({ foo: 2 })));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<div>2</div>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content if setState() is called with an Array', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
+                setState([{ foo: 2 }, { foo: 3 }, { foo: 4 }]);
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(4);
+                expect($island.innerHTML).toBe('<div>4</div>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content if setState() is called with null', (done) => {
+        setDocument(getDefaultDocument('<script type="text/html" id="squirrelly"><div>{{state.foo}}</div></script>'));
+        const $island = document.getElementById('island') as Element;
+        let updated = false;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
+                setState(null);
+
+                window.setTimeout(() => {
+                    setState((state) => {
+                        expect(state.foo).toBe(1);
+                        expect($island.innerHTML).toBe('<div>1</div>');
+                        expect(updated).toBe(false);
+
+                        done();
+
+                        return null;
+                    });
+                }, 1000);
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: () => {
+                updated = true;
+            },
+        });
+    });
+
+    it('should have the right state and show the right content after non-throttled event delegation', (done) => {
+        setDocument(
+            getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`,
+            ),
+        );
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            delegations: {
+                click: {
+                    button: (_, __, ___, setState) => {
+                        setState({ foo: 2 });
+                    },
+                },
+            },
+            initialState: { foo: 1 },
+            load: () => {
+                ($island.firstChild as Element).dispatchEvent(new Event('click', { bubbles: true }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content after throttled (RAF) event delegation', (done) => {
+        setDocument(
+            getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`,
+            ),
+        );
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            delegations: {
+                'click.throttled': {
+                    button: (_, __, ___, setState) => {
+                        setState({ foo: 2 });
+                    },
+                },
+            },
+            initialState: { foo: 1 },
+            load: () => {
+                ($island.firstChild as Element).dispatchEvent(new Event('click', { bubbles: true }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content after throttled (1 sec) event delegation', (done) => {
+        setDocument(
+            getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`,
+            ),
+        );
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            delegations: {
+                'click.throttled.1000': {
+                    button: (_, __, ___, setState) => {
+                        setState({ foo: 2 });
+                    },
+                },
+            },
+            initialState: { foo: 1 },
+            load: () => {
+                ($island.firstChild as Element).dispatchEvent(new Event('click', { bubbles: true }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content after debounced (RAF) event delegation', (done) => {
+        setDocument(
+            getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`,
+            ),
+        );
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            delegations: {
+                'click.debounced': {
+                    button: (_, __, ___, setState) => {
+                        setState({ foo: 2 });
+                    },
+                },
+            },
+            initialState: { foo: 1 },
+            load: () => {
+                ($island.firstChild as Element).dispatchEvent(new Event('click', { bubbles: true }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                done();
+            },
+        });
+    });
+
+    it('should have the right state and show the right content after debounced (1 sec) event delegation', (done) => {
+        setDocument(
+            getDefaultDocument(
+                `<script type="text/html" id="squirrelly">
+                    <button type="button">{{state.foo}}</button>
+                </script>`,
+            ),
+        );
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            delegations: {
+                'click.debounced.1000': {
+                    button: (_, __, ___, setState) => {
+                        setState({ foo: 2 });
+                    },
+                },
+            },
+            initialState: { foo: 1 },
+            load: () => {
+                ($island.firstChild as Element).dispatchEvent(new Event('click', { bubbles: true }));
+            },
+            template: document.getElementById('squirrelly') as HTMLScriptElement,
+            update: (state) => {
+                expect(state.foo).toBe(2);
+                expect($island.innerHTML).toBe('<button type="button">2</button>');
+
+                done();
+            },
+        });
+    });
+
+    it('should show the right content if partials are used', (done) => {
+        setDocument(getDefaultDocument());
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: () => {
+                expect($island.innerHTML).toBe('<div><div>1</div></div>');
+
+                done();
+            },
+            partials: { bar: '<div>{{partialState.foo}}</div>' },
+            template: "<div>{{@include('bar', { foo: state.foo })/}}</div>",
+        });
+    });
+
+    it('should show the right content if filters are used', (done) => {
+        setDocument(getDefaultDocument());
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            filters: { incr: (num) => num + 1 },
+            initialState: { foo: 1 },
+            load: () => {
+                expect($island.innerHTML).toBe('<div>2</div>');
+
+                done();
+            },
+            template: '<div>{{state.foo | incr}}</div>',
+        });
+    });
+
+    it('should show the right content if helpers are used', (done) => {
+        setDocument(getDefaultDocument());
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            helpers: {
+                repeat: (content) =>
+                    Array.from({ length: content.params[0] })
+                        .map(() => content.exec())
+                        .join(''),
+            },
+            initialState: { foo: 1 },
+            load: () => {
                 expect($island.innerHTML).toBe('<div>111</div>');
 
                 done();
-            }
-            , nativeHelpers: {
+            },
+            template: '<div>{{@repeat(3)}}{{state.foo}}{{/repeat}}</div>',
+        });
+    });
+
+    it('should show the right content if nativeHelpers are used', (done) => {
+        setDocument(getDefaultDocument());
+        const $island = document.getElementById('island') as Element;
+
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: () => {
+                expect($island.innerHTML).toBe('<div>111</div>');
+
+                done();
+            },
+            nativeHelpers: {
                 repeat: (buffer, env) => {
                     // DON'T DO THIS AT HOME!!!
                     return `Array.from({length:${buffer.p}}).forEach(function(){${Sqrl.compileScope(buffer.d, env)}});`;
-                }
-            }
-            , template: '<div>{{@repeat(3)}}{{state.foo}}{{/repeat}}</div>'
+                },
+            },
+            template: '<div>{{@repeat(3)}}{{state.foo}}{{/repeat}}</div>',
         });
     });
 
     it(
-        'should remove all event listeners, empty the island element and provide the final state if unload() '
-        + 'becomes invoked'
-        , done => {
+        'should remove all event listeners, empty the island element and provide the final state if unload() ' +
+            'becomes invoked',
+        (done) => {
             setDocument(getDefaultDocument());
-            const $island = document.getElementById('island');
+            const $island = document.getElementById('island') as Element;
 
             const events = {};
-            $island.addEventListener = jest.fn((event, callback) => events[event] = callback);
-            $island.removeEventListener = jest.fn(event => delete events[event]);
+            $island.addEventListener = jest.fn((event, callback) => (events[event] = callback));
+            $island.removeEventListener = jest.fn((event) => delete events[event]);
 
-            const island = new RIsland<{ foo: number; }>({
-                $element: $island
-                , delegations: {
-                    'click': {
-                        'div': () => {}
-                    }
-                }
-                , initialState: { foo: 1 }
-                , load: (_, setState) => {
+            const island = new RIsland<{ foo: number }>({
+                $element: $island,
+                delegations: {
+                    click: {
+                        div: () => {},
+                    },
+                },
+                initialState: { foo: 1 },
+                load: (_, setState) => {
                     expect(Object.keys(events)).toStrictEqual(['click']);
 
                     setState({ foo: 2 });
-                }
-                , template: '<div>{{state.foo}}</div>'
-                , unload: state => {
+                },
+                template: '<div>{{state.foo}}</div>',
+                unload: (state) => {
                     expect(state.foo).toBe(2);
                     expect($island.innerHTML).toBe('');
                     expect(Object.keys(events)).toStrictEqual([]);
 
                     done();
-                }
+                },
             });
 
             setTimeout(() => island.unload(), 1000);
-        }
+        },
     );
 
-    it('should show the right content if morphdoms onBeforeElUpdated is used and always returns true', done => {
+    it('should show the right content if morphdoms onBeforeElUpdated is used and always returns true', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , load: () => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: () => {
                 expect($island.innerHTML).toBe('<div>1</div>');
 
                 done();
-            }
-            , morphdom: { onBeforeElUpdated: () => true }
-            , template: '<div>{{state.foo}}</div>'
+            },
+            morphdom: { onBeforeElUpdated: () => true },
+            template: '<div>{{state.foo}}</div>',
         });
     });
 
-    it('should show the right content if morphdoms onBeforeElUpdated is used and returns false', done => {
+    it('should show the right content if morphdoms onBeforeElUpdated is used and returns false', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , load: (_, setState) => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
                 setState({ foo: 2 });
-            }
-            , morphdom: { onBeforeElUpdated: $el => $el.id !== 'ignore' }
-            , template: '<div><div>{{state.foo}}</div><div id="ignore">{{state.foo}}</div></div>'
-            , update: () => {
+            },
+            morphdom: { onBeforeElUpdated: ($el) => $el.id !== 'ignore' },
+            template: '<div><div>{{state.foo}}</div><div id="ignore">{{state.foo}}</div></div>',
+            update: () => {
                 expect($island.innerHTML).toBe('<div><div>2</div><div id="ignore">1</div></div>');
 
                 done();
-            }
+            },
         });
     });
 
-    it('should check if morphdoms onElUpdated is invoked with a valid Element', done => {
+    it('should check if morphdoms onElUpdated is invoked with a valid Element', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , morphdom: {
-                onElUpdated: $element => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            morphdom: {
+                onElUpdated: ($element) => {
                     expect($element instanceof Element).toBe(true);
 
                     done();
-                }
-            }
-            , template: '<div>{{state.foo}}</div>'
+                },
+            },
+            template: '<div>{{state.foo}}</div>',
         });
     });
 
-    it('should check if morphdoms onNodeAdded is invoked with a valid node', done => {
+    it('should check if morphdoms onNodeAdded is invoked with a valid node', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , morphdom: {
-                onNodeAdded: node => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            morphdom: {
+                onNodeAdded: (node) => {
                     expect(node instanceof Node).toBe(true);
 
                     done();
 
                     return node;
-                }
-            }
-            , template: '<div>{{state.foo}}</div>'
+                },
+            },
+            template: '<div>{{state.foo}}</div>',
         });
     });
 
-    it('should check if morphdoms onNodeDiscarded is invoked with a valid node', done => {
+    it('should check if morphdoms onNodeDiscarded is invoked with a valid node', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; }>({
-            $element: $island
-            , initialState: { foo: 1 }
-            , load: (_, setState) => {
+        new RIsland<{ foo: number }>({
+            $element: $island,
+            initialState: { foo: 1 },
+            load: (_, setState) => {
                 setState({ foo: 2 });
-            }
-            , morphdom: {
-                onNodeDiscarded: node => {
+            },
+            morphdom: {
+                onNodeDiscarded: (node) => {
                     expect(node instanceof Node).toBe(true);
 
                     return node;
-                }
-            }
-            , template: '<div>{{@if(state.foo === 1}}<div>{{state.foo}}</div>{{/if}}</div>'
-            , update: () => done()
+                },
+            },
+            template: '<div>{{@if(state.foo === 1}}<div>{{state.foo}}</div>{{/if}}</div>',
+            update: () => done(),
         });
     });
 
-    it('should check if deepmerges customMerge is used and leads to the right result', done => {
+    it('should check if deepmerges customMerge is used and leads to the right result', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: Record<string, any>; }>({
-            $element: $island
-            , deepmerge: {
-                customMerge: key => {
+        new RIsland<{ foo: Record<string, any> }>({
+            $element: $island,
+            deepmerge: {
+                customMerge: (key) => {
                     // we need a custom merge function here to remove keys from the object completely,
                     // because setting an object key to "undefined" in JS does not delete it.
                     if (key === 'foo') {
-                        return function(a, b) {
+                        return function (a, b) {
                             return Object.assign(
                                 {},
-                                Object.keys(a).reduce(function(result, key) {
+                                Object.keys(a).reduce(function (result, key) {
                                     if (!(key in b) || typeof b[key] !== 'undefined') {
                                         var tmp = {};
                                         tmp[key] = a[key];
@@ -760,7 +721,7 @@ describe('RIsland', () => {
 
                                     return result;
                                 }, {}),
-                                Object.keys(b).reduce(function(result, key) {
+                                Object.keys(b).reduce(function (result, key) {
                                     if (typeof b[key] !== 'undefined') {
                                         var tmp = {};
                                         tmp[key] = b[key];
@@ -769,97 +730,96 @@ describe('RIsland', () => {
                                     }
 
                                     return result;
-                                }, {})
+                                }, {}),
                             );
                         };
                     }
 
                     return undefined;
-                }
-            }
-            , initialState: { foo: { bar: 1, quux: 2 } }
-            , load: (_, setState) => {
+                },
+            },
+            initialState: { foo: { bar: 1, quux: 2 } },
+            load: (_, setState) => {
                 expect($island.innerHTML).toBe('<div><div>1</div><div>2</div></div>');
 
                 setState({ foo: { quux: undefined } });
-            }
-            , template:
-                `<div>
+            },
+            template: `<div>
                     <div>{{state.foo.bar}}</div>
                     {{@if(state.foo.quux)}}<div>{{state.foo.quux}}</div>{{/if}}
                 </div>`
                 // removes all whitespaces from the template, so it is testable in a better way
-                .replace(/\s+/g, '')
-            , update: state => {
+                .replace(/\s+/g, ''),
+            update: (state) => {
                 expect($island.innerHTML).toBe('<div><div>1</div></div>');
                 expect(state).toStrictEqual({ foo: { bar: 1 } });
 
                 done();
-            }
+            },
         });
     });
 
-    it('should check if a custom shouldUpdate function works', done => {
+    it('should check if a custom shouldUpdate function works', (done) => {
         setDocument(getDefaultDocument());
-        const $island = document.getElementById('island');
+        const $island = document.getElementById('island') as Element;
 
-        new RIsland<{ foo: number; bar: number; }>({
-            $element: $island
-            , initialState: { foo: 1, bar: 2 }
-            , load: (_, setState) => {
+        new RIsland<{ foo: number; bar: number }>({
+            $element: $island,
+            initialState: { foo: 1, bar: 2 },
+            load: (_, setState) => {
                 setState([
-                    { foo: 2 }
-                    , new Promise(resolve => {
+                    { foo: 2 },
+                    new Promise((resolve) => {
                         setTimeout(() => {
                             resolve([
-                                state => {
+                                (state) => {
                                     expect($island.innerHTML).toBe('<div><div>2</div><div>2</div></div>');
                                     expect(state).toStrictEqual({ foo: 2, bar: 2 });
 
                                     return null;
-                                }
-                                , { bar: 3 }
-                                , new Promise(resolve => {
+                                },
+                                { bar: 3 },
+                                new Promise((resolve) => {
                                     setTimeout(() => {
-                                        resolve(state => {
+                                        resolve((state) => {
                                             expect($island.innerHTML).toBe('<div><div>2</div><div>2</div></div>');
                                             expect(state).toStrictEqual({ foo: 2, bar: 3 });
 
                                             done();
-        
+
                                             return null;
                                         });
                                     }, 1000);
-                                })
+                                }),
                             ]);
                         }, 1000);
-                    })
+                    }),
                 ]);
-            }
+            },
             // only update if bar hasn't changed
-            , shouldUpdate: (state, nextState) => state.hasOwnProperty('bar') === false || state.bar === nextState.bar
-            , template: '<div><div>{{state.foo}}</div><div>{{state.bar}}</div></div>'
+            shouldUpdate: (state, nextState) => state.hasOwnProperty('bar') === false || state.bar === nextState.bar,
+            template: '<div><div>{{state.foo}}</div><div>{{state.bar}}</div></div>',
         });
     });
 
     it(
-        'should check if deepmerges customMerge and a custom shouldUpdate function are used and lead to the right '
-        + 'result'
-        , done => {
+        'should check if deepmerges customMerge and a custom shouldUpdate function are used and lead to the right ' +
+            'result',
+        (done) => {
             setDocument(getDefaultDocument());
-            const $island = document.getElementById('island');
+            const $island = document.getElementById('island') as Element;
 
-            new RIsland<{ foo: Record<string, any>; }>({
-                $element: $island
-                , deepmerge: {
-                    customMerge: key => {
+            new RIsland<{ foo: Record<string, any> }>({
+                $element: $island,
+                deepmerge: {
+                    customMerge: (key) => {
                         // we need a custom merge function here to remove keys from the object completely,
                         // because setting an object key to "undefined" in JS does not delete it.
                         if (key === 'foo') {
-                            return function(a, b) {
+                            return function (a, b) {
                                 return Object.assign(
                                     {},
-                                    Object.keys(a).reduce(function(result, key) {
+                                    Object.keys(a).reduce(function (result, key) {
                                         if (!(key in b) || typeof b[key] !== 'undefined') {
                                             var tmp = {};
                                             tmp[key] = a[key];
@@ -869,7 +829,7 @@ describe('RIsland', () => {
 
                                         return result;
                                     }, {}),
-                                    Object.keys(b).reduce(function(result, key) {
+                                    Object.keys(b).reduce(function (result, key) {
                                         if (typeof b[key] !== 'undefined') {
                                             var tmp = {};
                                             tmp[key] = b[key];
@@ -878,108 +838,106 @@ describe('RIsland', () => {
                                         }
 
                                         return result;
-                                    }, {})
+                                    }, {}),
                                 );
                             };
                         }
 
                         return undefined;
-                    }
-                }
-                , initialState: { foo: { bar: 1, quux: 2, baz: 3 } }
-                , load: (_, setState) => {
+                    },
+                },
+                initialState: { foo: { bar: 1, quux: 2, baz: 3 } },
+                load: (_, setState) => {
                     expect($island.innerHTML).toBe('<div><div>1</div><div>2</div><div>3</div></div>');
 
                     setState([
-                        { foo: { bar: 2, quux: undefined } }
-                        , new Promise(resolve => {
+                        { foo: { bar: 2, quux: undefined } },
+                        new Promise((resolve) => {
                             setTimeout(() => {
                                 resolve([
-                                    state => {
+                                    (state) => {
                                         expect($island.innerHTML).toBe('<div><div>2</div><div>3</div></div>');
                                         expect(state).toStrictEqual({ foo: { bar: 2, baz: 3 } });
-    
+
                                         return null;
-                                    }
-                                    , { foo: { baz: 4 } }
-                                    , new Promise(resolve => {
+                                    },
+                                    { foo: { baz: 4 } },
+                                    new Promise((resolve) => {
                                         setTimeout(() => {
-                                            resolve(state => {
+                                            resolve((state) => {
                                                 expect($island.innerHTML).toBe('<div><div>2</div><div>3</div></div>');
                                                 expect(state).toStrictEqual({ foo: { bar: 2, baz: 4 } });
-    
+
                                                 done();
-            
+
                                                 return null;
                                             });
                                         }, 1000);
-                                    })
+                                    }),
                                 ]);
                             }, 1000);
-                        })
+                        }),
                     ]);
-                }
+                },
                 // only update if bar hasn't changed
-                , shouldUpdate: (state, nextState) => {
+                shouldUpdate: (state, nextState) => {
                     return state.hasOwnProperty('foo') === false || state.foo.baz === nextState.foo.baz;
-                }
-                , template:
-                    `<div>
+                },
+                template: `<div>
                         <div>{{state.foo.bar}}</div>
                         {{@if(state.foo.quux)}}<div>{{state.foo.quux}}</div>{{/if}}
                         <div>{{state.foo.baz}}</div>
                     </div>`
                     // removes all whitespaces from the template, so it is testable in a better way
-                    .replace(/\s+/g, '')
+                    .replace(/\s+/g, ''),
             });
-        }
+        },
     );
 
-    it(
-        'should have the right state and show the right content if used as a web component'
-        , done => {
-            setDocument(getDefaultHeaderFooter('<foo-bar></foo-bar>'));
+    it('should have the right state and show the right content if used as a web component', (done) => {
+        setDocument(getDefaultHeaderFooter('<foo-bar></foo-bar>'));
 
-            RIsland.createWebComponent<{ baz: number; }>('foo-bar', [], {
-                initialState: { baz: 1 }
-                , load: state => {
-                    const $island = document.querySelector('foo-bar');
+        RIsland.createWebComponent<{ baz: number }>('foo-bar', [], {
+            initialState: { baz: 1 },
+            load: (state) => {
+                const $island = document.querySelector('foo-bar') as Element;
 
-                    expect(state.baz).toBe(1);
-                    expect($island !== null).toBe(true);
-                    // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
-                    // with a div tag.
-                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1</div></div>');
+                expect(state.baz).toBe(1);
+                expect($island !== null).toBe(true);
+                // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
+                // with a div tag.
+                expect(($island.shadowRoot as ShadowRoot).innerHTML).toBe('<div><div>1</div></div>');
 
-                    done();
-                }
-                , template: '<div>{{state.baz}}</div>'
-            });
-        }
-    );
+                done();
+            },
+            template: '<div>{{state.baz}}</div>',
+        });
+    });
 
     it(
-        'should have the right state, show the right content and handle attributes with different types if used '
-        + 'as a web component'
-        , done => {
-            setDocument(getDefaultHeaderFooter(
-                '<foo-bar2 qux="100" corge=\'{"grault": ["garply", "waldo"]}\' fred="9.5"></foo-bar2>'
-            ));
+        'should have the right state, show the right content and handle attributes with different types if used ' +
+            'as a web component',
+        (done) => {
+            setDocument(
+                getDefaultHeaderFooter(
+                    '<foo-bar2 qux="100" corge=\'{"grault": ["garply", "waldo"]}\' fred="9.5"></foo-bar2>',
+                ),
+            );
 
             RIsland.createWebComponent<{
                 baz: number;
                 qux: number | null;
-                corge: { grault: [string, string]; } | null;
+                corge: { grault: [string, string] } | null;
                 fred: number | null;
             }>('foo-bar2', ['qux', 'corge', 'fred'], {
                 initialState: {
-                    baz: 1
-                    , qux: null
-                    , corge: null
-                    , fred: null
-                }
-                , load: state => {
-                    const $island = document.querySelector('foo-bar2');
+                    baz: 1,
+                    qux: null,
+                    corge: null,
+                    fred: null,
+                },
+                load: (state) => {
+                    const $island = document.querySelector('foo-bar2') as Element;
 
                     expect(state.baz).toBe(1);
                     expect(state.qux).toBe(100);
@@ -988,75 +946,78 @@ describe('RIsland', () => {
                     expect($island !== null).toBe(true);
                     // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
                     // with a div tag.
-                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 100 garply waldo 9.5</div></div>');
+                    expect(($island.shadowRoot as ShadowRoot).innerHTML).toBe(
+                        '<div><div>1 100 garply waldo 9.5</div></div>',
+                    );
 
                     done();
-                }
-                , template: '<div>{{state.baz}} {{state.qux}} {{state.corge.grault[0]}} {{state.corge.grault[1]}} '
-                    + '{{state.fred}}</div>'
+                },
+                template:
+                    '<div>{{state.baz}} {{state.qux}} {{state.corge.grault[0]}} {{state.corge.grault[1]}} ' +
+                    '{{state.fred}}</div>',
             });
-        }
+        },
     );
 
     it(
-        'should have the right state, show the right content and handle attributes which are not set if used '
-        + 'as a web component'
-        , done => {
+        'should have the right state, show the right content and handle attributes which are not set if used ' +
+            'as a web component',
+        (done) => {
             setDocument(getDefaultHeaderFooter('<foo-bar3></foo-bar3>'));
 
-            RIsland.createWebComponent<{ baz: number; qux: number | null; }>('foo-bar3', ['qux'], {
+            RIsland.createWebComponent<{ baz: number; qux: number | null }>('foo-bar3', ['qux'], {
                 initialState: {
-                    baz: 1
-                    , qux: null
-                }
-                , load: state => {
-                    const $island = document.querySelector('foo-bar3');
+                    baz: 1,
+                    qux: null,
+                },
+                load: (state) => {
+                    const $island = document.querySelector('foo-bar3') as Element;
 
                     expect(state.baz).toBe(1);
                     expect(state.qux).toBe(null);
                     expect($island !== null).toBe(true);
                     // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
                     // with a div tag.
-                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 null</div></div>');
+                    expect(($island.shadowRoot as ShadowRoot).innerHTML).toBe('<div><div>1 null</div></div>');
 
                     done();
-                }
-                , template: '<div>{{state.baz}} {{state.qux}}</div>'
+                },
+                template: '<div>{{state.baz}} {{state.qux}}</div>',
             });
-        }
+        },
     );
 
     it(
-        'should have the right state, show the right content and unload in an expected way when removed from the DOM '
-        + 'if used as a web component'
-        , done => {
+        'should have the right state, show the right content and unload in an expected way when removed from the DOM ' +
+            'if used as a web component',
+        (done) => {
             setDocument(getDefaultHeaderFooter('<foo-bar4 qux="100"></foo-bar4>'));
 
-            RIsland.createWebComponent<{ baz: number; qux: number; }>('foo-bar4', ['qux'], {
+            RIsland.createWebComponent<{ baz: number; qux: number | null }>('foo-bar4', ['qux'], {
                 initialState: {
-                    baz: 1
-                    , qux: null
-                }
-                , load: state => {
-                    const $island = document.querySelector('foo-bar4');
+                    baz: 1,
+                    qux: null,
+                },
+                load: (state) => {
+                    const $island = document.querySelector('foo-bar4') as Element;
 
                     expect(state.baz).toBe(1);
                     expect(state.qux).toBe(100);
                     expect($island !== null).toBe(true);
                     // Because we use a div tag as the shadow roots first element, we have to wrap the inner HTML
                     // with a div tag.
-                    expect($island.shadowRoot.innerHTML).toBe('<div><div>1 100</div></div>');
+                    expect(($island.shadowRoot as ShadowRoot).innerHTML).toBe('<div><div>1 100</div></div>');
 
                     $island.remove();
-                }
-                , template: '<div>{{state.baz}} {{state.qux}}</div>'
-                , unload: state => {
+                },
+                template: '<div>{{state.baz}} {{state.qux}}</div>',
+                unload: (state) => {
                     expect(state.baz).toBe(1);
                     expect(state.qux).toBe(100);
 
                     done();
-                }
+                },
             });
-        }
+        },
     );
 });
